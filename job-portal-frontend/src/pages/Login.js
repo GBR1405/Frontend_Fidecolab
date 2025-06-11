@@ -6,7 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "../styles/login.css";
 
-const apiUrl = 'http://localhost:3000/api';
+const apiUrl = 'https://backend-fidecolab.onrender.com/api';
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const Login = () => {

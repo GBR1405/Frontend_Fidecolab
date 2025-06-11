@@ -118,7 +118,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include"
+          withCredentials: "include"
         })
         .then((res) => {
             if (res.data.success) {

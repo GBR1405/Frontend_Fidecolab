@@ -76,7 +76,7 @@ const ProfessorStudents = () => {
         try {
             const response = await fetch(`${apiUrl}/get-students`, {
                 method: 'GET',
-                credentials: 'include',
+                withCredentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -134,7 +134,7 @@ const ProfessorStudents = () => {
             try {
                 const response = await fetch(`${apiUrl}/obtener-cursosVinculados`, {
                     method: 'GET',
-                    credentials: 'include',
+                    withCredentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ const ProfessorStudents = () => {
         try {
             const response = await fetch(`${apiUrl}/obtener-cursosVinculados`, {
                 method: 'GET',
-                credentials: 'include',
+                withCredentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -318,7 +318,7 @@ const ProfessorStudents = () => {
               try {
                 const response = await fetch(`${apiUrl}/add-students`, {
                   method: 'POST',
-                  credentials: 'include',
+                  withCredentials: 'include',
                   headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -404,7 +404,7 @@ const ProfessorStudents = () => {
         
                 const response = await fetch(`${apiUrl}/add-students`, {
                   method: 'POST',
-                  credentials: 'include',
+                  withCredentials: 'include',
                   headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

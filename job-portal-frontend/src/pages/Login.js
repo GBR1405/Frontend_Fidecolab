@@ -56,18 +56,16 @@ const Login = () => {
         const now = new Date();
         const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   
-        // Guardar el JWT en una cookie
         Cookies.set("authToken", token, {
-          expires: expires, 
-          secure: false, 
-          sameSite: "Strict",
+          expires: expires,
+          secure: true,           // HTTPS obligatorio
+          sameSite: "None"        // Para cross-site (entre dominios)
         });
-  
-        // Guardar la información del usuario encriptada en la cookie
+
         Cookies.set("IFUser_Info", encryptedUser, {
-          expires: expires, 
-          secure: false, 
-          sameSite: "Strict",
+          expires: expires,
+          secure: true,           // También debe ser true
+          sameSite: "None"
         });
   
         // Verifica el rol y redirige según corresponda

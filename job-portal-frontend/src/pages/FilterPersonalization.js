@@ -24,7 +24,7 @@ const FilterPersonalization = () => {
             try {
                 const response = await fetch(`${apiUrl}/obtener-personalizaciones`, {
                     method: 'GET',
-                    credentials: 'include',
+                    withCredentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const FilterPersonalization = () => {
             try {
                 const response = await fetch(`${apiUrl}/obtener-cursosVinculados`, {
                     method: 'GET',
-                    credentials: 'include',
+                    withCredentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -120,7 +120,7 @@ const FilterPersonalization = () => {
                 try {
                     const response = await fetch(`${apiUrl}/eliminar_personalizacion`, {
                         method: "DELETE",
-                        credentials: "include",
+                        withCredentials: "include",
                         headers: {
                             "Authorization": `Bearer ${token}`,
                             "Content-Type": "application/json"
@@ -146,7 +146,7 @@ const FilterPersonalization = () => {
         try {
             const response = await fetch(`${apiUrl}/start-simulation`, {
                 method: 'POST',
-                credentials: 'include',
+                withCredentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ const FilterPersonalization = () => {
                 if (confirmResult.isConfirmed) {
                     const cancelResponse = await fetch(`${apiUrl}/cancel-simulation`, {
                         method: 'POST',
-                        credentials: 'include',
+                        withCredentials: 'include',
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ const FilterPersonalization = () => {
             // Usar el nuevo endpoint que obtiene por ID
             const response = await fetch(`${apiUrl}/personalizacion-por-id`, {
                 method: 'POST',
-                credentials: 'include',
+                withCredentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',

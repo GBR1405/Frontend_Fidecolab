@@ -35,7 +35,7 @@ const Depuration = () => {
     // Obtener los tipos de juegos
     axios.get(`${apiURL}/tipo-juegos`, {
       method: "GET",
-        credentials: "include", 
+        withCredentials: "include", 
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -56,7 +56,7 @@ const Depuration = () => {
     // Obtener los temas de juegos
     axios.get(`${apiURL}/gettemas`, {
       method: "GET",
-      credentials: "include", 
+      withCredentials: "include", 
       headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -103,7 +103,7 @@ const Depuration = () => {
       try {
         const response = await fetch(`${apiURL}/delete-p`, {
           method: 'POST',
-          credentials: 'include',
+          withCredentials: 'include',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ const Depuration = () => {
     try {
       const response = await fetch(`${apiURL}/activate-p`, {
         method: 'POST',
-        credentials: 'include',
+        withCredentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ const Depuration = () => {
       try {
         const response = await fetch(`${apiURL}/edit-p`, {
           method: 'POST',
-          credentials: 'include',
+          withCredentials: 'include',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -323,7 +323,7 @@ const Depuration = () => {
         method: "POST",  // Definir el método como POST
         url: `${apiURL}/agregar_contenido`,  // La URL a la que se hace la solicitud
         data: requestData,  // Los datos a enviar en el cuerpo de la solicitud
-        withCredentials: true,  // Incluir cookies, similar a credentials: 'include'
+        withCredentials: true,  // Incluir cookies, similar a withwithCredentials: 'include'
         headers: {
           "Authorization": `Bearer ${token}`,  // Añadir el token de autorización al encabezado
           "Content-Type": "application/json"  // Establecer el tipo de contenido como JSON

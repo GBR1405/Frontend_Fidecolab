@@ -8,7 +8,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Conectar al servidor de Socket.IO
-        const newSocket = io('http://localhost:3000', {
+        const newSocket = io('https://backend-fidecolab.onrender.com', {
             withCredentials: true, // Enviar credenciales (cookies)
         });
 

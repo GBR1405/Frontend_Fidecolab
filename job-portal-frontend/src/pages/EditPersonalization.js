@@ -26,7 +26,7 @@ const EditPersonalization = () => {
         // Obtener juegos disponibles
         const juegosRes = await fetch(`${apiURL}/tipo-juegos`, {
           method: 'GET',
-          withCredentials: 'include',
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -39,7 +39,7 @@ const EditPersonalization = () => {
         // Obtener personalización actual
         const personalizacionRes = await fetch(`${apiURL}/personalizacion-por-id?id=${id}`, {
             method: 'POST',
-            withCredentials: 'include',
+            credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -55,7 +55,7 @@ const EditPersonalization = () => {
               }
               const temasRes = await fetch(`${apiURL}/temas-juego/${juego.Tipo_Juego_ID_PK}`, {
                 method: 'GET',
-                withCredentials: 'include',
+                credentials: 'include',
                 headers: {
                   'Authorization': `Bearer ${token}`,
                 },
@@ -88,7 +88,7 @@ const EditPersonalization = () => {
       const token = Cookies.get("authToken");
       const res = await fetch(`${apiURL}/temas-juego/${juegoId}`, {
         method: 'GET',
-        withCredentials: 'include',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -190,7 +190,7 @@ const EditPersonalization = () => {
 
       const response = await fetch(`${apiURL}/editar-personalizacion`, {
         method: 'POST',
-        withCredentials: 'include',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

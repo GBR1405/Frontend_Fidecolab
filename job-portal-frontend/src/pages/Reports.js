@@ -18,7 +18,7 @@ const Reports = () => {
       setLoading(true);
       const response = await fetch(`${apiUrl}/report-historial`, {
         method: "GET",
-        withCredentials: "include",
+        credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -41,7 +41,7 @@ const Reports = () => {
       try {
         const response = await fetch(`${apiUrl}/report-historial`, {
           method: "GET",
-          withCredentials: "include",
+          credentials: "include",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -77,7 +77,7 @@ const Reports = () => {
     try {
         const response = await fetch(`${apiUrl}/report-students`, {
             method: "GET",
-            withCredentials: "include", 
+            credentials: "include", 
             headers: {
               "Authorization": `Bearer ${token}`, 
               "Content-Type": "application/json"
@@ -105,7 +105,7 @@ const Reports = () => {
     try {
       const response = await fetch(`${apiUrl}/report-teacher`, {
         method: "GET",
-        withCredentials: "include", 
+        credentials: "include", 
         headers: {
           "Authorization": `Bearer ${token}`, 
           "Content-Type": "application/json"
@@ -137,7 +137,7 @@ const Reports = () => {
     try {
       const response = await fetch(`${apiUrl}/report-partidas`, {
         method: "GET",
-        withCredentials: "include", 
+        credentials: "include", 
         headers: {
           "Authorization": `Bearer ${token}`, 
           "Content-Type": "application/json"
@@ -167,7 +167,7 @@ const Reports = () => {
     try {
       const response = await fetch(`${apiUrl}/report-bitacora`, {
         method: "GET",
-        withCredentials: "include",
+        credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"

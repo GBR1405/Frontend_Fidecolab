@@ -84,7 +84,7 @@ function EditUser({ showModal, setShowModal }) {
       // Enviar solo el cambio de género y el correo del usuario desde la cookie
       const response = await fetch(`${apiUrl}/auth/user-edit`, {
         method: "POST",
-        withCredentials: "include", 
+        credentials: "include", 
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"

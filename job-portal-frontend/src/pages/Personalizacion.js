@@ -141,7 +141,7 @@ const Personalizacion = ({ personalizacionId }) => {
             "Authorization": `Bearer ${token}`,  // Enviar el token en las cabeceras
             "Content-Type": "application/json",
           },
-          withCredentials: "include"  // Asegúrate de incluir las cookies si es necesario
+          credentials: "include"  // Asegúrate de incluir las cookies si es necesario
         })
         .then((res) => {
           if (res.data.success) {

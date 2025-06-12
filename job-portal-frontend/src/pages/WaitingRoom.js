@@ -27,7 +27,7 @@ const WaitingRoom = () => {
     try {
         const response = await fetch(`${apiUrl}/checkgroup`, {
             method: 'GET',
-            withCredentials: 'include',
+            credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json',

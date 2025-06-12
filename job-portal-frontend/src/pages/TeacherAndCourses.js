@@ -58,7 +58,7 @@ const AdminProfessorCourses = () => {
         try {
             const response = await fetch(`${apiUrl}/add-grupo-profesor`, {
                 method: 'POST',
-                withCredentials: 'include',
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const AdminProfessorCourses = () => {
             if (isConfirmed) {
                 const response = await fetch(`${apiUrl}/quit-grupo-profesor`, {
                     method: 'DELETE',
-                    withCredentials: 'include',
+                    credentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ const AdminProfessorCourses = () => {
         try {
             const response = await fetch(`${apiUrl}/get-cursos-by-profesor/${professorId}`, {
                 method: 'GET',
-                withCredentials: 'include',
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -177,7 +177,7 @@ const AdminProfessorCourses = () => {
             // Obtener los grupos disponibles desde el backend
             const response = await fetch(`${apiUrl}/get-grupos-disponibles`, {
                 method: 'GET',
-                withCredentials: 'include',
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -279,7 +279,7 @@ const AdminProfessorCourses = () => {
 
                 const response = await fetch(`${apiUrl}/get-profesores`, {
                     method: 'GET',
-                    withCredentials: 'include',
+                    credentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -306,7 +306,7 @@ const AdminProfessorCourses = () => {
         
                 const response = await fetch(`${apiUrl}/get-cursos`, {
                     method: 'GET',
-                    withCredentials: 'include',
+                    credentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -392,7 +392,7 @@ const AdminProfessorCourses = () => {
     
                     const response = await fetch(`${apiUrl}/add-course`, {
                         method: "POST",
-                        withCredentials: "include", 
+                        credentials: "include", 
                         headers: {
                             "Authorization": `Bearer ${token}`,
                             "Content-Type": "application/json"
@@ -459,7 +459,7 @@ const AdminProfessorCourses = () => {
                             try {
                                 const latestGroupResponse = await fetch(`${apiUrl}/cursos/${selectedCourse}/ultimo-grupo`, {
                                     method: "GET",
-                                    withCredentials: "include",
+                                    credentials: "include",
                                     headers: {
                                         "Authorization": `Bearer ${token}`,
                                         "Content-Type": "application/json"
@@ -490,7 +490,7 @@ const AdminProfessorCourses = () => {
 
                         const response = await fetch(`${apiUrl}/add-grupos`, { // Asegúrate de que coincida con la ruta del backend
                             method: "POST",
-                            withCredentials: "include",
+                            credentials: "include",
                             headers: {
                                 "Authorization": `Bearer ${token}`,
                                 "Content-Type": "application/json"
@@ -612,7 +612,7 @@ const AdminProfessorCourses = () => {
                     try {
                         const response = await fetch(`${apiUrl}/add-profesor`, {
                             method: 'POST',
-                            withCredentials: 'include',  // Asegúrate de que las cookies (si usas cookies para el token) se incluyan
+                            credentials: 'include',  // Asegúrate de que las cookies (si usas cookies para el token) se incluyan
                             headers: {
                                 'Authorization': `Bearer ${token}`,  // Asegúrate de tener el token de acceso
                                 'Content-Type': 'application/json'
@@ -668,7 +668,7 @@ const AdminProfessorCourses = () => {
                         // Enviar los datos al backend
                         const response = await fetch(`${apiUrl}/add-profesor`, {
                             method: 'POST',
-                            withCredentials: 'include',  // Incluir cookies si las usas
+                            credentials: 'include',  // Incluir cookies si las usas
                             headers: {
                                 'Authorization': `Bearer ${token}`,  // Asegúrate de que el token esté en el encabezado
                                 'Content-Type': 'application/json'

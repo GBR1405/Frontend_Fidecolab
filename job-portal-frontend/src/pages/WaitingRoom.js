@@ -12,7 +12,7 @@ const token = Cookies.get("authToken");
 
 const WaitingRoom = () => {
   const socket = useSocket(); // Obtener la instancia de Socket.IO
-  const { partidaId } = useParams(); // Obtener el partidaId de la URL
+  const { partidaId } = useParams(); // Obtener el partidaId de la URL.
   const navigate = useNavigate(); // Para redirigir al usuario
   const [users, setUsers] = useState([]); // Estado para almacenar la lista de usuarios
   const audioRef = useRef(null); // Referencia al elemento de audio

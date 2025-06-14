@@ -1,8 +1,8 @@
 export const uploadImageToImgBB = async (file) => {
-    const apiKey = process.env.REACT_APP_IMGBB_API_KEY; // Para Create React App (CRA)
+    const apiKey = process.env.REACT_APP_IMGBB_API_KEY;
     if (!apiKey) {
         console.error("API Key no definida");
-        return null;
+        return { success: false, message: "API Key no definida" };
     }
 
     const formData = new FormData();
@@ -15,13 +15,29 @@ export const uploadImageToImgBB = async (file) => {
         });
 
         const data = await response.json();
+        console.log("Respuesta completa:", data);
+
         if (data.success) {
-            return data.data.url; // Retorna la URL de la imagen
+            return { success: true, url: data.data.url };
         } else {
-            throw new Error("Error al subir la imagen");
+            // Detección de mantenimiento
+            if (data.error?.message === "Imgbb is currently down for maintenance.") {
+                return {
+                    success: false,
+                    message: "El servicio de alojamiento de imagen está en mantenimiento. Intenta más tarde.",
+                };
+            }
+
+            return {
+                success: false,
+                message: "Error desconocido al subir la imagen.",
+            };
         }
     } catch (error) {
         console.error("Error en la subida de la imagen:", error);
-        return null;
+        return {
+            success: false,
+            message: "No se pudo conectar con el servidor de ImgBB.",
+        };
     }
 };

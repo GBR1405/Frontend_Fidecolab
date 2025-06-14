@@ -292,27 +292,28 @@ const Depuration = () => {
     // Si es "Rompecabezas" y hay imagen, subirla a ImgBB
     if (tipoJuego.Juego === "Rompecabezas" && file) {
       try {
-        setIsLoading(true); // Activar el estado de carga
+        setIsLoading(true);
         Swal.fire({
           title: 'Cargando...',
           text: 'Por favor espera mientras se sube la imagen.',
           allowOutsideClick: false,
           didOpen: () => {
-            Swal.showLoading(); // Muestra el indicador de carga
+            Swal.showLoading();
           }
         });
 
-        const imageUrl = await uploadImageToImgBB(file);
-        if (imageUrl) {
-          requestData.contenido = imageUrl;
+        const result = await uploadImageToImgBB(file);
+
+        if (result.success) {
+          requestData.contenido = result.url;
         } else {
-          Swal.fire("Error", "Error al subir la imagen.", "error");
-          setIsLoading(false); // Desactivar el estado de carga
+          Swal.fire("Error", result.message, "error");
+          setIsLoading(false);
           return;
         }
       } catch (error) {
         console.error("Error subiendo la imagen:", error);
-        Swal.fire("Error", "Hubo un problema al subir la imagen.", "error");
+        Swal.fire("Error", "Hubo un problema inesperado al subir la imagen.", "error");
         setIsLoading(false);
         return;
       }

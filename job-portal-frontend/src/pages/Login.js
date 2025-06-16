@@ -5,14 +5,19 @@ import CryptoJS from "crypto-js";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "../styles/login.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const apiUrl = 'https://backend-fidecolab.onrender.com/api';
 const secretKey = process.env.REACT_APP_SECRET_KEY;
+
 
 const Login = () => {
   const [correo, setCorreo] = useState("");
   const [contraseña, setContraseña] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [mostrarContraseña, setMostrarContraseña] = useState(false);
 
   const validateForm = () => {
     const errors = {};
@@ -39,6 +44,8 @@ const Login = () => {
       }
       return;
     }
+
+    setLoading(true);
   
     try {
       const response = await axios.post(`${apiUrl}/auth/login`, {
@@ -80,6 +87,8 @@ const Login = () => {
     } catch (error) {
       console.error("Error durante el inicio de sesión:", error);
       toast.error(error.response?.data?.message || "Algo salió mal. Por favor, inténtalo de nuevo.");
+    } finally {
+      setLoading(false); 
     }
   };
   
@@ -116,24 +125,35 @@ const Login = () => {
               <label className="input__label-login" htmlFor="contraseña">
                 Contraseña
               </label>
-              <input
-                className="input__shape-login"
-                type="password"
-                id="contraseña"
-                value={contraseña}
-                onChange={(e) => setContraseña(e.target.value)}
-                placeholder="Contraseña"
-              />
+              <div className="input__wrapper-login">
+                <input
+                  className="input__shape-login"
+                  type={mostrarContraseña ? "text" : "password"}
+                  id="contraseña"
+                  value={contraseña}
+                  onChange={(e) => setContraseña(e.target.value)}
+                  placeholder="Contraseña"
+                />
+                <span
+                  className="eye-icon"
+                  onClick={() => setMostrarContraseña(!mostrarContraseña)}
+                >
+                  <FontAwesomeIcon icon={mostrarContraseña ? faEye :  faEyeSlash} />
+                </span>
+              </div>
             </div>
-            <div className="form__check-login">
-              <input className="check__box-login" type="checkbox" id="rememberMe" />
-              <label className="check__text-login" htmlFor="rememberMe">
-                Recuerda mi contraseña
-              </label>
-            </div>
+
             <div className="form__button-login">
-              <button className="button__shape-login" type="submit">
-                Iniciar sesión
+              <button
+                className="button__shape-login"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="loader"></div>
+                ) : (
+                  "Iniciar sesión"
+                )}
               </button>
             </div>
             <div className="form__link-login">

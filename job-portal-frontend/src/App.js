@@ -10,7 +10,10 @@ import Home from "./pages/Home";
 import UserHomeScreen from "./pages/UserHomeScreen";
 import { SocketProvider } from './context/SocketContext';
 
-// Rutas de usuario
+import FullScreenLoader from "./components/FullScreenLoader";
+import DelayedSuspense from "./components/DelayedSuspense";
+
+// Rutas de usuario s
 const Login = lazy(() => import("./pages/Login"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Help = lazy(() => import("./pages/Help"));
@@ -65,7 +68,7 @@ const App = () => {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <DelayedSuspense fallback={<FullScreenLoader />} minDuration={1200}>
       <SocketProvider>
       <Routes>
       
@@ -131,7 +134,7 @@ const App = () => {
         closeOnClick
         theme="colored"
       />
-    </Suspense>
+    </DelayedSuspense>
   );
 };
 

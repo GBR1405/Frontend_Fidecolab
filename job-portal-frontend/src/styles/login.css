@@ -198,3 +198,39 @@ html {
     color: var(--blue-royal-clr);
     font-size: 14px;
 }
+
+/* Spinner tipo medio círculo giratorio */
+.loader {
+  width: 20px; /* Puedes ajustar el tamaño si lo deseas */
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid;
+  border-color: #fff #0000; /* #fff es blanco, #0000 es transparente */
+  animation: l1 1s linear infinite;
+}
+
+@keyframes l1 {
+  to {
+    transform: rotate(0.5turn);
+  }
+}
+
+.input__wrapper-login {
+  position: relative;
+}
+
+.input__shape-login {
+  width: 100%;
+  padding-right: 40px; /* espacio para el ojito */
+  box-sizing: border-box;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+}

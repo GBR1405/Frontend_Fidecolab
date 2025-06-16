@@ -200,17 +200,18 @@ html {
 }
 
 .loader {
-  width: 20px; 
-  aspect-ratio: 1;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 3px solid;
-  border-color: #fff #0000; 
-  animation: l1 1s linear infinite;
+  border-color: #fff #0000; /* blanco y transparente */
+  animation: spin 0.6s linear infinite;
+  margin: auto;
 }
 
-@keyframes l1 {
+@keyframes spin {
   to {
-    transform: rotate(0.5turn);
+    transform: rotate(360deg);
   }
 }
 

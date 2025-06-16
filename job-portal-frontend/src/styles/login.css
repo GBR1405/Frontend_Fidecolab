@@ -199,13 +199,12 @@ html {
     font-size: 14px;
 }
 
-/* Spinner tipo medio círculo giratorio */
 .loader {
-  width: 20px; /* Puedes ajustar el tamaño si lo deseas */
+  width: 20px; 
   aspect-ratio: 1;
   border-radius: 50%;
   border: 3px solid;
-  border-color: #fff #0000; /* #fff es blanco, #0000 es transparente */
+  border-color: #fff #0000; 
   animation: l1 1s linear infinite;
 }
 
@@ -221,7 +220,7 @@ html {
 
 .input__shape-login {
   width: 100%;
-  padding-right: 40px; /* espacio para el ojito */
+  padding-right: 40px; 
   box-sizing: border-box;
 }
 

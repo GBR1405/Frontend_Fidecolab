@@ -150,7 +150,7 @@ const Login = () => {
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="loader"></div>
+                  <div className="loader_login"></div>
                 ) : (
                   "Iniciar sesión"
                 )}

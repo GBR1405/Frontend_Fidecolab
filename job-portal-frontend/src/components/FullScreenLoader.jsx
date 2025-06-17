@@ -1,22 +1,20 @@
-// FullScreenLoader.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from 'react';
 import "../styles/FullScreenLoader.css";
 
 const FullScreenLoader = () => {
-  const [fadeOut, setFadeOut] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Empieza fadeOut justo antes de desmontarse (ajustable según tu minDuration)
-    const timer = setTimeout(() => setFadeOut(true), 1800); // 200ms antes de 2s
+    const delay = setTimeout(() => setVisible(true), 400); // espera 400ms
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(delay);
   }, []);
 
-  return (
-    <div className={`fullscreen-loader ${fadeOut ? "fade-out" : ""}`}>
+  return visible ? (
+    <div className="fullscreen-loader-container fade-in">
       <div className="loader"></div>
     </div>
-  );
+  ) : null;
 };
 
 export default FullScreenLoader;

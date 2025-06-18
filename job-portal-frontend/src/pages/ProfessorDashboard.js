@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import Swal from 'sweetalert2';
 import "../styles/simulationComponents.css";
@@ -9,6 +9,25 @@ import DrawingDemoView from '../games/DrawingDemoView ';
 
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      event.preventDefault();
+      navigate('/', { replace: true });
+    };
+  
+    // Bloquear retroceso
+    window.addEventListener('popstate', handlePopState);
+  
+    // Reemplazar la entrada actual en el historial (para evitar que "volver" lo lleve a atrás)
+    window.history.replaceState(null, '', window.location.href);
+  
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
   
   useEffect(() => {
     if (!socket) return;

@@ -28,85 +28,100 @@ const Layout = ({ children }) => {
   const decryptionKey = process.env.REACT_APP_SECRET_KEY;
 
   const handleJoinSimulation = async () => {
-    try {
-        // Verificar la participación del usuario
-        const response = await fetch(`${apiUrl}/check-participation`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json',
-            },
-        });
+  try {
+    const response = await fetch(`${apiUrl}/check-participation`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (data.isParticipant) {
-            const partidaId = data.partidaId;
+    if (data.isParticipant) {
+      const { partidaId, estadoPartida, equipoNumero } = data;
 
-            // Obtener la cookie del usuario
-            const token = getCookie('IFUser_Info');
+      // Obtener la cookie del usuario
+      const token = getCookie('IFUser_Info');
 
-            if (!token) {
-                Swal.fire('Error', 'No se pudo obtener la información del usuario.', 'error');
-                return;
-            }
+      if (!token) {
+        Swal.fire('Error', 'No se pudo obtener la información del usuario.', 'error');
+        return;
+      }
 
-            // Desencriptar la cookie
-            try {
-                const bytes = CryptoJS.AES.decrypt(token, decryptionKey);
-                const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+      try {
+        const bytes = CryptoJS.AES.decrypt(token, decryptionKey);
+        const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
 
-                if (!decryptedData) {
-                    Swal.fire('Error', 'No se pudo desencriptar la información del usuario.', 'error');
-                    return;
-                }
-
-                const parsedToken = JSON.parse(decryptedData);
-                const userId = parsedToken.id; 
-                const rol = parsedToken.rol; 
-                const fullName = `${parsedToken.nombre} ${parsedToken.apellido1} ${parsedToken.apellido2}`;
-
-                if (!userId || !fullName) {
-                    Swal.fire('Error', 'No se pudo obtener el ID o el nombre del usuario.', 'error');
-                    return;
-                }
-
-                // Almacenar el ID y el nombre completo en el localStorage
-                localStorage.setItem('userId', userId);
-                localStorage.setItem('userFullName', fullName);
-                localStorage.setItem('role', rol);
-
-                // Conectar al servidor de Socket.IO
-                const socket = io('http://localhost:3000', {
-                    withCredentials: true,
-                });
-
-                // Unirse a la sala con el ID y el nombre completo
-                socket.emit('JoinRoom', partidaId, { userId, fullName });
-
-                // Escuchar eventos de la sala
-                socket.on('UserJoined', (user) => {
-                    console.log(`Usuario ${user.fullName} (ID: ${user.userId}) se unió a la sala`);
-                });
-
-                socket.on('UserLeft', (user) => {
-                    console.log(`Usuario ${user.fullName} (ID: ${user.userId}) salió de la sala`);
-                });
-
-                // Redirigir a la Sala de Espera
-                window.location.href = `/waiting-room/${partidaId}`;
-            } catch (error) {
-                console.error('Error al desencriptar o parsear la cookie:', error);
-                Swal.fire('Error', 'Hubo un problema al procesar la información del usuario.', 'error');
-            }
-        } else {
-            Swal.fire('Información', 'No estás participando en ninguna partida activa.', 'info');
+        if (!decryptedData) {
+          Swal.fire('Error', 'No se pudo desencriptar la información del usuario.', 'error');
+          return;
         }
-    } catch (error) {
-        console.error('Error al verificar la participación:', error);
-        Swal.fire('Error', 'Hubo un problema al verificar la participación', 'error');
+
+        const parsedToken = JSON.parse(decryptedData);
+        const userId = parsedToken.id;
+        const rol = parsedToken.rol;
+        const fullName = `${parsedToken.nombre} ${parsedToken.apellido1} ${parsedToken.apellido2}`;
+
+        if (!userId || !fullName) {
+          Swal.fire('Error', 'No se pudo obtener el ID o el nombre del usuario.', 'error');
+          return;
+        }
+
+        // Guardar en localStorage
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('userFullName', fullName);
+        localStorage.setItem('role', rol);
+
+        // 🔁 Redirección según estado de la partida
+        if (estadoPartida === 'iniciada') {
+          // Conectar al socket solo si va a la sala de espera
+          const socket = io('https://backend-fidecolab.onrender.com', {
+            withCredentials: true,
+          });
+
+          socket.emit('JoinRoom', partidaId, { userId, fullName });
+
+          socket.on('UserJoined', (user) => {
+            console.log(`Usuario ${user.fullName} (ID: ${user.userId}) se unió a la sala`);
+          });
+
+          socket.on('UserLeft', (user) => {
+            console.log(`Usuario ${user.fullName} (ID: ${user.userId}) salió de la sala`);
+          });
+
+          window.location.href = `/waiting-room/${partidaId}`;
+
+        } else if (estadoPartida === 'en proceso') {
+          if (rol === 'Profesor') {
+            window.location.href = `/professor-dashboard/${partidaId}`;
+          } else {
+            if (!equipoNumero) {
+              Swal.fire('Error', 'No se pudo determinar el equipo del jugador.', 'error');
+              return;
+            }
+            window.location.href = `/team-room/${partidaId}/${equipoNumero}`;
+          }
+
+        } else {
+          Swal.fire('Error', 'Estado de la partida no reconocido.', 'error');
+        }
+
+      } catch (error) {
+        console.error('Error al desencriptar o parsear la cookie:', error);
+        Swal.fire('Error', 'Hubo un problema al procesar la información del usuario.', 'error');
+      }
+
+    } else {
+      Swal.fire('Información', 'No estás participando en ninguna partida activa.', 'info');
     }
+
+  } catch (error) {
+    console.error('Error al verificar la participación:', error);
+    Swal.fire('Error', 'Hubo un problema al verificar la participación', 'error');
+  }
 };
 
 

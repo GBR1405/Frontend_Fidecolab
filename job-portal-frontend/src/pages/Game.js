@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import LayoutSimulation from '../components/LayoutSimulation';
 import "../styles/simulationComponents.css";
@@ -39,6 +39,31 @@ const TeamRoom = () => {
   const [initialTimerSet, setInitialTimerSet] = useState(false);
   const [firstGameConfig, setFirstGameConfig] = useState(null);
   const [transitionPhase, setTransitionPhase] = useState('idle');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  const handlePopState = (event) => {
+    event.preventDefault();
+    navigate('/', { replace: true });
+  };
+
+  // Bloquear retroceso
+  window.addEventListener('popstate', handlePopState);
+
+  // Reemplazar la entrada actual en el historial (para evitar que "volver" lo lleve a atrás)
+  window.history.replaceState(null, '', window.location.href);
+
+  return () => {
+    window.removeEventListener('popstate', handlePopState);
+  };
+}, [navigate]);
+
+useEffect(() => {
+  if (!partidaId || !equipoNumero) {
+    navigate('/', { replace: true });
+  }
+}, [partidaId, equipoNumero]);
 
   // Función para generar hash de un string
   const hashCode = (str) => {
@@ -494,15 +519,16 @@ const TeamRoom = () => {
             <h1>¡Bienvenidos!</h1>
             <p>El juego comenzará en {countdown} segundos</p>
             
-            <div className="team-section">
-              <h2>Equipo {equipoNumero}</h2>
-              <div className="team-members">
-                {teamMembers.map((member, index) => (
-                  <div key={index} className="member">
-                    {member.fullName} {member.userId === userId && "(Tú)"}
-                  </div>
-                ))}
-              </div>
+            <div className="team-members">
+              {teamMembers.map((member, index) => (
+                <div
+                  key={index}
+                  className="member"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {member.fullName} {member.userId === userId && "(Tú)"}
+                </div>
+              ))}
             </div>
           </div>
         </div>

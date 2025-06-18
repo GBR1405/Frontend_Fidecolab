@@ -5,7 +5,10 @@ import Swal from 'sweetalert2';
 import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
 import DrawingDemoView from '../games/DrawingDemoView ';
+import Cookies from "js-cookie";
 
+const apiUrl = process.env.REACT_APP_API_URL;
+const token = Cookies.get("authToken");
 
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
@@ -368,15 +371,42 @@ useEffect(() => {
 }, [socket, partidaId, gameConfig]);
 
 useEffect(() => {
-  if (!socket) return;
+  if (!socket || !partidaId) return;
+
+  // 🔍 Verificar estado de la partida antes de ejecutar lógica
+  const verificarEstadoPartida = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/check-activity`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ partidaId })
+      });
+
+      const data = await res.json();
+
+      if (data.isFinished) {
+        window.location.href = `/resultados/${partidaId}`;
+        return;
+      }
+
+      console.log('Partida activa, obteniendo configuración...');
+      socket.emit('getGameConfig', partidaId, handleGameConfig);
+    } catch (error) {
+      console.error('Error al verificar estado de la partida:', error);
+    }
+  };
 
   const handleGameConfig = (response) => {
     if (response.error) return;
-    
+
     if (response.juegos?.length > 0) {
       const firstGame = response.juegos[response.currentIndex || 0];
       const initialTime = calculateGameTime(firstGame.tipo, firstGame.dificultad);
-      
+
       setTimer({
         remaining: initialTime,
         total: initialTime,
@@ -387,7 +417,7 @@ useEffect(() => {
     }
   };
 
-  socket.emit('getGameConfig', partidaId, handleGameConfig);
+  verificarEstadoPartida(); // Llamado antes del emit
 }, [socket, partidaId]);
 
 
@@ -562,13 +592,32 @@ const handleAutoNextGame = () => {
   };
 
   useEffect(() => {
-    if (!socket) return;
-  
-    setLoading(true);
-    setError(null);
-  
-    // Obtener configuración inicial
-    const fetchGameConfig = () => {
+  if (!socket || !partidaId) return;
+
+  const verificarEstadoPartida = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/check-activity`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ partidaId })
+      });
+
+      const data = await res.json();
+
+      if (data.isFinished) {
+        window.location.href = `/resultados/${partidaId}`;
+        return;
+      }
+
+      // ✅ Solo continuar si NO está finalizada
+      setLoading(true);
+      setError(null);
+
+      // Obtener configuración inicial
       socket.emit('getGameConfig', partidaId, (response) => {
         if (response.error) {
           console.error('Error al obtener configuración:', response.error);
@@ -576,7 +625,7 @@ const handleAutoNextGame = () => {
           setLoading(false);
           return;
         }
-    
+
         if (!response.juegos || response.juegos.length === 0) {
           const errorMsg = 'No hay juegos configurados para esta partida';
           console.error(errorMsg);
@@ -584,7 +633,7 @@ const handleAutoNextGame = () => {
           setLoading(false);
           return;
         }
-    
+
         // Guardar configuración global
         if (!global.partidasConfig) global.partidasConfig = {};
         global.partidasConfig[partidaId] = {
@@ -592,7 +641,7 @@ const handleAutoNextGame = () => {
           currentIndex: response.currentIndex || 0,
           profesorId: response.profesorId
         };
-    
+
         // Actualizar estado local
         setGameConfig({
           juegos: response.juegos,
@@ -601,30 +650,14 @@ const handleAutoNextGame = () => {
         });
         setLoading(false);
       });
-    };
 
-    // Obtener lista de grupos
-    const fetchGroups = () => {
-      socket.emit('getGroups', partidaId, (response) => {
-        if (!response.error) {
-          setGroups(response.groups);
-        }
-      });
-    };
+    } catch (error) {
+      console.error('Error al verificar estado de la partida:', error);
+    }
+  };
 
-    fetchGameConfig();
-    fetchGroups();
-  
-    // Escuchar actualizaciones de juego
-    socket.on('gameChanged', handleGameChangeWithTransition);
-  
-    return () => {
-      socket.off('gameChanged', handleGameChangeWithTransition);
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-    };
-  }, [socket, partidaId]);
+  verificarEstadoPartida(); // ✅ ahora sí: toda la lógica está controlada
+}, [socket, partidaId]);
 
   const nextGame = () => {
     if (!gameConfig) return;
@@ -674,29 +707,51 @@ const handleAutoNextGame = () => {
   };
 
   const finishGame = () => {
-    Swal.fire({
-      title: 'Finalizar partida',
-      text: '¿Estás seguro que deseas finalizar la partida? Esto no se puede deshacer.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, finalizar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        socket.emit('finishGame', partidaId, (response) => {
-          if (response.error) {
-            Swal.fire('Error', 'No se pudo finalizar la partida', 'error');
-          } else {
-            Swal.fire('Éxito', 'Partida finalizada correctamente', 'success').then(() => {
-              window.location.href = '/professor/dashboard';
-            });
-          }
-        });
-      }
-    });
-  };
+  Swal.fire({
+    title: 'Finalizar partida',
+    text: '¿Estás seguro que deseas finalizar la partida? Esto no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, finalizar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      socket.emit('finishGame', partidaId, (response) => {
+        if (response.error) {
+          Swal.fire('Error', 'No se pudo finalizar la partida', 'error');
+        } else {
+          // Mostrar pantalla con temporizador visual
+          Swal.fire({
+            title: '🎉 Partida finalizada con éxito',
+            html: 'Serás redirigido a los resultados en <b>8</b> segundos...',
+            icon: 'success',
+            timer: 8000,
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+              const content = Swal.getHtmlContainer();
+              const b = content.querySelector('b');
+              let timeLeft = 8;
+              const interval = setInterval(() => {
+                timeLeft--;
+                if (b) b.textContent = timeLeft;
+                if (timeLeft <= 0) clearInterval(interval);
+              }, 1000);
+            },
+            willClose: () => {
+              window.location.href = `/resultados/${partidaId}`;
+            }
+          });
+        }
+      });
+    }
+  });
+};
 
   if (loading) {
     return (

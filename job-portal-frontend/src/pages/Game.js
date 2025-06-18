@@ -85,8 +85,8 @@ useEffect(() => {
     const rect = container.getBoundingClientRect();
     
     // Calcular posición absoluta en píxeles
-    const x = normalizedX * rect.width;
-    const y = normalizedY * rect.height;
+    const x = normalizedX * window.innerWidth;
+    const y = normalizedY * window.innerHeight;
     
     let cursor = document.getElementById(`cursor-${userId}`);
     
@@ -121,10 +121,9 @@ useEffect(() => {
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
     if (!cursorContainerRef.current || !socket) return;
-    
-    const rect = cursorContainerRef.current.getBoundingClientRect();
-    const normalizedX = (e.clientX - rect.left) / rect.width;
-    const normalizedY = (e.clientY - rect.top) / rect.height;
+
+    const normalizedX = e.clientX / window.innerWidth;
+    const normalizedY = e.clientY / window.innerHeight;
 
     socket.emit('SendMousePosition', { 
       roomId: `team-${partidaId}-${equipoNumero}`,

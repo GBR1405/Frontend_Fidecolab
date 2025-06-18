@@ -75,6 +75,7 @@ const Layout = ({ children }) => {
         localStorage.setItem('userFullName', fullName);
         localStorage.setItem('role', rol);
 
+        console.log(`Estado de la partida: ${estadoPartida}`);
         // 🔁 Redirección según estado de la partida
         if (estadoPartida === 'iniciada') {
           // Conectar al socket solo si va a la sala de espera

@@ -1,175 +1,198 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import '../styles/games_puzzle.css';
 
-const PuzzleGame = ({ gameConfig, onGameComplete }) => {
+const PuzzleGame = ({ gameConfig }) => {
   const { partidaId, equipoNumero } = useParams();
   const socket = useSocket();
   const userId = localStorage.getItem('userId');
+
   const [pieces, setPieces] = useState([]);
-  const [selectedPieces, setSelectedPieces] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [swapsLeft, setSwapsLeft] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [previousProgress, setPreviousProgress] = useState(0);
-  const imageRef = useRef(null);
-  const containerRef = useRef(null);
-  const lastUpdateRef = useRef(Date.now());
-  
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [interactionLocked, setInteractionLocked] = useState(false);
+
+  const [imageCrop, setImageCrop] = useState({
+    size: 1, xOffset: 0, yOffset: 0
+  });
+
   const difficulty = gameConfig.dificultad.toLowerCase();
+  console.log('Dificultad seleccionada:', difficulty);
   const imageUrl = gameConfig.tema;
 
+  const gridSize = {
+    fácil: 6,
+    normal: 7,
+    difícil: 8
+  }[difficulty] || 6;
+
+  const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
 
   useEffect(() => {
-    const img = new Image();
-    img.src = imageUrl;
-    img.onload = () => {
-      imageRef.current = img;
-      initGame();
-    };
-  }, [imageUrl]);
+  if (progress === 100) {
+    // Bloquear clics o swaps
+    setInteractionLocked(true);
 
-
-  const initGame = useCallback(() => {
-    if (!socket) return;
-    socket.emit('initPuzzleGame', { partidaId, equipoNumero, difficulty, imageUrl });
-    
-    socket.on('puzzleGameState', (state) => {
-      setPieces(state.pieces);
-      setSelectedPieces(state.selectedPieces);
-      setProgress(state.progress);
-      setPreviousProgress(state.previousProgress);
-      lastUpdateRef.current = Date.now();
+    // Mostrar confeti o mensaje
+    import('canvas-confetti').then(confetti => {
+      confetti.default({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
     });
-    
-    return () => {
-      socket.off('puzzleGameState');
-    };
-  }, [socket, partidaId, equipoNumero, difficulty, imageUrl]);
+
+    // O puedes usar SweetAlert
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: '¡Felicidades!',
+        text: '¡Puzzle completado!',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
+    });
+  }
+}, [progress]);
 
 
+  // 🔄 Iniciar juego al cargar imagen
+  useEffect(() => {
+  const img = new Image();
+  img.src = imageUrl;
+  img.onload = () => {
+    const width = img.naturalWidth;
+    const height = img.naturalHeight;
+    const squareSize = Math.min(width, height);
+    const xOffset = (width - squareSize) / 2;
+    const yOffset = (height - squareSize) / 2;
+
+    setImageCrop({ size: squareSize, xOffset, yOffset });
+    setImageLoaded(true);
+
+    socket.emit('initPuzzleGame', {
+      partidaId,
+      equipoNumero,
+      difficulty,
+      imageUrl
+    });
+  };
+}, [imageUrl, socket]);
+  
+
+  // 📥 Recibir estado inicial o tras reconexión
   useEffect(() => {
     if (!socket) return;
 
-    const handlePieceUpdate = ({ modifiedPieces, selectedPieces, progress, previousProgress }) => {
-      const now = Date.now();
-
-      if (now - lastUpdateRef.current < 50) return;
-      
-      lastUpdateRef.current = now;
-      
-      setPieces(prev => prev.map(p => {
-        const updatedPiece = modifiedPieces.find(mp => mp.id === p.id);
-        return updatedPiece ? {...p, ...updatedPiece} : p;
-      }));
-      setSelectedPieces(selectedPieces);
-      setProgress(progress);
-      setPreviousProgress(previousProgress);
+    const handleInit = (game) => {
+      setPieces(game.state.pieces);
+      setSwapsLeft(game.config.swapsLeft);
+      setProgress(game.state.progress);
+      setSelectedIds([]);
     };
 
-    socket.on('updatePuzzlePiece', handlePieceUpdate);
-    
+    socket.on('puzzleGameState', handleInit);
+    socket.emit('requestPuzzleState', { partidaId, equipoNumero });
+
     return () => {
-      socket.off('updatePuzzlePiece', handlePieceUpdate);
+      socket.off('puzzleGameState', handleInit);
     };
+  }, [socket, partidaId, equipoNumero]);
+
+  // 🧩 Recibir actualizaciones tras swap
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
+      setPieces(pieces);
+      setSelectedIds(selected);
+      setSwapsLeft(swapsLeft);
+      setProgress(progress);
+    };
+
+    socket.on('puzzleUpdate', handleUpdate);
+    return () => socket.off('puzzleUpdate', handleUpdate);
   }, [socket]);
 
-
+  // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-    if (!socket) return;
-    socket.emit('selectPuzzlePiece', { partidaId, equipoNumero, pieceId, userId });
+    socket.emit('selectPuzzlePiece', {
+      partidaId,
+      equipoNumero,
+      pieceId,
+      userId
+    });
   }, [socket, partidaId, equipoNumero, userId]);
 
-
-  const PuzzlePiece = React.memo(({ piece, isSelected, isCorrect, onClick, userId }) => {
-    const size = difficulty === 'facil' ? 4 : difficulty === 'normal' ? 6 : 8;
-    const bgSize = `${size * 100}% ${size * 100}%`;
-    const bgPosX = `${(piece.correctCol / (size - 1)) * 100}%`;
-    const bgPosY = `${(piece.correctRow / (size - 1)) * 100}%`;
+  // 📐 Estilo para cada pieza
+  const renderPiece = (piece) => {
+    const isSelected = selectedIds.includes(piece.id);
+    const isCorrect = piece.currentRow === piece.correctRow && piece.currentCol === piece.correctCol;
 
     return (
       <div
+        key={piece.id}
         className={`puzzle-piece ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''}`}
         style={{
+          width: `${pieceSize}px`,
+          height: `${pieceSize}px`,
           position: 'absolute',
-          width: `${piece.size}px`,
-          height: `${piece.size}px`,
-          left: `${piece.currentCol * piece.size}px`,
-          top: `${piece.currentRow * piece.size}px`,
+          top: `${piece.currentRow * pieceSize}px`,
+          left: `${piece.currentCol * pieceSize}px`,
           backgroundImage: `url(${imageUrl})`,
-          backgroundSize: bgSize,
-          backgroundPosition: `${bgPosX} ${bgPosY}`,
-          border: isSelected ? '3px solid #ffcc00' : '1px solid #333',
-          cursor: piece.locked && piece.selectedBy !== userId ? 'not-allowed' : 'pointer',
-          opacity: piece.locked && piece.selectedBy !== userId ? 0.6 : 1,
+          backgroundSize: `${gridSize * 100}%`,
+          backgroundPosition: `${(piece.correctCol / (gridSize - 1)) * 100}% ${(piece.correctRow / (gridSize - 1)) * 100}%`,
+          border: isSelected ? '3px solid gold' : '1px solid #555',
+          cursor: 'pointer',
           transition: 'all 0.2s ease'
         }}
-        onClick={onClick}
-      >
-        {piece.locked && piece.selectedBy !== userId && (
-          <div className="piece-locked-overlay">
-            <span>🔒</span>
-          </div>
-        )}
-      </div>
+        onClick={() => handlePieceClick(piece.id)}
+      />
     );
-  });
+  };
 
   return (
-    <div className="puzzle-game">
-      <h2>Rompecabezas Colaborativo</h2>
-      
-      <div className="puzzle-progress">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-        </div>
-        <span className="progress-text">
-          Progreso: {progress}%
-          {progress !== previousProgress && (
-            <span className={`progress-change ${progress > previousProgress ? 'up' : 'down'}`}>
-              {progress > previousProgress ? '↑' : '↓'}
-            </span>
-          )}
-        </span>
-      </div>
-      
-      <div className="puzzle-board-container">
-        <div className="reference-image">
-          <img src={imageUrl} alt="Referencia" />
-          <p>Imagen de referencia</p>
-        </div>
-        
-        <div 
-          ref={containerRef}
-          className="puzzle-container"
-          style={{
-            width: `${difficulty === 'facil' ? 400 : difficulty === 'normal' ? 600 : 800}px`,
-            height: `${difficulty === 'facil' ? 400 : difficulty === 'normal' ? 600 : 800}px`
-          }}
-        >
-          {pieces.map(piece => (
-            <PuzzlePiece
-              key={`${piece.id}-${piece.currentRow}-${piece.currentCol}`}
-              piece={piece}
-              isSelected={selectedPieces.includes(piece.id)}
-              isCorrect={piece.currentRow === piece.correctRow && piece.currentCol === piece.correctCol}
-              onClick={() => !(piece.locked && piece.selectedBy !== userId) && handlePieceClick(piece.id)}
-              userId={userId}
-            />
-          ))}
-        </div>
-      </div>
-      
-      <div className="puzzle-instructions">
-        <h3>Instrucciones:</h3>
-        <ul>
-          <li>Selecciona una pieza para bloquearla (se marcará en amarillo)</li>
-          <li>Selecciona otra pieza para intercambiarlas</li>
-          <li>Haz clic en una pieza seleccionada para desbloquearla</li>
-          <li>Las piezas correctas tendrán borde verde</li>
-        </ul>
+  <div className="puzzle-game">
+    
+    {/* Contenedor del título y progreso */}
+    <div className="top-bar">
+      <h2 className="game-title">Rompecabezas</h2>
+      <div className="progress-box">
+        <span className="progress-label">Progreso:</span>
+        <span className="progress-value">{progress}%</span>
       </div>
     </div>
-  );
+
+    <div className="main-layout">
+      
+      {/* Columna izquierda: imagen de referencia + swaps */}
+      <div className="left-panel">
+        <div className="reference-image">
+          <img src={imageUrl} alt="Referencia" className="ref-img" />
+          <p className="ref-label">Imagen de referencia</p>
+        </div>
+        <div className="swaps-box">
+          <p><strong>Swaps restantes:</strong> {swapsLeft}</p>
+        </div>
+      </div>
+
+      {/* Columna derecha: tablero del puzzle */}
+      <div
+        className="puzzle-container"
+        style={{
+          width: `${pieceSize * gridSize}px`,
+          height: `${pieceSize * gridSize}px`
+        }}
+      >
+        {pieces.map(renderPiece)}
+      </div>
+
+    </div>
+  </div>
+);
+
 };
 
-export default React.memo(PuzzleGame);
+export default PuzzleGame;

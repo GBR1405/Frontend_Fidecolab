@@ -578,7 +578,7 @@ const TeamRoom = () => {
                     />
                   ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
                     <PuzzleGame 
-                      key={`puzzle-${partidaId}-${equipoNumero}-${Date.now()}`}
+                      key={`puzzle-${partidaId}-${equipoNumero}`}
                       gameConfig={currentGameInfo} 
                       onGameComplete={(result) => {
                         console.log('Rompecabezas completado:', result);

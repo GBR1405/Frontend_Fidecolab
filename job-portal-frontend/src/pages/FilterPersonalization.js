@@ -73,7 +73,8 @@ const FilterPersonalization = () => {
 
     const handleStartGame = (personalization) => {
         Swal.fire({
-            title: `¿Deseas empezar la partida con la configuración: ${personalization.Nombre_Personalizacion || 'Configuración por defecto'}`,
+            title: '¿Deseas empezar la partida?',
+            html: `<p style="margin-top: 10px">Configuración seleccionada: <strong>${personalization.Nombre_Personalizacion || 'Configuración por defecto'}</strong></p>`,
             text: 'Selecciona el grupo con el cual vas a empezar',
             icon: 'question',
             input: 'select',
@@ -144,6 +145,17 @@ const FilterPersonalization = () => {
 
     const startGameWithGroup = async (personalization, grupoID) => {
         try {
+
+            Swal.fire({
+                title: 'Iniciando partida...',
+                html: 'Por favor espera un momento',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             const response = await fetch(`${apiUrl}/start-simulation`, {
                 method: 'POST',
                 credentials: 'include',
@@ -158,6 +170,8 @@ const FilterPersonalization = () => {
             });
     
             const data = await response.json();
+
+            Swal.close();
     
             if (response.ok) {
                 const partidaId = data.partidaId;

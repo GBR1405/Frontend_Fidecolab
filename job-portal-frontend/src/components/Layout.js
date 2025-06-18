@@ -29,6 +29,17 @@ const Layout = ({ children }) => {
 
   const handleJoinSimulation = async () => {
   try {
+
+    Swal.fire({
+      title: 'Conectando...',
+      text: 'Obteniendo información',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     const response = await fetch(`${apiUrl}/check-participation`, {
       method: 'GET',
       credentials: 'include',

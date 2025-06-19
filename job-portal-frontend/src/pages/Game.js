@@ -162,15 +162,20 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    const miembro = teamMembers.find(m => m.userId === userId);
-    if (miembro) return miembro.fullName;
+  const currentId = localStorage.getItem('userId');
 
-    if (userId === localStorage.getItem('userId')) {
-      return localStorage.getItem('userFullName') || `Tú (${userId})`;
-    }
+  // Si el usuario está en la lista, usa su nombre real
+  const miembro = teamMembers.find(m => String(m.userId) === String(userId));
+  if (miembro) return miembro.fullName;
 
-    return `Usuario ${userId}`; // Nombre genérico temporal
-  };
+  // Si es el propio usuario (aunque no lo mostramos igual), retorna tu nombre
+  if (String(userId) === String(currentId)) {
+    return localStorage.getItem('userFullName') || `Tú (${userId})`;
+  }
+
+  // Evitar usar tu nombre para otros => fallback neutral
+  return `Usuario ${userId}`;
+};
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
@@ -454,6 +459,18 @@ useEffect(() => {
     }, 300); // Tiempo para aplicar blur
   };
 
+  useEffect(() => {
+  const container = cursorContainerRef.current;
+  if (!container) return;
+
+  const cursors = container.querySelectorAll('.remote-cursor');
+  cursors.forEach(cursor => {
+    const userId = cursor.id.replace('cursor-', '');
+    const nameSpan = cursor.querySelector('.cursor-name');
+    const correctName = getUserName(userId);
+    if (nameSpan && correctName) nameSpan.textContent = correctName;
+  });
+}, [teamMembers]);
 
   // Pantalla de bienvenida
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import LayoutSimulation from '../components/LayoutSimulation';
 import "../styles/simulationComponents.css";
@@ -40,75 +40,6 @@ const TeamRoom = () => {
   const [firstGameConfig, setFirstGameConfig] = useState(null);
   const [transitionPhase, setTransitionPhase] = useState('idle');
 
-  const navigate = useNavigate();
-
-   useEffect(() => {
-  if (!socket) return;
-
-  const onGameFinished = ({ partidaId }) => {
-    // Overlay oscuro con cuenta atrás
-    let count = 8;
-    const overlay = document.createElement('div');
-    overlay.className = 'finish-overlay';
-    overlay.innerHTML = `
-      <div class="finish-content">
-        <h1>Partida finalizada</h1>
-        <p>Redirigiendo a resultados en <span id="finish-count">${count}</span> segundos...</p>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const interval = setInterval(() => {
-      count--;
-      const el = document.getElementById('finish-count');
-      if (el) el.textContent = count;
-      if (count <= 0) {
-        clearInterval(interval);
-        window.location.href = `/resultados/${partidaId}`;
-      }
-    }, 1000);
-  };
-
-  socket.on('gameFinished', onGameFinished);
-  return () => socket.off('gameFinished', onGameFinished);
-}, [socket]);
-
-  useEffect(() => {
-  const handlePopState = (event) => {
-    event.preventDefault();
-    navigate('/', { replace: true });
-  };
-
-  // Bloquear retroceso
-  window.addEventListener('popstate', handlePopState);
-
-  // Reemplazar la entrada actual en el historial (para evitar que "volver" lo lleve a atrás)
-  window.history.replaceState(null, '', window.location.href);
-
-  return () => {
-    window.removeEventListener('popstate', handlePopState);
-  };
-}, [navigate]);
-
-useEffect(() => {
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const cursors = container.querySelectorAll('.remote-cursor');
-  cursors.forEach(cursor => {
-    const userId = cursor.id.replace('cursor-', '');
-    const nameSpan = cursor.querySelector('.cursor-name');
-    const correctName = getUserName(userId);
-    if (nameSpan && correctName) nameSpan.textContent = correctName;
-  });
-}, [teamMembers]);
-
-useEffect(() => {
-  if (!partidaId || !equipoNumero) {
-    navigate('/', { replace: true });
-  }
-}, [partidaId, equipoNumero]);
-
   // Función para generar hash de un string
   const hashCode = (str) => {
     let hash = 0;
@@ -120,75 +51,55 @@ useEffect(() => {
 
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
-  if (userId === localStorage.getItem('userId')) return;
-
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  const x = normalizedX * rect.width;
-  const y = normalizedY * rect.height;
-
-  let cursor = document.getElementById(`cursor-${userId}`);
-
-  if (!cursor) {
-    cursor = document.createElement('div');
-    cursor.id = `cursor-${userId}`;
-    cursor.className = 'remote-cursor';
-
-    const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
-    cursor.style.setProperty('--cursor-color', color);
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'cursor-name';
-    nameSpan.textContent = getUserName(userId);
-    nameSpan.id = `cursor-name-${userId}`;
-
-    cursor.appendChild(nameSpan);
-    container.appendChild(cursor);
-  } else {
-    // 🛠️ Reparar el nombre si cambia dinámicamente
-    const nameSpan = cursor.querySelector(`#cursor-name-${userId}`);
-    const correctName = getUserName(userId);
-
-    if (nameSpan) {
-      // Solo actualiza si el nombre nuevo es mejor
-      if (!nameSpan.textContent.includes('Usuario') && correctName.includes('Usuario')) {
-        // No lo sobreescribas con genérico
-        return;
-      }
-      nameSpan.textContent = correctName;
+    if (userId === localStorage.getItem('userId')) return;
+    
+    const container = cursorContainerRef.current;
+    if (!container) return;
+    
+    // Obtener posición absoluta del contenedor
+    const rect = container.getBoundingClientRect();
+    
+    // Calcular posición absoluta en píxeles
+    const x = normalizedX * rect.width;
+    const y = normalizedY * rect.height;
+    
+    let cursor = document.getElementById(`cursor-${userId}`);
+    
+    if (!cursor) {
+      cursor = document.createElement('div');
+      cursor.id = `cursor-${userId}`;
+      cursor.className = 'remote-cursor';
+      
+      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
+      cursor.style.setProperty('--cursor-color', color);
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cursor-name';
+      nameSpan.textContent = getUserName(userId);
+      cursor.appendChild(nameSpan);
+      
+      container.appendChild(cursor);
     }
-  }
-
-  cursor.style.left = `${x}px`;
-  cursor.style.top = `${y}px`;
-};
-
+  
+    // Aplicar posición absoluta con transform
+    cursor.style.left = `${x}px`;
+    cursor.style.top = `${y}px`;
+  };
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-  const currentId = localStorage.getItem('userId');
-
-  // Si el usuario está en la lista, usa su nombre real
-  const miembro = teamMembers.find(m => String(m.userId) === String(userId));
-  if (miembro) return miembro.fullName;
-
-  // Si es el propio usuario (aunque no lo mostramos igual), retorna tu nombre
-  if (String(userId) === String(currentId)) {
-    return localStorage.getItem('userFullName') || `Tú (${userId})`;
-  }
-
-  // Evitar usar tu nombre para otros => fallback neutral
-  return `Usuario ${userId}`;
-};
+    return teamMembers.find(m => m.userId === userId)?.fullName 
+           || localStorage.getItem('userFullName') 
+           || `Usuario ${userId}`;
+  };
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
     if (!cursorContainerRef.current || !socket) return;
-
-    const normalizedX = e.clientX / window.innerWidth;
-    const normalizedY = e.clientY / window.innerHeight;
+    
+    const rect = cursorContainerRef.current.getBoundingClientRect();
+    const normalizedX = (e.clientX - rect.left) / rect.width;
+    const normalizedY = (e.clientY - rect.top) / rect.height;
 
     socket.emit('SendMousePosition', { 
       roomId: `team-${partidaId}-${equipoNumero}`,
@@ -214,10 +125,8 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
-      console.log("🔄 Actualizando miembros del equipo:", members);
       setTeamMembers(members);
     };
-
 
     const handleBroadcastMouse = (userId, x, y) => {
       updateCursor(userId, x, y);
@@ -467,18 +376,6 @@ useEffect(() => {
     }, 300); // Tiempo para aplicar blur
   };
 
-  useEffect(() => {
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const cursors = container.querySelectorAll('.remote-cursor');
-  cursors.forEach(cursor => {
-    const userId = cursor.id.replace('cursor-', '');
-    const nameSpan = cursor.querySelector('.cursor-name');
-    const correctName = getUserName(userId);
-    if (nameSpan && correctName) nameSpan.textContent = correctName;
-  });
-}, [teamMembers]);
 
   // Pantalla de bienvenida
   useEffect(() => {
@@ -597,16 +494,15 @@ useEffect(() => {
             <h1>¡Bienvenidos!</h1>
             <p>El juego comenzará en {countdown} segundos</p>
             
-            <div className="team-members">
-              {teamMembers.map((member, index) => (
-                <div
-                  key={index}
-                  className="member"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {member.fullName} {member.userId === userId && "(Tú)"}
-                </div>
-              ))}
+            <div className="team-section">
+              <h2>Equipo {equipoNumero}</h2>
+              <div className="team-members">
+                {teamMembers.map((member, index) => (
+                  <div key={index} className="member">
+                    {member.fullName} {member.userId === userId && "(Tú)"}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -642,10 +538,9 @@ useEffect(() => {
           {/* Header del equipo */}
           <div className="team-room-header">
             <h1>Equipo {equipoNumero}</h1>
-            {currentGameInfo.name.toLowerCase().includes('dibujo') && <h3 className="game__topic">Tema: {currentGameInfo.tema}</h3>}            
-            {currentGameInfo && (              
+            {currentGameInfo && (
               <div className="game-progress">
-                Juego {gameProgress.current} de {gameProgress.total}                
+                Juego {gameProgress.current} de {gameProgress.total}
               </div>
             )}
           </div>
@@ -682,7 +577,7 @@ useEffect(() => {
                     />
                   ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
                     <PuzzleGame 
-                      key={`puzzle-${partidaId}-${equipoNumero}`}
+                      key={`puzzle-${partidaId}-${equipoNumero}}`}
                       gameConfig={currentGameInfo} 
                       onGameComplete={(result) => {
                         console.log('Rompecabezas completado:', result);

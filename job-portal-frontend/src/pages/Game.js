@@ -150,7 +150,13 @@ useEffect(() => {
     // 🛠️ Reparar el nombre si cambia dinámicamente
     const nameSpan = cursor.querySelector(`#cursor-name-${userId}`);
     const correctName = getUserName(userId);
-    if (nameSpan && nameSpan.textContent !== correctName) {
+
+    if (nameSpan) {
+      // Solo actualiza si el nombre nuevo es mejor
+      if (!nameSpan.textContent.includes('Usuario') && correctName.includes('Usuario')) {
+        // No lo sobreescribas con genérico
+        return;
+      }
       nameSpan.textContent = correctName;
     }
   }
@@ -208,8 +214,10 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
+      console.log("🔄 Actualizando miembros del equipo:", members);
       setTeamMembers(members);
     };
+
 
     const handleBroadcastMouse = (userId, x, y) => {
       updateCursor(userId, x, y);

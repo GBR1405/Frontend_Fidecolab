@@ -90,6 +90,27 @@ const TeamRoom = () => {
   };
 }, [navigate]);
 
+useEffect(() => {
+  if (!cursorContainerRef.current || !socket) return;
+
+  const handleMouseMove = (e) => {
+    if (!teamMembers || teamMembers.length === 0) return; // Aún no enviar
+
+    const rect = cursorContainerRef.current.getBoundingClientRect();
+    const normalizedX = (e.clientX - rect.left) / rect.width;
+    const normalizedY = (e.clientY - rect.top) / rect.height;
+
+    socket.emit('SendMousePosition', { 
+      roomId: `team-${partidaId}-${equipoNumero}`,
+      userId,
+      x: normalizedX,
+      y: normalizedY
+    });
+  };
+
+  window.addEventListener('mousemove', handleMouseMove);
+  return () => window.removeEventListener('mousemove', handleMouseMove);
+}, [teamMembers, socket]);
 
 
 useEffect(() => {
@@ -146,9 +167,16 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    return teamMembers.find(m => m.userId === userId)?.fullName 
-           || localStorage.getItem('userFullName') 
-           || `Usuario ${userId}`;
+    const miembro = teamMembers.find(m => m.userId === userId);
+    
+    if (miembro) return miembro.fullName;
+
+    // Solo retornar tu nombre si es tu propio cursor (aunque lo ignoras arriba)
+    if (userId === localStorage.getItem('userId')) {
+      return localStorage.getItem('userFullName') || `Tú (${userId})`;
+    }
+
+    return `Usuario ${userId}`; // Fallback seguro
   };
 
   // Manejar movimiento del mouse
@@ -186,6 +214,9 @@ useEffect(() => {
     };
 
     const handleBroadcastMouse = (userId, x, y) => {
+      // Espera a que teamMembers esté disponible
+      if (!teamMembers || teamMembers.length === 0) return;
+
       updateCursor(userId, x, y);
     };
 

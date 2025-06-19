@@ -90,18 +90,7 @@ const TeamRoom = () => {
   };
 }, [navigate]);
 
-useEffect(() => {
-  const container = cursorContainerRef.current;
-  if (!container) return;
 
-  const cursors = container.querySelectorAll('.remote-cursor');
-  cursors.forEach(cursor => {
-    const userId = cursor.id.replace('cursor-', '');
-    const nameSpan = cursor.querySelector('.cursor-name');
-    const correctName = getUserName(userId);
-    if (nameSpan && correctName) nameSpan.textContent = correctName;
-  });
-}, [teamMembers]);
 
 useEffect(() => {
   if (!partidaId || !equipoNumero) {
@@ -120,68 +109,52 @@ useEffect(() => {
 
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
-  if (userId === localStorage.getItem('userId')) return;
-
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  const x = normalizedX * rect.width;
-  const y = normalizedY * rect.height;
-
-  let cursor = document.getElementById(`cursor-${userId}`);
-
-  if (!cursor) {
-    cursor = document.createElement('div');
-    cursor.id = `cursor-${userId}`;
-    cursor.className = 'remote-cursor';
-
-    const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
-    cursor.style.setProperty('--cursor-color', color);
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'cursor-name';
-    nameSpan.textContent = getUserName(userId);
-    nameSpan.id = `cursor-name-${userId}`;
-
-    cursor.appendChild(nameSpan);
-    container.appendChild(cursor);
-  } else {
-    // 🛠️ Reparar el nombre si cambia dinámicamente
-    const nameSpan = cursor.querySelector(`#cursor-name-${userId}`);
-    const correctName = getUserName(userId);
-
-    if (nameSpan) {
-      // Solo actualiza si el nombre nuevo es mejor
-      if (!nameSpan.textContent.includes('Usuario') && correctName.includes('Usuario')) {
-        // No lo sobreescribas con genérico
-        return;
-      }
-      nameSpan.textContent = correctName;
+    if (userId === localStorage.getItem('userId')) return;
+    
+    const container = cursorContainerRef.current;
+    if (!container) return;
+    
+    // Obtener posición absoluta del contenedor
+    const rect = container.getBoundingClientRect();
+    
+    // Calcular posición absoluta en píxeles
+    const x = normalizedX * window.innerWidth;
+    const y = normalizedY * window.innerHeight;
+    
+    let cursor = document.getElementById(`cursor-${userId}`);
+    
+    if (!cursor) {
+      cursor = document.createElement('div');
+      cursor.id = `cursor-${userId}`;
+      cursor.className = 'remote-cursor';
+      
+      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
+      cursor.style.setProperty('--cursor-color', color);
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cursor-name';
+      nameSpan.textContent = getUserName(userId);
+      cursor.appendChild(nameSpan);
+      
+      container.appendChild(cursor);
     }
-  }
-
-  cursor.style.left = `${x}px`;
-  cursor.style.top = `${y}px`;
-};
-
+  
+    // Aplicar posición absoluta con transform
+    cursor.style.left = `${x}px`;
+    cursor.style.top = `${y}px`;
+  };
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-  const currentId = localStorage.getItem('userId');
+    const miembro = teamMembers.find(m => m.userId === userId);
+    if (miembro) return miembro.fullName;
 
-  // Si el usuario está en la lista, usa su nombre real
-  const miembro = teamMembers.find(m => String(m.userId) === String(userId));
-  if (miembro) return miembro.fullName;
+    if (userId === localStorage.getItem('userId')) {
+      return localStorage.getItem('userFullName') || `Tú (${userId})`;
+    }
 
-  // Si es el propio usuario (aunque no lo mostramos igual), retorna tu nombre
-  if (String(userId) === String(currentId)) {
-    return localStorage.getItem('userFullName') || `Tú (${userId})`;
-  }
-
-  // Evitar usar tu nombre para otros => fallback neutral
-  return `Usuario ${userId}`;
-};
+    return `Usuario ${userId}`; // Nombre genérico temporal
+  };
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
@@ -214,10 +187,8 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
-      console.log("🔄 Actualizando miembros del equipo:", members);
       setTeamMembers(members);
     };
-
 
     const handleBroadcastMouse = (userId, x, y) => {
       updateCursor(userId, x, y);
@@ -467,18 +438,6 @@ useEffect(() => {
     }, 300); // Tiempo para aplicar blur
   };
 
-  useEffect(() => {
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const cursors = container.querySelectorAll('.remote-cursor');
-  cursors.forEach(cursor => {
-    const userId = cursor.id.replace('cursor-', '');
-    const nameSpan = cursor.querySelector('.cursor-name');
-    const correctName = getUserName(userId);
-    if (nameSpan && correctName) nameSpan.textContent = correctName;
-  });
-}, [teamMembers]);
 
   // Pantalla de bienvenida
   useEffect(() => {

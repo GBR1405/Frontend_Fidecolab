@@ -6,15 +6,11 @@ import "../styles/simulationComponents.css";
 import { games } from '../games/GameConfiguration';
 import "../styles/TeamRoom.css";
 import Swal from 'sweetalert2';
-import Cookies from "js-cookie";
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
 import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
-
-const apiUrl = process.env.REACT_APP_API_URL;
-const token = Cookies.get("authToken");
 
 const TeamRoom = () => {
   const { partidaId, equipoNumero } = useParams();
@@ -150,12 +146,9 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    if (userId === localStorage.getItem('userId')) {
-      return localStorage.getItem('userFullName') || `Tú (${userId})`;
-    }
-
-    const miembro = teamMembers.find(m => m.userId === userId);
-    return miembro?.fullName || `Usuario ${userId}`;
+    return teamMembers.find(m => m.userId === userId)?.fullName 
+           || localStorage.getItem('userFullName') 
+           || `Usuario ${userId}`;
   };
 
   // Manejar movimiento del mouse
@@ -175,146 +168,123 @@ useEffect(() => {
 
   // Configuración inicial y listeners
   useEffect(() => {
-  // Estado de control para evitar múltiples ejecuciones
-  let sistemaInicializado = false;
+    if (!socket || !partidaId || !equipoNumero) return;
 
-  const verificarEstadoPartida = async () => {
-    try {
-      const res = await fetch(`${apiUrl}/check-activity`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ partidaId })
+    // Unirse a la sala del equipo
+    socket.emit('JoinTeamRoom', { 
+      partidaId, 
+      equipoNumero,
+      userId 
+    });
+
+    // Unirse a la sala general de la partida
+    socket.emit('joinPartidaRoom', partidaId);
+
+    // Configurar listeners
+    const handleUpdateTeamMembers = (members) => {
+      setTeamMembers(members);
+    };
+
+    const handleBroadcastMouse = (userId, x, y) => {
+      updateCursor(userId, x, y);
+    };
+
+    const handleGameChange = (data) => {
+      handleGameChangeWithTransition(data);
+    };
+
+    const handleTimerUpdate = ({ remaining, total, gameType, difficulty }) => {
+      setTimer({
+        remaining,
+        total,
+        active: remaining > 0,
+        gameType,
+        difficulty
       });
+    };
 
-      const data = await res.json();
+    const handleTimeUp = (gameType) => {
+      setTimer(prev => ({
+        ...prev,
+        remaining: 0,
+        active: false
+      }));
+      
+      Swal.fire({
+        title: '¡Tiempo terminado!',
+        text: `Se ha acabado el tiempo para el juego ${gameType}.`,
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+      });
+    };
 
-      if (data.isFinished) {
-        window.location.href = `/resultados/${partidaId}`;
+    
+
+    // Configurar listeners
+    socket.on('UpdateTeamMembers', handleUpdateTeamMembers);
+    socket.on('BroadcastMousePosition', handleBroadcastMouse);
+    socket.on('gameChanged', handleGameChange);
+    socket.on('timerUpdate', handleTimerUpdate);
+    socket.on('timeUp', handleTimeUp);
+
+    // Obtener configuración del juego
+    socket.emit('getGameConfig', partidaId, (response) => {
+      if (response.error) {
+        console.error('Error al obtener configuración:', response.error);
         return;
       }
 
-      if (sistemaInicializado) return; // ya inicializado
-
-      sistemaInicializado = true;
-
-      // ✅ Lógica principal (ya verificado que está activa)
-      console.log('🔁 Inicializando sistema...');
-
-      // Unirse a salas
-      socket.emit('JoinTeamRoom', { partidaId, equipoNumero, userId });
-      socket.emit('joinPartidaRoom', partidaId);
-
-      // Listeners
-      const handleUpdateTeamMembers = (members) => {
-        setTeamMembers(members);
-      };
-
-      const handleBroadcastMouse = (userId, x, y) => {
-        if (teamMembers.length === 0) return; // Aún no cargado
-        updateCursor(userId, x, y);
-      };
-
-      const handleGameChange = (data) => {
-        handleGameChangeWithTransition(data);
-      };
-
-      const handleTimerUpdate = ({ remaining, total, gameType, difficulty }) => {
-        setTimer({
-          remaining,
-          total,
-          active: remaining > 0,
-          gameType,
-          difficulty
-        });
-      };
-
-      const handleTimeUp = (gameType) => {
-        setTimer(prev => ({
-          ...prev,
-          remaining: 0,
-          active: false
-        }));
-
-        Swal.fire({
-          title: '¡Tiempo terminado!',
-          text: `Se ha acabado el tiempo para el juego ${gameType}.`,
-          icon: 'info',
-          showConfirmButton: false,
-          allowOutsideClick: false
-        });
-      };
-
-      socket.on('UpdateTeamMembers', handleUpdateTeamMembers);
-      socket.on('BroadcastMousePosition', handleBroadcastMouse);
-      socket.on('gameChanged', handleGameChange);
-      socket.on('timerUpdate', handleTimerUpdate);
-      socket.on('timeUp', handleTimeUp);
-
-      // Obtener configuración inicial del juego
-      socket.emit('getGameConfig', partidaId, (response) => {
-        if (response.error) {
-          console.error('Error al obtener configuración:', response.error);
-          return;
+      if (response.juegos?.length > 0) {
+        const initialIndex = response.currentIndex || 0;
+        const currentGame = response.juegos[initialIndex];
+        
+        if (games[currentGame.tipo.toLowerCase()]) {
+          setCurrentGameInfo({
+            ...games[currentGame.tipo.toLowerCase()],
+            config: currentGame.configEspecifica,
+            dificultad: currentGame.dificultad,
+            tema: currentGame.tema
+          });
+          
+          setGameProgress({
+            current: initialIndex + 1,
+            total: response.juegos.length
+          });
+          resetTimer();
         }
+      }
+    });
 
-        if (response.juegos?.length > 0) {
-          const initialIndex = response.currentIndex || 0;
-          const currentGame = response.juegos[initialIndex];
+    // Agregar listener de movimiento del mouse
+    window.addEventListener('mousemove', handleMouseMove);
 
-          if (games[currentGame.tipo.toLowerCase()]) {
-            setCurrentGameInfo({
-              ...games[currentGame.tipo.toLowerCase()],
-              config: currentGame.configEspecifica,
-              dificultad: currentGame.dificultad,
-              tema: currentGame.tema
-            });
-
-            setGameProgress({
-              current: initialIndex + 1,
-              total: response.juegos.length
-            });
-
-            resetTimer();
-          }
-        }
-      });
-
-      // Movimiento del mouse
-      window.addEventListener('mousemove', handleMouseMove);
-
-      // Limpieza al desmontar
-      return () => {
-        socket.off('UpdateTeamMembers', handleUpdateTeamMembers);
-        socket.off('BroadcastMousePosition', handleBroadcastMouse);
-        socket.off('gameChanged', handleGameChange);
-        socket.off('timerUpdate', handleTimerUpdate);
-        socket.off('timeUp', handleTimeUp);
-
-        window.removeEventListener('mousemove', handleMouseMove);
-
-        if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
-        if (timerRef.current) clearInterval(timerRef.current);
-
-        const container = cursorContainerRef.current;
-        if (container) {
-          const remoteCursors = container.querySelectorAll('.remote-cursor');
-          remoteCursors.forEach(cursor => cursor.remove());
-        }
-      };
-    } catch (error) {
-      console.error('❌ Error al verificar estado de partida:', error);
-    }
-  };
-
-  if (socket && partidaId && equipoNumero && userId) {
-    verificarEstadoPartida();
-  }
-
-}, [socket, partidaId, equipoNumero, userId]);
+    // Limpieza
+    return () => {
+      socket.off('UpdateTeamMembers', handleUpdateTeamMembers);
+      socket.off('BroadcastMousePosition', handleBroadcastMouse);
+      socket.off('gameChanged', handleGameChange);
+      socket.off('timerUpdate', handleTimerUpdate);
+      socket.off('timeUp', handleTimeUp);
+      
+      window.removeEventListener('mousemove', handleMouseMove);
+      
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      // Limpiar cursores al desmontar
+      const container = cursorContainerRef.current;
+      if (container) {
+        const remoteCursors = container.querySelectorAll('.remote-cursor');
+        remoteCursors.forEach(cursor => cursor.remove());
+      }
+    };
+  }, [socket, partidaId, equipoNumero, userId]);
 
   useEffect(() => {
     if (!socket) return;

@@ -150,9 +150,12 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    return teamMembers.find(m => m.userId === userId)?.fullName 
-           || localStorage.getItem('userFullName') 
-           || `Usuario ${userId}`;
+    if (userId === localStorage.getItem('userId')) {
+      return localStorage.getItem('userFullName') || `Tú (${userId})`;
+    }
+
+    const miembro = teamMembers.find(m => m.userId === userId);
+    return miembro?.fullName || `Usuario ${userId}`;
   };
 
   // Manejar movimiento del mouse
@@ -211,6 +214,7 @@ useEffect(() => {
       };
 
       const handleBroadcastMouse = (userId, x, y) => {
+        if (teamMembers.length === 0) return; // Aún no cargado
         updateCursor(userId, x, y);
       };
 

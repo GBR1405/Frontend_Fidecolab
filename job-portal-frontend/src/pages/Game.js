@@ -91,29 +91,6 @@ const TeamRoom = () => {
 }, [navigate]);
 
 useEffect(() => {
-  if (!cursorContainerRef.current || !socket) return;
-
-  const handleMouseMove = (e) => {
-    if (!teamMembers || teamMembers.length === 0) return; // Aún no enviar
-
-    const rect = cursorContainerRef.current.getBoundingClientRect();
-    const normalizedX = (e.clientX - rect.left) / rect.width;
-    const normalizedY = (e.clientY - rect.top) / rect.height;
-
-    socket.emit('SendMousePosition', { 
-      roomId: `team-${partidaId}-${equipoNumero}`,
-      userId,
-      x: normalizedX,
-      y: normalizedY
-    });
-  };
-
-  window.addEventListener('mousemove', handleMouseMove);
-  return () => window.removeEventListener('mousemove', handleMouseMove);
-}, [teamMembers, socket]);
-
-useEffect(() => {
-  // Cuando llega teamMembers, actualiza nombres visibles de cursores
   const container = cursorContainerRef.current;
   if (!container) return;
 
@@ -122,10 +99,7 @@ useEffect(() => {
     const userId = cursor.id.replace('cursor-', '');
     const nameSpan = cursor.querySelector('.cursor-name');
     const correctName = getUserName(userId);
-
-    if (nameSpan && correctName) {
-      nameSpan.textContent = correctName;
-    }
+    if (nameSpan && correctName) nameSpan.textContent = correctName;
   });
 }, [teamMembers]);
 
@@ -146,54 +120,52 @@ useEffect(() => {
 
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
-  if (userId === localStorage.getItem('userId')) return;
-
-  const name = getUserName(userId);
-  if (!name || name.startsWith("Usuario")) return; // aún no se conoce el nombre real
-
-  const container = cursorContainerRef.current;
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  const x = normalizedX * rect.width;
-  const y = normalizedY * rect.height;
-
-  let cursor = document.getElementById(`cursor-${userId}`);
-  if (!cursor) {
-    cursor = document.createElement('div');
-    cursor.id = `cursor-${userId}`;
-    cursor.className = 'remote-cursor';
-
-    const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
-    cursor.style.setProperty('--cursor-color', color);
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'cursor-name';
-    nameSpan.textContent = name;
-
-    cursor.appendChild(nameSpan);
-    container.appendChild(cursor);
-  }
-
-  cursor.style.left = `${x}px`;
-  cursor.style.top = `${y}px`;
-};
-
+    if (userId === localStorage.getItem('userId')) return;
+    
+    const container = cursorContainerRef.current;
+    if (!container) return;
+    
+    // Obtener posición absoluta del contenedor
+    const rect = container.getBoundingClientRect();
+    
+    // Calcular posición absoluta en píxeles
+    const x = normalizedX * window.innerWidth;
+    const y = normalizedY * window.innerHeight;
+    
+    let cursor = document.getElementById(`cursor-${userId}`);
+    
+    if (!cursor) {
+      cursor = document.createElement('div');
+      cursor.id = `cursor-${userId}`;
+      cursor.className = 'remote-cursor';
+      
+      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
+      cursor.style.setProperty('--cursor-color', color);
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cursor-name';
+      nameSpan.textContent = getUserName(userId);
+      cursor.appendChild(nameSpan);
+      
+      container.appendChild(cursor);
+    }
+  
+    // Aplicar posición absoluta con transform
+    cursor.style.left = `${x}px`;
+    cursor.style.top = `${y}px`;
+  };
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
     const miembro = teamMembers.find(m => m.userId === userId);
-
     if (miembro) return miembro.fullName;
 
-    // Solo devuelve tu propio nombre si es tu cursor (aunque normalmente se ignora)
     if (userId === localStorage.getItem('userId')) {
       return localStorage.getItem('userFullName') || `Tú (${userId})`;
     }
 
-    return `Usuario ${userId}`; // Fallback neutral
+    return `Usuario ${userId}`; // Nombre genérico temporal
   };
-
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
@@ -232,7 +204,6 @@ useEffect(() => {
     const handleBroadcastMouse = (userId, x, y) => {
       updateCursor(userId, x, y);
     };
-
 
     const handleGameChange = (data) => {
       handleGameChangeWithTransition(data);

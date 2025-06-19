@@ -112,6 +112,22 @@ useEffect(() => {
   return () => window.removeEventListener('mousemove', handleMouseMove);
 }, [teamMembers, socket]);
 
+useEffect(() => {
+  // Cuando llega teamMembers, actualiza nombres visibles de cursores
+  const container = cursorContainerRef.current;
+  if (!container) return;
+
+  const cursors = container.querySelectorAll('.remote-cursor');
+  cursors.forEach(cursor => {
+    const userId = cursor.id.replace('cursor-', '');
+    const nameSpan = cursor.querySelector('.cursor-name');
+    const correctName = getUserName(userId);
+
+    if (nameSpan && correctName) {
+      nameSpan.textContent = correctName;
+    }
+  });
+}, [teamMembers]);
 
 useEffect(() => {
   if (!partidaId || !equipoNumero) {
@@ -130,54 +146,54 @@ useEffect(() => {
 
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
-    if (userId === localStorage.getItem('userId')) return;
-    
-    const container = cursorContainerRef.current;
-    if (!container) return;
-    
-    // Obtener posición absoluta del contenedor
-    const rect = container.getBoundingClientRect();
-    
-    // Calcular posición absoluta en píxeles
-    const x = normalizedX * window.innerWidth;
-    const y = normalizedY * window.innerHeight;
-    
-    let cursor = document.getElementById(`cursor-${userId}`);
-    
-    if (!cursor) {
-      cursor = document.createElement('div');
-      cursor.id = `cursor-${userId}`;
-      cursor.className = 'remote-cursor';
-      
-      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
-      cursor.style.setProperty('--cursor-color', color);
-      
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'cursor-name';
-      nameSpan.textContent = getUserName(userId);
-      cursor.appendChild(nameSpan);
-      
-      container.appendChild(cursor);
-    }
-  
-    // Aplicar posición absoluta con transform
-    cursor.style.left = `${x}px`;
-    cursor.style.top = `${y}px`;
-  };
+  if (userId === localStorage.getItem('userId')) return;
+
+  const name = getUserName(userId);
+  if (!name || name.startsWith("Usuario")) return; // aún no se conoce el nombre real
+
+  const container = cursorContainerRef.current;
+  if (!container) return;
+
+  const rect = container.getBoundingClientRect();
+  const x = normalizedX * rect.width;
+  const y = normalizedY * rect.height;
+
+  let cursor = document.getElementById(`cursor-${userId}`);
+  if (!cursor) {
+    cursor = document.createElement('div');
+    cursor.id = `cursor-${userId}`;
+    cursor.className = 'remote-cursor';
+
+    const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
+    cursor.style.setProperty('--cursor-color', color);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'cursor-name';
+    nameSpan.textContent = name;
+
+    cursor.appendChild(nameSpan);
+    container.appendChild(cursor);
+  }
+
+  cursor.style.left = `${x}px`;
+  cursor.style.top = `${y}px`;
+};
+
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
     const miembro = teamMembers.find(m => m.userId === userId);
-    
+
     if (miembro) return miembro.fullName;
 
-    // Solo retornar tu nombre si es tu propio cursor (aunque lo ignoras arriba)
+    // Solo devuelve tu propio nombre si es tu cursor (aunque normalmente se ignora)
     if (userId === localStorage.getItem('userId')) {
       return localStorage.getItem('userFullName') || `Tú (${userId})`;
     }
 
-    return `Usuario ${userId}`; // Fallback seguro
+    return `Usuario ${userId}`; // Fallback neutral
   };
+
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
@@ -214,11 +230,9 @@ useEffect(() => {
     };
 
     const handleBroadcastMouse = (userId, x, y) => {
-      // Espera a que teamMembers esté disponible
-      if (!teamMembers || teamMembers.length === 0) return;
-
       updateCursor(userId, x, y);
     };
+
 
     const handleGameChange = (data) => {
       handleGameChangeWithTransition(data);

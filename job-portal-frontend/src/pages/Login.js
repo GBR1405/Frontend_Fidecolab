@@ -62,6 +62,8 @@ const Login = () => {
         const encryptedUser = CryptoJS.AES.encrypt(JSON.stringify(user), secretKey).toString();
         const now = new Date();
         const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+        localStorage.setItem('userId', user.id);
   
         Cookies.set("authToken", token, {
           expires: expires,

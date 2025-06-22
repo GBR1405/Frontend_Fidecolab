@@ -26,6 +26,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const [totalTeams, setTotalTeams] = useState(0);
 
+  const userId = localStorage.getItem('userId');
+
   let tempCanvasState = null;
 
   // Inicializar canvas y cargar estado
@@ -306,32 +308,54 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   }, [socket]);
 
   const handleRemoteAction = (action) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    switch(action.type) {
-      case 'start':
-        ctx.beginPath();
-        ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-        break;
-      case 'draw':
-        ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-        ctx.strokeStyle = action.color;
-        ctx.lineWidth = action.size;
-        ctx.stroke();
-        break;
-      case 'fill':
-        ctx.fillStyle = action.color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        break;
-      case 'clear':
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+
+  if (!canvas || !ctx) return;
+
+  const { userId: actionUserId } = action;
+
+  switch(action.type) {
+    case 'start':
+      ctx.beginPath();
+      ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+      break;
+    case 'draw':
+      ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+      ctx.strokeStyle = action.color;
+      ctx.lineWidth = action.size;
+      ctx.stroke();
+      break;
+    case 'fill':
+      ctx.fillStyle = action.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      break;
+    case 'clear':
+      if (actionUserId === userId) {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        break;
-      default:
-        break;
+      }
+      break;
+    default:
+      break;
+  }
+};
+
+useEffect(() => {
+  socket.on('drawingCleared', ({ userId: clearedUser }) => {
+    if (clearedUser === userId) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+      // Opcional: podrías volver a renderizar todos menos los de ese userId
     }
-  };
+  });
+
+  return () => socket.off('drawingCleared');
+}, [socket]);
+
 
   useEffect(() => {
     if (!socket) return;
@@ -372,46 +396,50 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   }, [socket]);
 
   const startDrawing = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
-    
-    setIsDrawing(true);
-    
-    // Emitir acción
-    const action = {
-      type: 'start',
-      x,
-      y,
-      color,
-      size: brushSize
-    };
-    
-    socket.emit('drawingAction', { partidaId, equipoNumero, action });
-    handleRemoteAction(action);
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / canvas.width;
+  const y = (e.clientY - rect.top) / canvas.height;
+
+  setIsDrawing(true);
+
+  const userId = localStorage.getItem('userId'); // ✅ paso 1
+
+  const action = {
+    type: 'start',
+    x,
+    y,
+    color,
+    size: brushSize
   };
 
+  socket.emit('drawingAction', { partidaId, equipoNumero, userId, action }); // ✅ paso 2
+  handleRemoteAction({ ...action, userId }); // para ver tu trazo en tu pantalla
+};
+
+
   const draw = (e) => {
-    if (!isDrawing) return;
-    
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
-    
-    // Emitir acción
-    const action = {
-      type: 'draw',
-      x,
-      y,
-      color: tool === 'eraser' ? '#FFFFFF' : color, // Usar blanco para borrar
-      size: brushSize
-    };
-    
-    socket.emit('drawingAction', { partidaId, equipoNumero, action });
-    handleRemoteAction(action);
+  if (!isDrawing) return;
+
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / canvas.width;
+  const y = (e.clientY - rect.top) / canvas.height;
+
+  const userId = localStorage.getItem('userId'); // ✅ paso 1
+
+  const action = {
+    type: 'draw',
+    x,
+    y,
+    color: tool === 'eraser' ? '#FFFFFF' : color,
+    size: brushSize
   };
+
+  socket.emit('drawingAction', { partidaId, equipoNumero, userId, action }); // ✅ paso 2
+  handleRemoteAction({ ...action, userId }); // opcional: para mostrar inmediatamente tu trazo
+};
+
 
   const endDrawing = () => {
     setIsDrawing(false);
@@ -545,10 +573,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   };
 
   const clearCanvas = () => {
-    const action = { type: 'clear' };
-    socket.emit('drawingAction', { partidaId, equipoNumero, action });
-    handleRemoteAction(action);
-  };
+  socket.emit('clearMyDrawing', { partidaId, equipoNumero, userId });
+};
 
   const fillCanvas = () => {
     const action = { type: 'fill', color };

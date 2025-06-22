@@ -30,6 +30,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const [userDrawings, setUserDrawings] = useState({});
 
+  const pendingRemoteActions = useRef([]); 
+
 
   let tempCanvasState = null;
 
@@ -364,7 +366,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const handleRemoteAction = (action) => {
   const { userId: actionUserId } = action;
 
-  // Guardar la acción
+  // Guardar en estado central
   setUserDrawings(prev => {
     const prevActions = prev[actionUserId] || [];
     return {
@@ -372,7 +374,55 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       [actionUserId]: [...prevActions, action]
     };
   });
+
+  // Si es de otro usuario, lo diferimos
+  if (actionUserId !== userId) {
+    pendingRemoteActions.current.push(action);
+  } else {
+    // Si es nuestro, dibujamos de una
+    drawAction(action);
+  }
 };
+
+const drawAction = (action) => {
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+
+  switch (action.type) {
+    case 'start':
+      ctx.beginPath();
+      ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+      break;
+    case 'draw':
+      ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+      ctx.strokeStyle = action.color;
+      ctx.lineWidth = action.size;
+      ctx.stroke();
+      break;
+    case 'fill':
+      ctx.fillStyle = action.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      break;
+  }
+};
+
+useEffect(() => {
+  let animationFrameId;
+
+  const processRemoteDrawings = () => {
+    if (pendingRemoteActions.current.length > 0) {
+      const action = pendingRemoteActions.current.shift(); // Toma una
+      drawAction(action); // La dibuja
+    }
+
+    animationFrameId = requestAnimationFrame(processRemoteDrawings);
+  };
+
+  animationFrameId = requestAnimationFrame(processRemoteDrawings);
+
+  return () => cancelAnimationFrame(animationFrameId);
+}, []);
+
 
 useEffect(() => {
   const canvas = canvasRef.current;
@@ -407,34 +457,8 @@ useEffect(() => {
 }, [userDrawings]);
 
 
-useEffect(() => {
-  const handleInitialState = ({ actions }) => {
-    const grouped = {};
-    actions.forEach(action => {
-      if (!grouped[action.userId]) grouped[action.userId] = [];
-      grouped[action.userId].push(action);
-    });
-    setUserDrawings(grouped);  // ⚠️ no redibuja aún
-    setTimeout(() => redrawCanvas(grouped), 0); // 🔄 redibuja desde snapshot
-  };
 
-  socket.on('drawingGameState', handleInitialState);
-  return () => socket.off('drawingGameState', handleInitialState);
-}, [socket]);
 
-useEffect(() => {
-  const handleClear = ({ userId: clearedUserId }) => {
-    setUserDrawings(prev => {
-      const updated = { ...prev };
-      delete updated[clearedUserId];
-      setTimeout(() => redrawCanvas(updated), 0);
-      return updated;
-    });
-  };
-
-  socket.on('drawingCleared', handleClear);
-  return () => socket.off('drawingCleared', handleClear);
-}, []);
 
 
 useEffect(() => {
@@ -670,6 +694,11 @@ useEffect(() => {
 
   const clearCanvas = () => {
   socket.emit('clearMyDrawing', { partidaId, equipoNumero, userId });
+  setUserDrawings(prev => {
+    const updated = { ...prev };
+    delete updated[userId];
+    return updated;
+  });
 };
 
 useEffect(() => {
@@ -677,7 +706,6 @@ useEffect(() => {
     setUserDrawings(prev => {
       const updated = { ...prev };
       delete updated[clearedUserId];
-      setTimeout(() => redrawCanvas(updated), 0);
       return updated;
     });
   };

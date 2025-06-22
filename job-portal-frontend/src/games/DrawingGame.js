@@ -367,14 +367,32 @@ useEffect(() => {
 
 
   const handleRemoteAction = (action) => {
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+
+  // Guardar la acción en userDrawings
   setUserDrawings(prev => {
     const prevActions = prev[action.userId] || [];
-    return {
+    const updated = {
       ...prev,
       [action.userId]: [...prevActions, action]
     };
+
+    // 🟢 DIBUJAR solo esa acción en vivo
+    if (action.type === 'start') {
+      ctx.beginPath();
+      ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+    } else if (action.type === 'draw') {
+      ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+      ctx.strokeStyle = action.color;
+      ctx.lineWidth = action.size;
+      ctx.stroke();
+    }
+
+    return updated;
   });
 };
+
 
 
 useEffect(() => {

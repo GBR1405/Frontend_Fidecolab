@@ -362,38 +362,49 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
 
   const handleRemoteAction = (action) => {
-  const canvas = canvasRef.current;
-  const ctx = canvas.getContext('2d');
   const { userId: actionUserId } = action;
 
+  // Guardar la acción
   setUserDrawings(prev => {
     const prevActions = prev[actionUserId] || [];
-    const updated = {
+    return {
       ...prev,
       [actionUserId]: [...prevActions, action]
     };
-
-    // Redibujar solamente ese trazo nuevo para evitar remezclar todo
-    const userActions = updated[actionUserId];
-
-    // Buscamos si es una acción 'start' o 'draw'
-    if (action.type === 'start') {
-      ctx.beginPath();
-      ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-    } else if (action.type === 'draw') {
-      ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-      ctx.strokeStyle = action.color;
-      ctx.lineWidth = action.size;
-      ctx.stroke();
-    } else if (action.type === 'fill') {
-      ctx.fillStyle = action.color;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    return updated;
   });
 };
 
+useEffect(() => {
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  Object.values(userDrawings).forEach(actions => {
+    let drawing = false;
+    actions.forEach(action => {
+      switch (action.type) {
+        case 'start':
+          ctx.beginPath();
+          ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+          drawing = true;
+          break;
+        case 'draw':
+          if (!drawing) return;
+          ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+          ctx.strokeStyle = action.color;
+          ctx.lineWidth = action.size;
+          ctx.stroke();
+          break;
+        case 'fill':
+          ctx.fillStyle = action.color;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          break;
+      }
+    });
+  });
+}, [userDrawings]);
 
 
 useEffect(() => {
@@ -498,8 +509,9 @@ useEffect(() => {
   };
 
   socket.emit('drawingAction', { partidaId, equipoNumero, userId, action });
-  handleRemoteAction(action);
+  handleRemoteAction(action); // ⬅️ actualiza tu plano local
 };
+
 
 
   const draw = (e) => {
@@ -522,6 +534,7 @@ useEffect(() => {
   socket.emit('drawingAction', { partidaId, equipoNumero, userId, action });
   handleRemoteAction(action);
 };
+
 
 
   const endDrawing = () => {

@@ -88,14 +88,14 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   };
   
   
-  const redrawCanvas = () => {
+  const redrawCanvas = (drawings = userDrawings) => {
   const canvas = canvasRef.current;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  Object.values(userDrawings).forEach(actions => {
+  Object.values(drawings).forEach(actions => {
     let drawing = false;
     actions.forEach(action => {
       switch (action.type) {
@@ -115,16 +115,11 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
           ctx.fillStyle = action.color;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           break;
-        default:
-          break;
       }
     });
   });
 };
 
-useEffect(() => {
-  redrawCanvas();
-}, [userDrawings]);
 
   // Lógica de relleno mejorada
   const handleCanvasClick = (e) => {
@@ -369,30 +364,63 @@ useEffect(() => {
   const handleRemoteAction = (action) => {
   const canvas = canvasRef.current;
   const ctx = canvas.getContext('2d');
+  const { userId } = action;
 
-  // Guardar la acción en userDrawings
   setUserDrawings(prev => {
-    const prevActions = prev[action.userId] || [];
-    const updated = {
+    const prevActions = prev[userId] || [];
+    return {
       ...prev,
-      [action.userId]: [...prevActions, action]
+      [userId]: [...prevActions, action]
     };
+  });
 
-    // 🟢 DIBUJAR solo esa acción en vivo
-    if (action.type === 'start') {
+  // 🔥 Dibuja solo la acción recibida
+  switch (action.type) {
+    case 'start':
       ctx.beginPath();
       ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-    } else if (action.type === 'draw') {
+      break;
+    case 'draw':
       ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
       ctx.strokeStyle = action.color;
       ctx.lineWidth = action.size;
       ctx.stroke();
-    }
-
-    return updated;
-  });
+      break;
+    case 'fill':
+      ctx.fillStyle = action.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      break;
+  }
 };
 
+useEffect(() => {
+  const handleInitialState = ({ actions }) => {
+    const grouped = {};
+    actions.forEach(action => {
+      if (!grouped[action.userId]) grouped[action.userId] = [];
+      grouped[action.userId].push(action);
+    });
+    setUserDrawings(grouped);  // ⚠️ no redibuja aún
+    setTimeout(() => redrawCanvas(grouped), 0); // 🔄 redibuja desde snapshot
+  };
+
+  socket.on('drawingGameState', handleInitialState);
+  return () => socket.off('drawingGameState', handleInitialState);
+}, [socket]);
+
+useEffect(() => {
+  const handleClear = ({ userId: clearedUserId }) => {
+    setUserDrawings(prev => {
+      const updated = { ...prev };
+      delete updated[clearedUserId];
+      setTimeout(() => redrawCanvas(updated), 0);
+      return updated;
+    });
+  };
+
+  socket.on('drawingCleared', handleClear);
+  return () => socket.off('drawingCleared', handleClear);
+}, []);
 
 
 useEffect(() => {

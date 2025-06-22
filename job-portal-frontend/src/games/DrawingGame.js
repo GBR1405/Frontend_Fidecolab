@@ -364,31 +364,36 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const handleRemoteAction = (action) => {
   const canvas = canvasRef.current;
   const ctx = canvas.getContext('2d');
-  const { userId } = action;
+  const { userId: actionUserId } = action;
 
   setUserDrawings(prev => {
-    const prevActions = prev[userId] || [];
+    const prevActions = prev[actionUserId] || [];
     const updated = {
       ...prev,
-      [userId]: [...prevActions, action]
+      [actionUserId]: [...prevActions, action]
     };
 
-    // Solo dibuja directamente en tiempo real si es del mismo usuario
-    if (userId === localStorage.getItem('userId')) {
-      if (action.type === 'start') {
-        ctx.beginPath();
-        ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-      } else if (action.type === 'draw') {
-        ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-        ctx.strokeStyle = action.color;
-        ctx.lineWidth = action.size;
-        ctx.stroke();
-      }
+    // Redibujar solamente ese trazo nuevo para evitar remezclar todo
+    const userActions = updated[actionUserId];
+
+    // Buscamos si es una acción 'start' o 'draw'
+    if (action.type === 'start') {
+      ctx.beginPath();
+      ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+    } else if (action.type === 'draw') {
+      ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+      ctx.strokeStyle = action.color;
+      ctx.lineWidth = action.size;
+      ctx.stroke();
+    } else if (action.type === 'fill') {
+      ctx.fillStyle = action.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     return updated;
   });
 };
+
 
 
 useEffect(() => {

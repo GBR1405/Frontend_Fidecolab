@@ -410,11 +410,10 @@ useEffect(() => {
   let animationFrameId;
 
   const processRemoteDrawings = () => {
-    if (pendingRemoteActions.current.length > 0) {
-      const action = pendingRemoteActions.current.shift(); // Toma una
-      drawAction(action); // La dibuja
+    for (let i = 0; i < 10 && pendingRemoteActions.current.length > 0; i++) {
+      const action = pendingRemoteActions.current.shift();
+      drawAction(action);
     }
-
     animationFrameId = requestAnimationFrame(processRemoteDrawings);
   };
 

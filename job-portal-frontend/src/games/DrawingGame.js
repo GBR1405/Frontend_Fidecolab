@@ -365,24 +365,23 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const handleRemoteAction = (action) => {
   const { userId: actionUserId } = action;
+  if (!actionUserId) return; // ignorar si no hay ID
 
-  // Guardar en estado central
   setUserDrawings(prev => {
-    const prevActions = prev[actionUserId] || [];
-    return {
-      ...prev,
-      [actionUserId]: [...prevActions, action]
-    };
+    const updated = { ...prev };
+    if (!updated[actionUserId]) updated[actionUserId] = [];
+    updated[actionUserId].push(action);
+    return updated;
   });
 
-  // Si es de otro usuario, lo diferimos
+  // Si no es nuestro, diferimos para renderizar por frame
   if (actionUserId !== userId) {
     pendingRemoteActions.current.push(action);
   } else {
-    // Si es nuestro, dibujamos de una
-    drawAction(action);
+    drawAction(action); // si es nuestro, dibujamos directo
   }
-};
+    };
+
 
 const drawAction = (action) => {
   const canvas = canvasRef.current;
@@ -425,40 +424,42 @@ useEffect(() => {
 
 
 useEffect(() => {
+  // Redibuja todo solo cuando cambia userDrawings completo
   const canvas = canvasRef.current;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  Object.values(userDrawings).forEach(actions => {
-    let drawing = false;
-    actions.forEach(action => {
-      switch (action.type) {
-        case 'start':
-          ctx.beginPath();
-          ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-          drawing = true;
-          break;
-        case 'draw':
-          if (!drawing) return;
-          ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-          ctx.strokeStyle = action.color;
-          ctx.lineWidth = action.size;
-          ctx.stroke();
-          break;
-        case 'fill':
-          ctx.fillStyle = action.color;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          break;
-      }
+  const renderAll = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    Object.values(userDrawings).forEach(actions => {
+      let drawing = false;
+      actions.forEach(action => {
+        switch (action.type) {
+          case 'start':
+            ctx.beginPath();
+            ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+            drawing = true;
+            break;
+          case 'draw':
+            if (!drawing) return;
+            ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+            ctx.strokeStyle = action.color;
+            ctx.lineWidth = action.size;
+            ctx.stroke();
+            break;
+          case 'fill':
+            ctx.fillStyle = action.color;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            break;
+        }
+      });
     });
-  });
+  };
+
+  renderAll();
 }, [userDrawings]);
-
-
-
-
 
 
 useEffect(() => {
@@ -475,6 +476,22 @@ useEffect(() => {
 
   return () => socket.off('drawingCleared');
 }, [socket]);
+
+useEffect(() => {
+  if (!socket) return;
+
+  const handleGameReset = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setUserDrawings({});
+  };
+
+  socket.on('cleanPreviousGames', handleGameReset);
+  return () => socket.off('cleanPreviousGames', handleGameReset);
+}, [socket]);
+
 
 
   useEffect(() => {

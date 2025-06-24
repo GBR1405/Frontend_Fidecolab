@@ -365,23 +365,28 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
 
   const handleRemoteAction = (action) => {
-  const { userId: actionUserId } = action;
-  if (!actionUserId) return; // ignorar si no hay ID
+    const { userId: actionUserId } = action;
+    if (!actionUserId) return;
 
-  setUserDrawings(prev => {
-    const updated = { ...prev };
-    if (!updated[actionUserId]) updated[actionUserId] = [];
-    updated[actionUserId].push(action);
-    return updated;
-  });
+    setUserDrawings(prev => {
+      const updated = { ...prev };
+      if (!updated[actionUserId]) updated[actionUserId] = [];
+      updated[actionUserId].push(action);
 
-  // Si no es nuestro, diferimos para renderizar por frame
-  if (actionUserId !== userId) {
-    pendingRemoteActions.current.push(action);
-  } else {
-    drawAction(action); // si es nuestro, dibujamos directo
-  }
-    };
+      // Limita el historial por usuario para evitar lag
+      if (updated[actionUserId].length > 500) {
+        updated[actionUserId] = updated[actionUserId].slice(-500);
+      }
+
+      return updated;
+    });
+
+    if (actionUserId !== userId) {
+      pendingRemoteActions.current.push(action);
+    } else {
+      drawAction(action);
+    }
+  };
 
 
 const drawAction = (action) => {
@@ -461,21 +466,6 @@ useEffect(() => {
   renderAll();
 }, [userDrawings]);
 
-
-useEffect(() => {
-  socket.on('drawingCleared', ({ userId: clearedUser }) => {
-    if (clearedUser === userId) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    } else {
-      // Opcional: podrías volver a renderizar todos menos los de ese userId
-    }
-  });
-
-  return () => socket.off('drawingCleared');
-}, [socket]);
 
 useEffect(() => {
   if (!socket) return;

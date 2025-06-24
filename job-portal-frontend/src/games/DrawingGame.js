@@ -27,6 +27,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const [totalTeams, setTotalTeams] = useState(0);
 
   const userId = localStorage.getItem('userId');
+  console.log('User ID:', userId);
 
   const [userDrawings, setUserDrawings] = useState({});
 

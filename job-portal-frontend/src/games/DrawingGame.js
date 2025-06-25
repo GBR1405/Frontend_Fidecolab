@@ -81,6 +81,16 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   }, [socket]);
 
   useEffect(() => {
+    if (!userId || userDrawings[userId]) return;
+
+    setUserDrawings(prev => ({
+      ...prev,
+      [userId]: []
+    }));
+  }, [userId, userDrawings]);
+
+
+  useEffect(() => {
     if (!socket) return;
   
     const handleDemoStarted = (response) => {

@@ -18,6 +18,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const [shape, setShape] = useState(null);
   const [startPos, setStartPos] = useState(null);
 
+  const canvasRefs = useRef({});
+
   const [lastColor, setLastColor] = useState('#000000');
   const [demoMode, setDemoMode] = useState(false);
   const [demoProgress, setDemoProgress] = useState('');
@@ -266,6 +268,46 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     ctx.putImageData(imageData, 0, 0);
   };
 
+  useEffect(() => {
+  Object.entries(userDrawings).forEach(([id, actions]) => {
+    const canvas = canvasRefs.current[id];
+    renderActionsToCanvas(actions, canvas);
+  });
+}, [userDrawings]);
+
+  const renderActionsToCanvas = (actions, canvas) => {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  let drawing = false;
+
+  actions.forEach(action => {
+    switch (action.type) {
+      case 'start':
+        ctx.beginPath();
+        ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
+        drawing = true;
+        break;
+      case 'draw':
+        if (!drawing) return;
+        ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
+        ctx.strokeStyle = action.color;
+        ctx.lineWidth = action.size;
+        ctx.stroke();
+        break;
+      case 'fill':
+        ctx.fillStyle = action.color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        break;
+    }
+  });
+};
+
+
   // Inicializar canvas y cargar estado
   useEffect(() => {
     if (!socket || !canvasRef.current) return;
@@ -390,7 +432,9 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
 
 const drawAction = (action) => {
-  const canvas = canvasRef.current;
+  const canvas = canvasRefs.current[action.userId];
+  if (!canvas) return;
+
   const ctx = canvas.getContext('2d');
 
   switch (action.type) {
@@ -410,6 +454,7 @@ const drawAction = (action) => {
       break;
   }
 };
+
 
 useEffect(() => {
   let animationFrameId;
@@ -700,13 +745,13 @@ useEffect(() => {
   };
 
   const clearCanvas = () => {
-  socket.emit('clearMyDrawing', { partidaId, equipoNumero, userId });
-  setUserDrawings(prev => {
-    const updated = { ...prev };
-    delete updated[userId];
-    return updated;
-  });
-};
+    socket.emit('clearMyDrawing', { partidaId, equipoNumero, userId });
+    setUserDrawings(prev => {
+      const updated = { ...prev };
+      delete updated[userId];
+      return updated;
+    });
+  };
 
 useEffect(() => {
   const handleClear = ({ userId: clearedUserId }) => {
@@ -918,38 +963,29 @@ useEffect(() => {
         />
       </div >
       <div className="canvas-container">
-        <canvas
-          ref={canvasRef}
-          className="drawing-canvas-enhanced"
-          onMouseDown={(e) => {
-              if (['rectangle', 'circle'].includes(tool)) {
-              startDrawingShape(e);
-              } else {
-              startDrawing(e);
-              }
-          }}
-          onMouseMove={(e) => {
-              if (['rectangle', 'circle'].includes(tool)) {
-              drawShape(e);
-              } else if (isDrawing) {
-              draw(e);
-              }
-          }}
-          onMouseUp={(e) => {
-              if (['rectangle', 'circle'].includes(tool)) {
-              endDrawingShape(e);
-              } else {
-              endDrawing();
-              }
-          }}
-          onMouseLeave={(e) => {
-              if (['rectangle', 'circle'].includes(tool)) {
-              endDrawingShape(e);
-              } else {
-              endDrawing();
-              }
-          }}
-        />
+        <div style={{ position: 'relative', width: 800, height: 600 }}>
+          {Object.entries(userDrawings).map(([id, actions]) => (
+            <canvas
+              key={id}
+              ref={el => {
+                if (el) canvasRefs.current[id] = el;
+              }}
+              width={800}
+              height={600}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                zIndex: id === userId ? 10 : 5,
+                pointerEvents: id === userId ? 'auto' : 'none'
+              }}
+              onMouseDown={id === userId ? startDrawing : undefined}
+              onMouseMove={id === userId ? draw : undefined}
+              onMouseUp={id === userId ? endDrawing : undefined}
+              onMouseLeave={id === userId ? endDrawing : undefined}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

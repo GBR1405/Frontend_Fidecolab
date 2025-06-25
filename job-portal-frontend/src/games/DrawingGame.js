@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import { fabric } from 'fabric';
+import fabric from 'fabric';
 import Swal from 'sweetalert2';
 import '../styles/games.css';
 

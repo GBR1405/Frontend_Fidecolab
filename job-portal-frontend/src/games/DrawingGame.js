@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import { fabric } from 'fabric/dist/fabric.min';
 import Swal from 'sweetalert2';
 import '../styles/games.css';
 
@@ -24,6 +23,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const userActions = useRef({});
   const pendingRemoteActions = useRef([]);
   const isProcessingRemoteActions = useRef(false);
+
+  const { fabric } = require('fabric');
 
   // Inicializar canvas con Fabric.js
   useEffect(() => {

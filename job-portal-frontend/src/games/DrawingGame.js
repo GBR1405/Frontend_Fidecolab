@@ -7,7 +7,6 @@ import '../styles/games.css';
 const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const { partidaId, equipoNumero } = useParams();
   const socket = useSocket();
-  const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(5);
@@ -38,42 +37,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   let tempCanvasState = null;
 
-  // Inicializar canvas y cargar estado
-  useEffect(() => {
-    if (!socket || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    // Configurar canvas
-    canvas.width = 800;
-    canvas.height = 600;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-
-    // Inicializar juego
-    socket.emit('initDrawingGame', { partidaId, equipoNumero });
-
-    // Escuchar acciones de dibujo
-    socket.on('drawingAction', (action) => {
-      handleRemoteAction(action);
-    });
-
-    // Escuchar inicio de demostración
-    socket.on('drawingDemoStarted', (teams) => {
-      setShowDemo(true);
-      setCurrentDemoTeam(Math.min(...teams.map(Number)));
-      loadDemoDrawings(teams);
-    });
-
-    return () => {
-      socket.off('drawingAction');
-      socket.off('drawingDemoStarted');
-    };
-  }, [socket, partidaId, equipoNumero]);
-
   const generateGradientColors = () => {
     const gradients = [];
     // Degradado rojo a amarillo
@@ -92,66 +55,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     return [...gradients, '#000000', '#FFFFFF', '#888888'];
   };
   
-  
-  const redrawCanvas = (drawings = userDrawings) => {
-  const canvas = canvasRef.current;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  Object.values(drawings).forEach(actions => {
-    let drawing = false;
-    actions.forEach(action => {
-      switch (action.type) {
-        case 'start':
-          ctx.beginPath();
-          ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-          drawing = true;
-          break;
-        case 'draw':
-          if (!drawing) return;
-          ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-          ctx.strokeStyle = action.color;
-          ctx.lineWidth = action.size;
-          ctx.stroke();
-          break;
-        case 'fill':
-          ctx.fillStyle = action.color;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          break;
-      }
-    });
-  });
-};
-
-
-  // Lógica de relleno mejorada
-  const handleCanvasClick = (e) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    if (tool === 'fill') {
-      floodFill(ctx, Math.round(x), Math.round(y), color);
-      
-      // Enviar el cambio al servidor
-      const imageData = canvas.toDataURL();
-      socket.emit('drawingAction', {
-        partidaId,
-        equipoNumero,
-        action: {
-          type: 'fill',
-          x: x / canvas.width,
-          y: y / canvas.height,
-          color,
-          imageData
-        }
-      });
-    }
-  };
 
   useEffect(() => {
     if (!socket) return;
@@ -309,85 +213,9 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
 
   // Inicializar canvas y cargar estado
-  useEffect(() => {
-    if (!socket || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    // Configurar canvas
-    canvas.width = 800;
-    canvas.height = 600;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-
-    // Eventos de demostración
-    const handleDemoStarted = ({ currentTeam, totalTeams, teams }) => {
-      setShowDemo(true);
-      setCurrentDemoTeam(currentTeam);
-      setTotalTeams(totalTeams);
-      
-      // Cargar todos los dibujos
-      teams.forEach(team => {
-        socket.emit('getDrawingForDemo', { partidaId, equipoNumero: team }, (imageData) => {
-          if (imageData) {
-            setDemoDrawings(prev => ({
-              ...prev,
-              [team]: imageData
-            }));
-          }
-        });
-      });
-    };
-
-    const handleTeamChanged = ({ currentTeam }) => {
-      setCurrentDemoTeam(currentTeam);
-    };
-
-    const handleDemoEnded = () => {
-      setShowDemo(false);
-      setCurrentDemoTeam(null);
-      setDemoDrawings({});
-    };
-
-    socket.on('demoStarted', handleDemoStarted);
-    socket.on('demoTeamChanged', handleTeamChanged);
-    socket.on('demoEnded', handleDemoEnded);
-
-    return () => {
-      socket.off('demoStarted', handleDemoStarted);
-      socket.off('demoTeamChanged', handleTeamChanged);
-      socket.off('demoEnded', handleDemoEnded);
-    };
-  }, [socket, partidaId]);
+ 
   
-  useEffect(() => {
-    if (!socket) return;
   
-    const handleInitialState = ({ actions, isInitial }) => {
-      if (isInitial) {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        
-        // Limpiar canvas primero
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Replay todas las acciones
-        actions.forEach(action => {
-          handleRemoteAction(action);
-        });
-      }
-    };
-  
-    socket.on('drawingGameState', handleInitialState);
-  
-    return () => {
-      socket.off('drawingGameState', handleInitialState);
-    };
-  }, [socket]);
 
   useEffect(() => {
   if (!socket) return;
@@ -474,52 +302,9 @@ useEffect(() => {
 
 
 useEffect(() => {
-  // Redibuja todo solo cuando cambia userDrawings completo
-  const canvas = canvasRef.current;
-  const ctx = canvas.getContext('2d');
-
-  const renderAll = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    Object.values(userDrawings).forEach(actions => {
-      let drawing = false;
-      actions.forEach(action => {
-        switch (action.type) {
-          case 'start':
-            ctx.beginPath();
-            ctx.moveTo(action.x * canvas.width, action.y * canvas.height);
-            drawing = true;
-            break;
-          case 'draw':
-            if (!drawing) return;
-            ctx.lineTo(action.x * canvas.width, action.y * canvas.height);
-            ctx.strokeStyle = action.color;
-            ctx.lineWidth = action.size;
-            ctx.stroke();
-            break;
-          case 'fill':
-            ctx.fillStyle = action.color;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            break;
-        }
-      });
-    });
-  };
-
-  renderAll();
-}, [userDrawings]);
-
-
-useEffect(() => {
   if (!socket) return;
 
   const handleGameReset = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     setUserDrawings({});
   };
 
@@ -529,46 +314,11 @@ useEffect(() => {
 
 
 
-  useEffect(() => {
-    if (!socket) return;
-  
-    const handleShape = (action) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      ctx.fillStyle = action.color;
-      ctx.strokeStyle = action.color;
-      ctx.lineWidth = action.size;
-      
-      const startX = action.startX * canvas.width;
-      const startY = action.startY * canvas.height;
-      const endX = action.endX * canvas.width;
-      const endY = action.endY * canvas.height;
-      
-      if (action.type === 'rectangle') {
-        const width = endX - startX;
-        const height = endY - startY;
-        ctx.strokeRect(startX, startY, width, height);
-      } else if (action.type === 'circle') {
-        const radius = Math.sqrt(
-          Math.pow(endX - startX, 2) + 
-          Math.pow(endY - startY, 2)
-        );
-        ctx.beginPath();
-        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    };
-  
-    socket.on('drawShape', handleShape);
-  
-    return () => {
-      socket.off('drawShape', handleShape);
-    };
-  }, [socket]);
 
   const startDrawing = (e) => {
-  const canvas = canvasRef.current;
+  const canvas = canvasRefs.current[userId];
+  if (!canvas) return;
+
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) / canvas.width;
   const y = (e.clientY - rect.top) / canvas.height;
@@ -585,15 +335,18 @@ useEffect(() => {
   };
 
   socket.emit('drawingAction', { partidaId, equipoNumero, userId, action });
-  handleRemoteAction(action); // ⬅️ actualiza tu plano local
+  handleRemoteAction(action);
 };
+
 
 
 
   const draw = (e) => {
   if (!isDrawing) return;
 
-  const canvas = canvasRef.current;
+  const canvas = canvasRefs.current[userId];
+  if (!canvas) return;
+
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) / canvas.width;
   const y = (e.clientY - rect.top) / canvas.height;
@@ -612,17 +365,18 @@ useEffect(() => {
 };
 
 
-
   const endDrawing = () => {
     setIsDrawing(false);
     autoSaveDrawing();
   };
 
   const autoSaveDrawing = () => {
-    const canvas = canvasRef.current;
-    const imageData = canvas.toDataURL('image/png');
-    socket.emit('saveDrawing', { partidaId, equipoNumero, imageData });
-  };
+  const canvas = canvasRefs.current[userId];
+  if (!canvas) return;
+
+  const imageData = canvas.toDataURL('image/png');
+  socket.emit('saveDrawing', { partidaId, equipoNumero, imageData });
+};
 
   const changeTool = (newTool) => {
     setTool(newTool);
@@ -631,117 +385,6 @@ useEffect(() => {
     if (newTool === 'eraser') {
       setColor('#FFFFFF'); // Fondo blanco para borrar
     }
-  };
-
-  const startDrawingShape = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
-    
-    setStartPos({ x, y });
-  };
-  
-  const drawShape = (e) => {
-    if (!startPos) return;
-    
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
-    
-    // Guardar el estado actual del canvas
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    
-    // Limpiar temporalmente solo para la vista previa
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Redibujar todas las acciones existentes
-    socket.emit('getDrawingState', { partidaId, equipoNumero }, (actions) => {
-      actions.forEach(a => handleRemoteAction(a));
-      
-      // Dibujar la forma temporal
-      ctx.fillStyle = color;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = brushSize;
-      
-      const startX = startPos.x * canvas.width;
-      const startY = startPos.y * canvas.height;
-      const width = (x - startPos.x) * canvas.width;
-      const height = (y - startPos.y) * canvas.height;
-      
-      if (tool === 'rectangle') {
-        ctx.strokeRect(startX, startY, width, height);
-      } else if (tool === 'circle') {
-        const radius = Math.sqrt(width * width + height * height);
-        ctx.beginPath();
-        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      
-      // Guardar el estado temporal para poder restaurarlo
-      tempCanvasState = {
-        imageData,
-        shapePreview: { tool, startPos, currentPos: { x, y }, color, size: brushSize }
-      };
-    });
-  };
-
-  const restoreCanvas = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    if (tempCanvasState?.imageData) {
-      ctx.putImageData(tempCanvasState.imageData, 0, 0);
-    }
-    
-    if (tempCanvasState?.shapePreview) {
-      const { tool, startPos, currentPos, color, size } = tempCanvasState.shapePreview;
-      const startX = startPos.x * canvas.width;
-      const startY = startPos.y * canvas.height;
-      const width = (currentPos.x - startPos.x) * canvas.width;
-      const height = (currentPos.y - startPos.y) * canvas.height;
-      
-      ctx.fillStyle = color;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = size;
-      
-      if (tool === 'rectangle') {
-        ctx.strokeRect(startX, startY, width, height);
-      } else if (tool === 'circle') {
-        const radius = Math.sqrt(width * width + height * height);
-        ctx.beginPath();
-        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-  };
-  
-  const endDrawingShape = (e) => {
-    if (!startPos) return;
-    
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
-    
-    // Emitir acción de forma
-    const action = {
-      type: tool, // 'rectangle' o 'circle'
-      startX: startPos.x,
-      startY: startPos.y,
-      endX: x,
-      endY: y,
-      color,
-      size: brushSize
-    };
-    
-    socket.emit('drawingAction', { partidaId, equipoNumero, action });
-    
-    // Limpiar estado
-    setStartPos(null);
   };
 
   const clearCanvas = () => {
@@ -772,11 +415,7 @@ useEffect(() => {
     handleRemoteAction(action);
   };
 
-  const saveDrawing = () => {
-    const canvas = canvasRef.current;
-    const imageData = canvas.toDataURL('image/png');
-    socket.emit('saveDrawing', { partidaId, equipoNumero, imageData });
-  };
+  
 
   const loadDemoDrawings = (teams) => {
     // Asegurarse que teams es un array

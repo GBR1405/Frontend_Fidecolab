@@ -57,6 +57,10 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     // Solicitar estado inicial del juego
     socket.emit('initDrawingGame', { partidaId, equipoNumero });
 
+    socket.on('drawingGameState', ({ actions }) => {
+      actions.forEach(action => renderAction(action));
+    });
+
     // Configurar eventos del canvas
     setupCanvasEvents();
 
@@ -74,45 +78,20 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const setupCanvasEvents = () => {
     const canvas = fabricCanvas.current;
 
-    canvas.on('mouse:down', (options) => {
-      if (tool === 'brush' || tool === 'eraser') {
-        setIsDrawing(true);
-        const pointer = canvas.getPointer(options.e);
-        const action = {
-          type: 'path:start',
-          userId,
-          points: [pointer.x, pointer.y, pointer.x, pointer.y],
-          color: tool === 'eraser' ? '#ffffff' : color,
-          width: brushSize,
-        };
-        emitDrawingAction(action);
-      }
-    });
+    canvas.on('path:created', (e) => {
+      const path = e.path;
+      path.userId = userId; // Añade propiedad de autor
 
-    canvas.on('mouse:move', (options) => {
-      if (isDrawing && (tool === 'brush' || tool === 'eraser')) {
-        const pointer = canvas.getPointer(options.e);
-        const action = {
-          type: 'path:continue',
-          userId,
-          points: [pointer.x, pointer.y],
-          color: tool === 'eraser' ? '#ffffff' : color,
-          width: brushSize,
-        };
-        emitDrawingAction(action);
-      }
-    });
-
-    canvas.on('mouse:up', () => {
-      if (isDrawing) {
-        setIsDrawing(false);
-        const action = {
-          type: 'path:end',
-          userId,
-        };
-        emitDrawingAction(action);
-        saveDrawing();
-      }
+      // Emitir al servidor
+      socket.emit('drawingAction', {
+        partidaId,
+        equipoNumero,
+        userId,
+        action: {
+          type: 'path',
+          path: path.toObject(['path', 'stroke', 'strokeWidth'])
+        }
+      });
     });
   };
 
@@ -173,44 +152,33 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Renderizar una acción en el canvas
   const renderAction = (action) => {
-    const canvas = fabricCanvas.current;
-    if (!canvas) return;
+  const canvas = fabricCanvas.current;
+  if (!canvas) return;
 
-    switch (action.type) {
-      case 'path:start':
-        const path = new fabric.Path(`M ${action.points[0]} ${action.points[1]} L ${action.points[2]} ${action.points[3]}`, {
-          stroke: action.color,
-          strokeWidth: action.width,
-          fill: null,
-          selectable: false,
-          evented: false,
-        });
-        canvas.add(path);
-        break;
+  switch (action.type) {
+    case 'path':
+      const pathObj = new fabric.Path(action.path.path, {
+        stroke: action.path.stroke,
+        strokeWidth: action.path.strokeWidth,
+        fill: null,
+        selectable: false,
+        evented: false
+      });
+      pathObj.userId = action.userId; // importante para poder borrar después
+      canvas.add(pathObj);
+      break;
 
-      case 'path:continue':
-        const lastPath = canvas.getObjects().slice(-1)[0];
-        if (lastPath && lastPath.type === 'path') {
-          lastPath.path.push(['L', action.points[0], action.points[1]]);
-          canvas.renderAll();
-        }
-        break;
+    case 'clear':
+      if (action.userId === userId) {
+        clearUserDrawing();
+      }
+      break;
 
-      case 'path:end':
-        // No necesitamos hacer nada especial al terminar el trazo
-        break;
-
-      case 'clear':
-        if (action.userId === userId) {
-          clearUserDrawing();
-        }
-        break;
-
-      case 'fill':
-        canvas.setBackgroundColor(action.color, canvas.renderAll.bind(canvas));
-        break;
-    }
-  };
+    case 'fill':
+      canvas.setBackgroundColor(action.color, canvas.renderAll.bind(canvas));
+      break;
+  }
+};
 
   // Limpiar dibujo del usuario actual
   const clearUserDrawing = () => {

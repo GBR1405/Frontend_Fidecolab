@@ -92,30 +92,36 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     const canvas = fabricCanvas.current;
 
     canvas.on('path:created', (e) => {
-    const path = e.path;
-    const length = path.path?.length || 0;
+  const path = e.path;
+  const pathLength = path.path?.length || 0;
 
-    if (tintaConsumida.current + length >= MAX_TINTA) {
-      Swal.fire('¡Sin tinta!', 'Debes limpiar tu dibujo para recargar.', 'warning');
-      // Eliminar visualmente el trazo
-      canvas.remove(path);
-      return;
+  // Si no hay tinta suficiente, cancelar
+  if (tintaConsumida.current + pathLength >= MAX_TINTA) {
+    canvas.remove(path);
+    Swal.fire('¡Sin tinta!', 'Debes limpiar tu dibujo para recargar.', 'warning');
+    return;
+  }
+
+  // Asignar ID de autor
+  path.userId = userId;
+
+  // Añadirlo al historial local
+  tintaConsumida.current += pathLength;
+  setTinta(prev => prev - pathLength);
+
+  const serializedPath = path.toObject(['path', 'stroke', 'strokeWidth', 'userId']);
+
+  // Emitir al backend y aplicar localmente
+  socket.emit('drawingAction', {
+    partidaId,
+    equipoNumero,
+    userId,
+    action: {
+      type: 'path',
+      path: serializedPath
     }
-
-    path.userId = userId;
-    tintaConsumida.current += length;
-    setTinta(prev => prev - length);
-
-    socket.emit('drawingAction', {
-      partidaId,
-      equipoNumero,
-      userId,
-      action: {
-        type: 'path',
-        path: path.toObject(['path', 'stroke', 'strokeWidth'])
-      }
-    });
   });
+});
   };
 
   // Emitir acción de dibujo al servidor
@@ -180,16 +186,17 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   switch (action.type) {
     case 'path':
-      const pathObj = new fabric.Path(action.path.path, {
-        stroke: action.path.stroke,
-        strokeWidth: action.path.strokeWidth,
-        fill: null,
-        selectable: false,
-        evented: false
-      });
-      pathObj.userId = action.userId; // importante para poder borrar después
-      canvas.add(pathObj);
-      break;
+    const pathObj = new fabric.Path(action.path.path, {
+      stroke: action.path.stroke,
+      strokeWidth: action.path.strokeWidth,
+      fill: null,
+      selectable: false,
+      evented: false
+    });
+    pathObj.userId = action.userId;
+    canvas.add(pathObj);
+    canvas.renderAll(); // 🔹 MUY IMPORTANTE para mostrar
+    break;
 
     case 'clear':
       if (action.userId === userId) {

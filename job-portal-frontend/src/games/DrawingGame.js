@@ -26,73 +26,96 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const { fabric } = require('fabric');
 
+  const [tinta, setTinta] = useState(5000); // cantidad máxima inicial
+  const tintaConsumida = useRef(0);
+  const MAX_TINTA = 5000;
+
   // Inicializar canvas con Fabric.js
   useEffect(() => {
-    if (!socket || !canvasRef.current) return;
+  if (!socket || !canvasRef.current) return;
 
-    // Crear canvas de Fabric.js
-    fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
-      isDrawingMode: true,
-      width: 800,
-      height: 600,
-      backgroundColor: '#ffffff',
-    });
+  // Crear canvas de Fabric.js
+  fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
+    isDrawingMode: true,
+    width: 800,
+    height: 600,
+    backgroundColor: '#ffffff',
+  });
 
-    // Configurar pincel inicial
-    fabricCanvas.current.freeDrawingBrush.color = color;
-    fabricCanvas.current.freeDrawingBrush.width = brushSize;
+  // Configurar pincel inicial
+  fabricCanvas.current.freeDrawingBrush.color = color;
+  fabricCanvas.current.freeDrawingBrush.width = brushSize;
 
-    // Escuchar acciones de dibujo remotas
-    socket.on('drawingAction', (action) => {
-      handleRemoteAction(action);
-    });
+  // Bloquear dibujo si no hay tinta
+  fabricCanvas.current.on('mouse:down', () => {
+    if (tinta <= 0) {
+      fabricCanvas.current.isDrawingMode = false;
+    } else {
+      fabricCanvas.current.isDrawingMode = true;
+    }
+  });
 
-    // Escuchar inicio de demostración
-    socket.on('drawingDemoStarted', (teams) => {
-      setShowDemo(true);
-      setCurrentDemoTeam(Math.min(...teams.map(Number)));
-      loadDemoDrawings(teams);
-    });
+  // Escuchar acciones de dibujo remotas
+  socket.on('drawingAction', (action) => {
+    handleRemoteAction(action);
+  });
 
-    // Solicitar estado inicial del juego
-    socket.emit('initDrawingGame', { partidaId, equipoNumero });
+  // Escuchar inicio de demostración
+  socket.on('drawingDemoStarted', (teams) => {
+    setShowDemo(true);
+    setCurrentDemoTeam(Math.min(...teams.map(Number)));
+    loadDemoDrawings(teams);
+  });
 
-    socket.on('drawingGameState', ({ actions }) => {
-      actions.forEach(action => renderAction(action));
-    });
+  // Solicitar estado inicial del juego
+  socket.emit('initDrawingGame', { partidaId, equipoNumero });
 
-    // Configurar eventos del canvas
-    setupCanvasEvents();
+  socket.on('drawingGameState', ({ actions }) => {
+    actions.forEach(action => renderAction(action));
+  });
 
-    return () => {
-      // Limpiar listeners y canvas
-      socket.off('drawingAction');
-      socket.off('drawingDemoStarted');
-      if (fabricCanvas.current) {
-        fabricCanvas.current.dispose();
-      }
-    };
-  }, [socket, partidaId, equipoNumero]);
+  // Configurar eventos del canvas
+  setupCanvasEvents();
+
+  return () => {
+    socket.off('drawingAction');
+    socket.off('drawingDemoStarted');
+    if (fabricCanvas.current) {
+      fabricCanvas.current.dispose();
+    }
+  };
+}, [socket, partidaId, equipoNumero]);
+
 
   // Configurar eventos del canvas
   const setupCanvasEvents = () => {
     const canvas = fabricCanvas.current;
 
     canvas.on('path:created', (e) => {
-      const path = e.path;
-      path.userId = userId; // Añade propiedad de autor
+    const path = e.path;
+    const length = path.path?.length || 0;
 
-      // Emitir al servidor
-      socket.emit('drawingAction', {
-        partidaId,
-        equipoNumero,
-        userId,
-        action: {
-          type: 'path',
-          path: path.toObject(['path', 'stroke', 'strokeWidth'])
-        }
-      });
+    if (tintaConsumida.current + length >= MAX_TINTA) {
+      Swal.fire('¡Sin tinta!', 'Debes limpiar tu dibujo para recargar.', 'warning');
+      // Eliminar visualmente el trazo
+      canvas.remove(path);
+      return;
+    }
+
+    path.userId = userId;
+    tintaConsumida.current += length;
+    setTinta(prev => prev - length);
+
+    socket.emit('drawingAction', {
+      partidaId,
+      equipoNumero,
+      userId,
+      action: {
+        type: 'path',
+        path: path.toObject(['path', 'stroke', 'strokeWidth'])
+      }
     });
+  });
   };
 
   // Emitir acción de dibujo al servidor
@@ -182,18 +205,29 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Limpiar dibujo del usuario actual
   const clearUserDrawing = () => {
-    const canvas = fabricCanvas.current;
-    if (!canvas) return;
-    
-    // Eliminar solo los objetos del usuario actual
-    const objects = canvas.getObjects();
-    objects.forEach(obj => {
-      if (obj.userId === userId) {
-        canvas.remove(obj);
-      }
-    });
-    canvas.renderAll();
-  };
+  const canvas = fabricCanvas.current;
+  if (!canvas) return;
+
+  const objects = canvas.getObjects();
+  objects.forEach(obj => {
+    if (obj.userId === userId) {
+      canvas.remove(obj);
+    }
+  });
+  canvas.renderAll();
+
+  tintaConsumida.current = 0;
+  setTinta(MAX_TINTA);
+
+  // Animación o alerta
+  Swal.fire({
+    title: 'Tinta recargada',
+    text: '¡Puedes volver a dibujar!',
+    icon: 'success',
+    timer: 1000,
+    showConfirmButton: false
+  });
+};
 
   // Guardar el dibujo actual
   const saveDrawing = () => {
@@ -407,14 +441,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
               title="Pincel"
             >
               <i className="fas fa-paint-brush"></i>
-            </button>                    
-            <button 
-              className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
-              onClick={() => changeTool('eraser')}
-              title="Borrador"
-            >
-              <i className="fas fa-eraser"></i>
-            </button>                
+            </button>                                   
             <button 
               className="tool-btn"
               onClick={fillCanvas}
@@ -429,6 +456,21 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
             >
               <i className="fas fa-trash-alt"></i>
             </button>
+            <div className="tinta-tank-wrapper">
+            <div className="tinta-tank-label">Tanque de Tinta</div>
+            <div className="tinta-tank-container">
+              <div
+                className={`tinta-tank-fill ${
+                  tinta <= 1000 ? 'tinta-tank-critical' : tinta <= 3000 ? 'tinta-tank-low' : ''
+                }`}
+                style={{ width: `${(tinta / MAX_TINTA) * 100}%` }}
+              />
+            </div>
+            <div className="tinta-tank-text">
+              {tinta} / {MAX_TINTA}
+            </div>
+          </div>
+
           </div>
         </div>              
         

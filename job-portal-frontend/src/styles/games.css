@@ -1592,3 +1592,63 @@ h4 {
   color: white;
 }
 
+/* Contenedor del juego - Tanque */
+
+.tinta-tank-wrapper {
+  width: 200px;
+  margin: 10px auto;
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.tinta-tank-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.tinta-tank-container {
+  position: relative;
+  width: 100%;
+  height: 30px;
+  background-color: #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.tinta-tank-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+  border-radius: 12px 0 0 12px;
+  background: linear-gradient(
+    to right,
+    #00c853,
+    #64dd17
+  );
+  animation: tinta-wave 1.5s infinite linear;
+  background-size: 200% 100%;
+}
+
+.tinta-tank-low {
+  background: linear-gradient(to right, #ff9800, #ff5722);
+}
+
+.tinta-tank-critical {
+  background: linear-gradient(to right, #f44336, #b71c1c);
+}
+
+.tinta-tank-text {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #555;
+}
+
+@keyframes tinta-wave {
+  0% {
+    background-position-x: 0%;
+  }
+  100% {
+    background-position-x: 200%;
+  }
+}

@@ -26,151 +26,161 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const { fabric } = require('fabric');
 
-  const [tinta, setTinta] = useState(5000); // cantidad máxima inicial
+  const [tinta, setTinta] = useState(5000);
   const tintaConsumida = useRef(0);
   const MAX_TINTA = 5000;
 
+  // Función para cambiar al dibujo anterior en la demostración
+  const prevDemoDrawing = () => {
+    const prevTeam = currentDemoTeam - 1;
+    if (prevTeam >= 1) {
+      setCurrentDemoTeam(prevTeam);
+      // También puedes notificar al servidor si es necesario
+      socket.emit('changeDemoTeam', { partidaId, equipoNumero: prevTeam });
+    }
+  };
+
+  // Función para cambiar al siguiente dibujo en la demostración
+  const nextDemoDrawing = () => {
+    const nextTeam = currentDemoTeam + 1;
+    if (nextTeam <= totalTeams) {
+      setCurrentDemoTeam(nextTeam);
+      // También puedes notificar al servidor si es necesario
+      socket.emit('changeDemoTeam', { partidaId, equipoNumero: nextTeam });
+    }
+  };
+
+  // Función para seleccionar color
+  const handleColorSelect = (colorHex) => {
+    setColor(colorHex);
+    if (tool === 'brush') {
+      fabricCanvas.current.freeDrawingBrush.color = colorHex;
+    }
+    if (tool === 'eraser') {
+      setTool('brush');
+      setColor(colorHex);
+      fabricCanvas.current.freeDrawingBrush.color = colorHex;
+    }
+    setLastColor(colorHex);
+  };
+
   // Inicializar canvas con Fabric.js
   useEffect(() => {
-  if (!socket || !canvasRef.current) return;
+    if (!socket || !canvasRef.current) return;
 
-  // Crear canvas de Fabric.js
-  fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
-    isDrawingMode: true,
-    width: 800,
-    height: 600,
-    backgroundColor: '#ffffff',
-  });
+    // Crear canvas de Fabric.js
+    fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
+      isDrawingMode: true,
+      width: 800,
+      height: 600,
+      backgroundColor: '#ffffff',
+    });
 
-  // Configurar pincel inicial
-  fabricCanvas.current.freeDrawingBrush.color = color;
-  fabricCanvas.current.freeDrawingBrush.width = brushSize;
+    // Configurar pincel inicial
+    fabricCanvas.current.freeDrawingBrush.color = color;
+    fabricCanvas.current.freeDrawingBrush.width = brushSize;
 
-  // Bloquear dibujo si no hay tinta
-  fabricCanvas.current.on('mouse:down', () => {
-    if (tinta <= 0) {
-      fabricCanvas.current.isDrawingMode = false;
-    } else {
-      fabricCanvas.current.isDrawingMode = true;
-    }
-  });
+    // Eventos del canvas
+    const setupCanvasEvents = () => {
+      fabricCanvas.current.on('path:created', (e) => {
+        const path = e.path;
+        const pathData = path.toObject(['path', 'stroke', 'strokeWidth', 'userId']);
+        const pathLength = path.path?.length || 0;
 
-  // Escuchar acciones de dibujo remotas
-  socket.on('drawingAction', (action) => {
-    // Asegúrate de que siempre haya userId en la acción
-    handleRemoteAction(action);
-  });
+        if (tintaConsumida.current + pathLength >= MAX_TINTA) {
+          fabricCanvas.current.remove(path);
+          Swal.fire('¡Sin tinta!', 'Debes limpiar tu dibujo para recargar.', 'warning');
+          return;
+        }
 
-  // Escuchar inicio de demostración
-  socket.on('drawingDemoStarted', (teams) => {
-    setShowDemo(true);
-    setCurrentDemoTeam(Math.min(...teams.map(Number)));
-    loadDemoDrawings(teams);
-  });
+        path.userId = userId;
+        tintaConsumida.current += pathLength;
+        setTinta(prev => prev - pathLength);
 
-  // Solicitar estado inicial del juego
-  socket.emit('initDrawingGame', { partidaId, equipoNumero });
+        // Emitir acción de dibujo
+        socket.emit('drawingAction', {
+          partidaId,
+          equipoNumero,
+          userId,
+          action: {
+            type: 'path',
+            path: pathData
+          }
+        });
 
-  socket.on('drawingGameState', ({ actions }) => {
-    if (fabricCanvas.current) {
-      fabricCanvas.current.clear();
-      fabricCanvas.current.backgroundColor = '#ffffff';
-    }
-    actions.forEach(action => renderAction(action));
-  });
-
-  // Configurar eventos del canvas
-  setupCanvasEvents();
-
-  return () => {
-    socket.off('drawingAction');
-    socket.off('drawingDemoStarted');
-    if (fabricCanvas.current) {
-      fabricCanvas.current.dispose();
-    }
-  };
-}, [socket, partidaId, equipoNumero]);
-
-
-  // Configurar eventos del canvas
-  const setupCanvasEvents = () => {
-    const canvas = fabricCanvas.current;
-
-    canvas.on('path:created', (e) => {
-      const path = e.path;
-
-      // Serializa antes de calcular
-      const pathData = path.toObject(['path', 'stroke', 'strokeWidth', 'userId']);
-      const pathLength = path.path?.length || 0;
-
-      // Si se quedó sin tinta
-      if (tintaConsumida.current + pathLength >= MAX_TINTA) {
-        canvas.remove(path);
-        Swal.fire('¡Sin tinta!', 'Debes limpiar tu dibujo para recargar.', 'warning');
-        return;
-      }
-
-      // Marcar como autor y guardar local
-      path.userId = userId;
-      tintaConsumida.current += pathLength;
-      setTinta(prev => prev - pathLength);
-
-      // Enviar al backend
-      socket.emit('drawingAction', {
-        partidaId,
-        equipoNumero,
-        userId,
-        action: {
+        // Guardar acción localmente
+        if (!userActions.current[userId]) {
+          userActions.current[userId] = [];
+        }
+        userActions.current[userId].push({
           type: 'path',
           path: pathData
-        }
+        });
       });
+    };
 
-      // También almacenar localmente
-      if (!userActions.current[userId]) {
-        userActions.current[userId] = [];
+    // Configurar eventos del canvas
+    setupCanvasEvents();
+
+    // Escuchar acciones de dibujo remotas
+    socket.on('drawingAction', (action) => {
+      handleRemoteAction(action);
+    });
+
+    // Escuchar inicio de demostración
+    socket.on('drawingDemoStarted', (teams) => {
+      setShowDemo(true);
+      setCurrentDemoTeam(Math.min(...teams.map(Number)));
+      loadDemoDrawings(teams);
+    });
+
+    // Solicitar estado inicial del juego
+    socket.emit('initDrawingGame', { partidaId, equipoNumero });
+
+    // Escuchar estado inicial del juego
+    socket.on('drawingGameState', ({ actions }) => {
+      if (fabricCanvas.current) {
+        fabricCanvas.current.clear();
+        fabricCanvas.current.backgroundColor = '#ffffff';
+        
+        // Renderizar todas las acciones acumuladas
+        actions.forEach(action => {
+          renderAction(action);
+        });
       }
-      userActions.current[userId].push({
-        type: 'path',
-        path: pathData
-      });
     });
-  };
 
-  // Emitir acción de dibujo al servidor
-  const emitDrawingAction = (action) => {
-    if (!socket) return;
-    
-    // Almacenar acción localmente para renderizado inmediato
-    handleLocalAction(action);
-    
-    // Enviar al servidor
-    socket.emit('drawingAction', { 
-      partidaId, 
-      equipoNumero, 
-      userId, 
-      action 
+    // Escuchar limpieza de dibujos
+    socket.on('drawingCleared', ({ userId }) => {
+      if (fabricCanvas.current) {
+        const objects = fabricCanvas.current.getObjects();
+        objects.forEach(obj => {
+          if (obj.userId === userId) {
+            fabricCanvas.current.remove(obj);
+          }
+        });
+        fabricCanvas.current.renderAll();
+      }
     });
-  };
 
-  // Manejar acción local (renderizado inmediato)
-  const handleLocalAction = (action) => {
-    if (!userActions.current[userId]) {
-      userActions.current[userId] = [];
-    }
-    userActions.current[userId].push(action);
-    renderAction(action);
-  };
+    return () => {
+      socket.off('drawingAction');
+      socket.off('drawingDemoStarted');
+      socket.off('drawingGameState');
+      socket.off('drawingCleared');
+      if (fabricCanvas.current) {
+        fabricCanvas.current.dispose();
+      }
+    };
+  }, [socket, partidaId, equipoNumero]);
 
   // Manejar acción remota (de otros usuarios)
   const handleRemoteAction = (action) => {
-  // Quita este filtro, así también ves tus propios trazos
-  // if (action.userId === userId) return;
-  pendingRemoteActions.current.push(action);
-  if (!isProcessingRemoteActions.current) {
-    processRemoteActions();
-  }
-};
+    pendingRemoteActions.current.push(action);
+    if (!isProcessingRemoteActions.current) {
+      processRemoteActions();
+    }
+  };
 
   // Procesar acciones remotas en cola
   const processRemoteActions = () => {
@@ -188,70 +198,76 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     userActions.current[action.userId].push(action);
     renderAction(action);
 
-    // Usar requestAnimationFrame para procesar en el siguiente frame
     requestAnimationFrame(processRemoteActions);
   };
 
   // Renderizar una acción en el canvas
   const renderAction = (action) => {
-  const canvas = fabricCanvas.current;
-  if (!canvas) return;
+    const canvas = fabricCanvas.current;
+    if (!canvas) return;
 
-  switch (action.type) {
-    case 'path':
-      const pathObj = new fabric.Path(action.path.path, {
-        stroke: action.path.stroke,
-        strokeWidth: action.path.strokeWidth,
-        fill: null,
-        selectable: false,
-        evented: false
-      });
-      pathObj.userId = action.userId;
+    switch (action.type) {
+      case 'path':
+        const pathObj = new fabric.Path(action.path.path, {
+          stroke: action.path.stroke,
+          strokeWidth: action.path.strokeWidth,
+          fill: null,
+          selectable: false,
+          evented: false,
+          userId: action.userId
+        });
 
-      // Agregar al canvas
-      canvas.add(pathObj);
+        canvas.add(pathObj);
+        canvas.renderAll();
+        break;
 
-      // Asegurar que se vea
-      canvas.renderAll();
-      break;
+      case 'clear':
+        if (action.userId === userId) {
+          clearUserDrawing();
+        }
+        break;
 
-    case 'clear':
-      if (action.userId === userId) {
-        clearUserDrawing();
-      }
-      break;
-
-    case 'fill':
-      canvas.setBackgroundColor(action.color, canvas.renderAll.bind(canvas));
-      break;
-  }
-};
+      case 'fill':
+        canvas.setBackgroundColor(action.color, canvas.renderAll.bind(canvas));
+        break;
+    }
+  };
 
   // Limpiar dibujo del usuario actual
   const clearUserDrawing = () => {
-  const canvas = fabricCanvas.current;
-  if (!canvas) return;
+    const canvas = fabricCanvas.current;
+    if (!canvas) return;
 
-  const objects = canvas.getObjects();
-  objects.forEach(obj => {
-    if (obj.userId === userId) {
-      canvas.remove(obj);
-    }
-  });
-  canvas.renderAll();
+    const objects = canvas.getObjects();
+    objects.forEach(obj => {
+      if (obj.userId === userId) {
+        canvas.remove(obj);
+      }
+    });
+    canvas.renderAll();
 
-  tintaConsumida.current = 0;
-  setTinta(MAX_TINTA);
+    tintaConsumida.current = 0;
+    setTinta(MAX_TINTA);
 
-  // Animación o alerta
-  Swal.fire({
-    title: 'Tinta recargada',
-    text: '¡Puedes volver a dibujar!',
-    icon: 'success',
-    timer: 1000,
-    showConfirmButton: false
-  });
-};
+    // Notificar al backend
+    socket.emit('drawingAction', {
+      partidaId,
+      equipoNumero,
+      userId,
+      action: {
+        type: 'clear',
+        userId
+      }
+    });
+
+    Swal.fire({
+      title: 'Tinta recargada',
+      text: '¡Puedes volver a dibujar!',
+      icon: 'success',
+      timer: 1000,
+      showConfirmButton: false
+    });
+  };
 
   // Guardar el dibujo actual
   const saveDrawing = () => {
@@ -274,9 +290,10 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     setTool(newTool);
     if (newTool === 'eraser') {
       setLastColor(color);
-      setColor('#ffffff');
+      fabricCanvas.current.freeDrawingBrush.color = '#ffffff';
     } else if (newTool === 'brush') {
       setColor(lastColor);
+      fabricCanvas.current.freeDrawingBrush.color = lastColor;
     }
   };
 
@@ -297,7 +314,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Rellenar el canvas
   const fillCanvas = () => {
-    if (!socket) return;
+    if (!socket || !fabricCanvas.current) return;
     
     const action = { 
       type: 'fill', 
@@ -308,6 +325,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     socket.emit('drawingAction', { 
       partidaId, 
       equipoNumero, 
+      userId,
       action 
     });
     
@@ -318,6 +336,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   // Cargar dibujos para demostración
   const loadDemoDrawings = (teams) => {
     const validTeams = Array.isArray(teams) ? teams : [];
+    setTotalTeams(validTeams.length);
     
     validTeams.forEach(team => {
       const teamNumber = Number(team);
@@ -335,35 +354,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
         }
       });
     });
-  };
-
-  // Cambiar al siguiente dibujo en la demostración
-  const nextDemoDrawing = () => {
-    const nextTeam = currentDemoTeam + 1;
-    if (nextTeam <= totalTeams) {
-      socket.emit('changeDemoTeam', { partidaId, equipoNumero: nextTeam });
-    }
-  };
-
-  // Cambiar al dibujo anterior en la demostración
-  const prevDemoDrawing = () => {
-    const prevTeam = currentDemoTeam - 1;
-    if (prevTeam >= 1) {
-      socket.emit('changeDemoTeam', { partidaId, equipoNumero: prevTeam });
-    }
-  };
-
-  // Seleccionar color
-  const handleColorSelect = (colorHex) => {
-    setColor(colorHex);
-    if (tool === 'brush') {
-      fabricCanvas.current.freeDrawingBrush.color = colorHex;
-    }
-    if (tool === 'eraser') {
-      setTool('brush');
-      setColor(colorHex);
-    }
-    setLastColor(colorHex);
   };
 
   // Actualizar tamaño del pincel
@@ -474,20 +464,19 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
               <i className="fas fa-trash-alt"></i>
             </button>
             <div className="tinta-tank-wrapper">
-            <div className="tinta-tank-label">Tanque de Tinta</div>
-            <div className="tinta-tank-container">
-              <div
-                className={`tinta-tank-fill ${
-                  tinta <= 1000 ? 'tinta-tank-critical' : tinta <= 3000 ? 'tinta-tank-low' : ''
-                }`}
-                style={{ width: `${(tinta / MAX_TINTA) * 100}%` }}
-              />
+              <div className="tinta-tank-label">Tanque de Tinta</div>
+              <div className="tinta-tank-container">
+                <div
+                  className={`tinta-tank-fill ${
+                    tinta <= 1000 ? 'tinta-tank-critical' : tinta <= 3000 ? 'tinta-tank-low' : ''
+                  }`}
+                  style={{ width: `${(tinta / MAX_TINTA) * 100}%` }}
+                />
+              </div>
+              <div className="tinta-tank-text">
+                {tinta} / {MAX_TINTA}
+              </div>
             </div>
-            <div className="tinta-tank-text">
-              {tinta} / {MAX_TINTA}
-            </div>
-          </div>
-
           </div>
         </div>              
         

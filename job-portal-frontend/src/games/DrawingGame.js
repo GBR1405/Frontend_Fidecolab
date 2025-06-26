@@ -57,6 +57,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Escuchar acciones de dibujo remotas
   socket.on('drawingAction', (action) => {
+    // Asegúrate de que siempre haya userId en la acción
     handleRemoteAction(action);
   });
 
@@ -71,6 +72,10 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   socket.emit('initDrawingGame', { partidaId, equipoNumero });
 
   socket.on('drawingGameState', ({ actions }) => {
+    if (fabricCanvas.current) {
+      fabricCanvas.current.clear();
+      fabricCanvas.current.backgroundColor = '#ffffff';
+    }
     actions.forEach(action => renderAction(action));
   });
 
@@ -159,13 +164,13 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Manejar acción remota (de otros usuarios)
   const handleRemoteAction = (action) => {
-    if (action.userId === userId) return;
-    
-    pendingRemoteActions.current.push(action);
-    if (!isProcessingRemoteActions.current) {
-      processRemoteActions();
-    }
-  };
+  // Quita este filtro, así también ves tus propios trazos
+  // if (action.userId === userId) return;
+  pendingRemoteActions.current.push(action);
+  if (!isProcessingRemoteActions.current) {
+    processRemoteActions();
+  }
+};
 
   // Procesar acciones remotas en cola
   const processRemoteActions = () => {
@@ -461,13 +466,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
             >
               <i className="fas fa-paint-brush"></i>
             </button>                                   
-            <button 
-              className="tool-btn"
-              onClick={fillCanvas}
-              title="Rellenar"
-            >
-              <i className="fas fa-fill-drip"></i>
-            </button>
             <button 
               className="tool-btn"
               onClick={clearCanvas}

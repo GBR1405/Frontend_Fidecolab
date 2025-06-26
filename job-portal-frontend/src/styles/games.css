@@ -1594,61 +1594,33 @@ h4 {
 
 /* Contenedor del juego - Tanque */
 
-.tinta-tank-wrapper {
-  width: 200px;
-  margin: 10px auto;
-  text-align: center;
-  font-family: 'Arial', sans-serif;
-}
 
-.tinta-tank-label {
-  font-weight: bold;
-  margin-bottom: 4px;
-  color: #333;
-}
-
-.tinta-tank-container {
+/* Estilos para el tanque de tinta vertical */
+.tinta-tank-vertical {
+  width: 20px;
+  height: 100px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
   position: relative;
-  width: 100%;
-  height: 30px;
-  background-color: #e0e0e0;
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  margin-left: 10px;
 }
 
 .tinta-tank-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-  border-radius: 12px 0 0 12px;
-  background: linear-gradient(
-    to right,
-    #00c853,
-    #64dd17
-  );
-  animation: tinta-wave 1.5s infinite linear;
-  background-size: 200% 100%;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #4CAF50;
+  transition: height 0.3s ease;
 }
 
 .tinta-tank-low {
-  background: linear-gradient(to right, #ff9800, #ff5722);
+  background-color: #FFC107;
 }
 
 .tinta-tank-critical {
-  background: linear-gradient(to right, #f44336, #b71c1c);
+  background-color: #F44336;
 }
 
-.tinta-tank-text {
-  margin-top: 5px;
-  font-size: 14px;
-  color: #555;
-}
-
-@keyframes tinta-wave {
-  0% {
-    background-position-x: 0%;
-  }
-  100% {
-    background-position-x: 200%;
-  }
-}
+/* Otros estilos existentes... */

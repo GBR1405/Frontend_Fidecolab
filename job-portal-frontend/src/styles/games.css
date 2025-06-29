@@ -1595,32 +1595,31 @@ h4 {
 /* Contenedor del juego - Tanque */
 
 
-/* Estilos para el tanque de tinta vertical */
 .tinta-tank-vertical {
-  width: 20px;
+  position: relative;
+  width: 30px;
   height: 100px;
   background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  position: relative;
+  border-radius: 5px;
   overflow: hidden;
-  margin-left: 10px;
+  margin: 0 10px;
+  border: 1px solid #ccc;
 }
 
 .tinta-tank-fill {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background-color: #4CAF50;
+  background-color: #4a90e2;
   transition: height 0.3s ease;
 }
 
 .tinta-tank-low {
-  background-color: #FFC107;
+  background-color: #ffcc00;
 }
 
 .tinta-tank-critical {
-  background-color: #F44336;
+  background-color: #ff4d4d;
 }
 
 /* Otros estilos existentes... */

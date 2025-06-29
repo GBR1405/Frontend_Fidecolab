@@ -449,14 +449,15 @@ const Depuration = () => {
                 </thead>
                 <tbody className="table__body">
                   {loading ? (
-                    <tr>
-                      <td colSpan="5" style={{ 
-                        position: 'relative',
-                        height: '200px' // Ajusta esta altura según necesites
-                      }}>
-                        <div className="loader-blue-king"></div>
-                      </td>
-                    </tr>
+                    <td colSpan="5" style={{ 
+                      position: 'relative',
+                      height: '200px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}>
+                      <div className="loader-blue-king"></div>
+                    </td>
                   ) : (
                     currentItems.map((tema) => (
                       <tr className="table__row fade-in" key={tema.Tema_Juego_ID_PK}>

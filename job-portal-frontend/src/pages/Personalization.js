@@ -23,6 +23,7 @@ const Depuration = () => {
   const [filterTipoJuego, setFilterTipoJuego] = useState(""); // Filtro de tipo de juego
   const [filterEstado, setFilterEstado] = useState(""); // Filtro de estado
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
   
   const navigate = useNavigate();
   const token = Cookies.get("authToken");
@@ -30,6 +31,24 @@ const Depuration = () => {
   const handleDelete = (id) => {
     navigate(`/admin/personalize_editor/delete/${id}`);
   };
+  
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true); // Activar carga
+      const response = await axios.get(`${apiURL}/gettemas`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      setTemas(response.data.temas);
+    } catch (error) {
+      console.error("Error al obtener los temas:", error);
+    } finally {
+      setLoading(false); // Desactivar carga cuando termine
+    }
+  };
+
+  fetchData();
+}, []);
 
   useEffect(() => {
     // Obtener los tipos de juegos
@@ -429,42 +448,50 @@ const Depuration = () => {
                   <th className="table__header">Acciones</th>
                 </thead>
                 <tbody className="table__body">
-                  {currentItems.map((tema) => (
-                    <tr className="table__row" key={tema.Tema_Juego_ID_PK}>
-                      <td className="disapear">{tema.Tema_Juego_ID_PK}</td>
-                      <td className="table__data">{tema.Tipo_Juego}</td>
-                      <td className="table__data">
-                        {tema.Contenido.startsWith("http") && (tema.Contenido.endsWith(".jpg") || tema.Contenido.endsWith(".png") || tema.Contenido.endsWith(".jpeg"))
-                          ? <span className="data__image" onClick={() => handleImageClick(tema.Contenido)}>Ver Imagen</span>
-                          : tema.Contenido}
-                      </td>
-                      <td className="table__data">{tema.Estado === true ? "Activo" : "Inactivo"}</td>
-                      <td className={`table__data ${tema.Tipo_Juego === "Rompecabezas" ? "only-delete" : ""}`}>
-                        {tema.Tipo_Juego !== "Rompecabezas" && (
-                          <button className="button__blue" onClick={() => handleEdit(tema)}>
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                        )}
-                        
-                        {tema.Estado ? (
-                          <button 
-                            className="button__orange button--deactivate" 
-                            onClick={() => handleDeactivate(tema.Tema_Juego_ID_PK)} 
-                          >
-                            <i className="fa-solid fa-ban"></i>
-                          </button>
-                        ) : (
-                          <button 
-                            className="button__blue button--activate" 
-                            onClick={() => handleActivate(tema.Tema_Juego_ID_PK)} 
-                            style={{ cursor: "pointer" }}
-                          >
-                            <i className="fa-solid fa-check"></i>
-                          </button>
-                        )}
+                  {loading ? (
+                    <tr className="table__row">
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                        <div className="loader-blue"></div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    currentItems.map((tema) => (
+                      <tr className="table__row fade-in" key={tema.Tema_Juego_ID_PK}>
+                        <td className="disapear">{tema.Tema_Juego_ID_PK}</td>
+                        <td className="table__data">{tema.Tipo_Juego}</td>
+                        <td className="table__data">
+                          {tema.Contenido.startsWith("http") && (tema.Contenido.endsWith(".jpg") || tema.Contenido.endsWith(".png") || tema.Contenido.endsWith(".jpeg"))
+                            ? <span className="data__image" onClick={() => handleImageClick(tema.Contenido)}>Ver Imagen</span>
+                            : tema.Contenido}
+                        </td>
+                        <td className="table__data">{tema.Estado === true ? "Activo" : "Inactivo"}</td>
+                        <td className={`table__data ${tema.Tipo_Juego === "Rompecabezas" ? "only-delete" : ""}`}>
+                          {tema.Tipo_Juego !== "Rompecabezas" && (
+                            <button className="button__blue" onClick={() => handleEdit(tema)}>
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          )}
+                          
+                          {tema.Estado ? (
+                            <button 
+                              className="button__orange button--deactivate" 
+                              onClick={() => handleDeactivate(tema.Tema_Juego_ID_PK)} 
+                            >
+                              <i className="fa-solid fa-ban"></i>
+                            </button>
+                          ) : (
+                            <button 
+                              className="button__blue button--activate" 
+                              onClick={() => handleActivate(tema.Tema_Juego_ID_PK)} 
+                              style={{ cursor: "pointer" }}
+                            >
+                              <i className="fa-solid fa-check"></i>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 <tfoot className="table__foot">
                   {totalPages > 1 && (

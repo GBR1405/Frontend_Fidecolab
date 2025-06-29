@@ -2258,3 +2258,50 @@ body, html {
     display: none;
 }
 
+/* Estilos para la carga */
+
+/* Loader azul */
+.loader-blue {
+  width: 50px;
+  aspect-ratio: 1;
+  display: grid;
+  border: 4px solid transparent;
+  border-radius: 50%;
+  border-right-color: #2196F3;
+  animation: l15 1s infinite linear;
+  margin: 0 auto;
+}
+.loader-blue::before,
+.loader-blue::after {    
+  content: "";
+  grid-area: 1/1;
+  margin: 2px;
+  border: inherit;
+  border-radius: 50%;
+  animation: l15 2s infinite;
+  border-right-color: rgba(33, 150, 243, 0.5);
+}
+.loader-blue::after {
+  margin: 8px;
+  animation-duration: 3s;
+  border-right-color: rgba(33, 150, 243, 0.2);
+}
+
+@keyframes l15 { 
+  100% { transform: rotate(1turn) }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

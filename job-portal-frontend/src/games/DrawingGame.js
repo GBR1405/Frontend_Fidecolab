@@ -503,35 +503,43 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     };
 
     const handleGameState = (data) => {
-      if (!data) return;
+  if (!data) return;
 
-      const newRemoteLines = {};
-      
-      try {
-        if (Array.isArray(data.actions)) {
-          data.actions.forEach(({ userId, path }) => {
-            if (userId && path) {
-              if (!newRemoteLines[userId]) {
-                newRemoteLines[userId] = [];
-              }
-              newRemoteLines[userId].push(path);
-            }
-          });
-        }
-        
-        setRemoteLines(newRemoteLines);
-        
-        if (data.tintaState?.[userId]) {
-          const newTinta = parseInt(data.tintaState[userId]);
-          if (!isNaN(newTinta)) {
-            setTinta(newTinta);
-            tintaConsumida.current = MAX_TINTA - newTinta;
+  const newRemoteLines = {};
+  
+  try {
+    // Procesar acciones remotas
+    if (Array.isArray(data.actions)) {
+      data.actions.forEach(({ userId, path }) => {
+        if (userId && path) {
+          if (!newRemoteLines[userId]) {
+            newRemoteLines[userId] = [];
           }
+          newRemoteLines[userId].push(path);
         }
-      } catch (error) {
-        console.error('Error processing game state:', error);
+      });
+    }
+    
+    setRemoteLines(newRemoteLines);
+    
+    // Solo actualizar tinta si no estamos dibujando actualmente
+    if (!isDrawing.current && data.tintaState?.[userId]) {
+      const newTinta = parseInt(data.tintaState[userId]);
+      if (!isNaN(newTinta)) {
+        // Mantener consistencia entre estado local y remoto
+        const delta = tintaConsumida.current - (MAX_TINTA - newTinta);
+        
+        // Solo actualizar si la diferencia es significativa
+        if (Math.abs(delta) > 10) { // Umbral de 10 unidades
+          setTinta(newTinta);
+          tintaConsumida.current = MAX_TINTA - newTinta;
+        }
       }
-    };
+    }
+  } catch (error) {
+    console.error('Error processing game state:', error);
+  }
+};
 
     socket.on('drawingAction', handleDrawingAction);
     socket.on('drawingGameState', handleGameState);

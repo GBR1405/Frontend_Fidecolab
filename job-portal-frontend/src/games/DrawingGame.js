@@ -27,7 +27,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const lastPoint = useRef(null);
   const animationRef = useRef(null);
   const tintaConsumida = useRef(0);
-  const MAX_TINTA = 10000;
+  const MAX_TINTA = 5000;
 
   // Paleta de colores
   const colorPalette = [

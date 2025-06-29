@@ -561,7 +561,7 @@
         }
 
         .button__page.active{
-            background-color: var(--blue-royal-clr);
+            background-color: #6174e0;
         }
         
         .button__page:nth-child(n):focus,
@@ -908,7 +908,7 @@
         }
 
         .button__page.active{
-            background-color: var(--blue-royal-clr);
+            background-color: #6174e0;
         }
         
         .button__page:nth-child(n):focus,
@@ -1329,7 +1329,7 @@
         }
 
         .button__page.active{
-            background-color: var(--blue-royal-clr);
+            background-color: #6174e0;
         }
         
         .button__page:nth-child(n):focus,
@@ -1658,7 +1658,7 @@
         }
 
         .button__page.active{
-            background-color: var(--blue-royal-clr);
+            background-color: #6174e0;
         }
         
         .button__page:nth-child(n):focus,

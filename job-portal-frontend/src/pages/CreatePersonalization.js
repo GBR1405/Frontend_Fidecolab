@@ -71,7 +71,6 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
     setJuegosSeleccionados(prev => [...prev, nuevoJuego]);
 
-    // Abrir automáticamente el selector de imágenes para rompecabezas
     if (juego.Juego === "Rompecabezas") {
       const index = juegosSeleccionados.length;
       setTimeout(() => {
@@ -176,111 +175,122 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
   const JuegoCard = ({ index, juego }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const [modalOpen, setModalOpen] = useState(false);
+    const [swalInstance, setSwalInstance] = useState(null);
     const imagesPerPage = 4;
 
     const openModal = () => {
-      setModalOpen(true);
-      renderModal();
-    };
-
-    const closeModal = () => {
-      setModalOpen(false);
-      Swal.close();
-    };
-
-    const handleImageSelect = (temaId) => {
-      if (temaId) {
-        actualizarJuego(index, "tema", temaId);
-        closeModal();
-      }
-    };
-
-    const changePage = (newPage) => {
-      setCurrentPage(newPage);
-      renderModal();
-    };
-
-    const renderModal = () => {
       const totalPages = Math.ceil(juego.temas.length / imagesPerPage);
-      const startIdx = (currentPage - 1) * imagesPerPage;
-      const endIdx = startIdx + imagesPerPage;
-      const currentImages = juego.temas.slice(startIdx, endIdx);
-
-      Swal.fire({
+      
+      const modal = Swal.fire({
         title: 'Seleccionar Imagen',
-        html: `
-          <div class="image-gallery" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
-            ${currentImages.length > 0 ? 
-              currentImages.map((tema) => `
-                <div class="image-item" style="text-align: center;">
-                  <img src="${tema.Contenido}" alt="Tema ${tema.Tema_Juego_ID_PK}" 
-                    style="
-                      width: 120px; 
-                      height: 120px; 
-                      cursor: pointer; 
-                      border: ${juego.tema === tema.Tema_Juego_ID_PK ? '3px solid #2196F3' : '1px solid #ddd'};
-                      border-radius: 8px;
-                      object-fit: cover;
-                      padding: 2px;
-                      transition: all 0.3s;
-                    "
-                    onmouseover="this.style.transform='scale(1.05)'"
-                    onmouseout="this.style.transform='scale(1)'"
-                    data-id="${tema.Tema_Juego_ID_PK}" />
-                </div>
-              `).join('') :
-              `<span>No hay temas disponibles</span>`
-            }
-          </div>
-          ${totalPages > 1 ? `
-            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
-              <button id="prevPage" class="swal2-button swal2-cancel" 
-                style="padding: 5px 15px; border-radius: 5px;" 
-                ${currentPage === 1 ? 'disabled' : ''}>
-                <i class="fa-solid fa-chevron-left"></i>
-              </button>
-              <span style="margin: 0 5px;">Página ${currentPage} de ${totalPages}</span>
-              <button id="nextPage" class="swal2-button swal2-cancel" 
-                style="padding: 5px 15px; border-radius: 5px;" 
-                ${currentPage === totalPages ? 'disabled' : ''}>
-                <i class="fa-solid fa-chevron-right"></i>
-              </button>
-            </div>
-          ` : ''}
-        `,
+        html: getModalContent(),
         showCancelButton: true,
         cancelButtonText: 'Cerrar',
         showConfirmButton: false,
         allowOutsideClick: true,
         didOpen: () => {
-          const items = document.querySelectorAll('.image-item img');
-          items.forEach(item => {
-            item.addEventListener('click', (e) => {
-              const temaId = e.target.dataset.id;
-              handleImageSelect(temaId);
-            });
-          });
-
-          const prevBtn = document.getElementById('prevPage');
-          const nextBtn = document.getElementById('nextPage');
-          
-          if (prevBtn) {
-            prevBtn.addEventListener('click', () => {
-              changePage(currentPage - 1);
-            });
-          }
-          
-          if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-              changePage(currentPage + 1);
-            });
-          }
+          setupEventListeners();
         },
         willClose: () => {
-          setModalOpen(false);
+          setSwalInstance(null);
         }
       });
+      
+      setSwalInstance(modal);
+    };
+
+    const getModalContent = () => {
+      const totalPages = Math.ceil(juego.temas.length / imagesPerPage);
+      const startIdx = (currentPage - 1) * imagesPerPage;
+      const endIdx = startIdx + imagesPerPage;
+      const currentImages = juego.temas.slice(startIdx, endIdx);
+
+      return `
+        <div class="image-gallery" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-height: 60vh; overflow-y: auto;">
+          ${currentImages.length > 0 ? 
+            currentImages.map((tema) => `
+              <div class="image-item" style="text-align: center;">
+                <img src="${tema.Contenido}" alt="Tema ${tema.Tema_Juego_ID_PK}" 
+                  style="
+                    width: 120px; 
+                    height: 120px; 
+                    cursor: pointer; 
+                    border: ${juego.tema === tema.Tema_Juego_ID_PK ? '3px solid #2196F3' : '1px solid #ddd'};
+                    border-radius: 8px;
+                    object-fit: cover;
+                    padding: 2px;
+                    transition: all 0.3s;
+                  "
+                  onmouseover="this.style.transform='scale(1.05)'"
+                  onmouseout="this.style.transform='scale(1)'"
+                  data-id="${tema.Tema_Juego_ID_PK}" />
+              </div>
+            `).join('') :
+            `<span>No hay temas disponibles</span>`
+          }
+        </div>
+        ${totalPages > 1 ? `
+          <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <button id="prevPage" class="swal2-button swal2-cancel" 
+              style="padding: 5px 15px; border-radius: 5px;" 
+              ${currentPage === 1 ? 'disabled' : ''}>
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span style="margin: 0 5px;">Página ${currentPage} de ${totalPages}</span>
+            <button id="nextPage" class="swal2-button swal2-cancel" 
+              style="padding: 5px 15px; border-radius: 5px;" 
+              ${currentPage === totalPages ? 'disabled' : ''}>
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        ` : ''}
+      `;
+    };
+
+    const setupEventListeners = () => {
+      const items = document.querySelectorAll('.image-item img');
+      items.forEach(item => {
+        item.addEventListener('click', (e) => {
+          const temaId = e.target.dataset.id;
+          handleImageSelect(temaId);
+        });
+      });
+
+      const prevBtn = document.getElementById('prevPage');
+      const nextBtn = document.getElementById('nextPage');
+      
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setCurrentPage(prev => Math.max(prev - 1, 1));
+          updateModalContent();
+        });
+      }
+      
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setCurrentPage(prev => Math.min(prev + 1, Math.ceil(juego.temas.length / imagesPerPage)));
+          updateModalContent();
+        });
+      }
+    };
+
+    const updateModalContent = () => {
+      if (swalInstance) {
+        swalInstance.update({
+          html: getModalContent()
+        }).then(() => {
+          setupEventListeners();
+        });
+      }
+    };
+
+    const handleImageSelect = (temaId) => {
+      if (temaId) {
+        actualizarJuego(index, "tema", temaId);
+        swalInstance.close();
+      }
     };
 
     const [, ref] = useDrag({
@@ -319,6 +329,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
             <select
               value={juego.dificultad}
               onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
+              className="styled-select"
             >
               <option value="0" disabled selected>Dificultad:</option>
               <option value="1">Fácil (7 min)</option>
@@ -329,6 +340,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
             <select
               value={juego.dificultad}
               onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
+              className="styled-select"
             >
               <option value="0" disabled selected>Dificultad:</option>
               <option value="1">Fácil</option>
@@ -365,6 +377,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
                 const newTemaId = e.target.value;
                 actualizarJuego(index, "tema", newTemaId);
               }}
+              className="styled-select"
             >
               {juego.temas.length > 0 ? (
                 juego.temas.map((tema) => (

@@ -10,6 +10,7 @@ import { io } from 'socket.io-client';
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
+
 // Función para obtener el valor de una cookie por su nombre
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -26,6 +27,7 @@ const Layout = ({ children }) => {
 
   // Clave de desencriptado obtenida desde el archivo .env
   const decryptionKey = process.env.REACT_APP_SECRET_KEY;
+  const isSimulationsActive = location.pathname === '/simulations' || location.pathname.startsWith('/simulations/');
 
   const handleJoinSimulation = async () => {
   try {
@@ -269,11 +271,11 @@ const Layout = ({ children }) => {
                       <span className="area__text">Estudiantes</span>
                   </a>
               </li>
-              <li className={`list__item ${location.pathname === '/simulations' ? 'list__item--active' : ''}`}>
-                  <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
-                      <i className="fa-solid fa-play-circle"></i>
-                      <span className="area__text">Empezar Simulación</span>
-                  </a>
+              <li className={`list__item ${isSimulationsActive ? 'list__item--active' : ''}`}>
+                <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
+                  <i className="fa-solid fa-play-circle"></i>
+                  <span className="area__text">Empezar Simulación</span>
+                </a>
               </li>
               <li className={`list__item ${location.pathname === '/history' ? 'list__item--active' : ''}`}>
                   <a className="item__area" onClick={() => navigate('/history')} style={{ cursor: 'pointer' }}>

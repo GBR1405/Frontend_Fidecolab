@@ -226,7 +226,12 @@ const Layout = ({ children }) => {
         </div>
 
         <ul className="sidebar__list">
-          <li className={`list__item ${location.pathname === '/homeScreen' ? 'list__item--active' : ''}`}>
+          <li className={`list__item ${
+            location.pathname === '/homeScreen' || 
+            location.pathname === '/profile'
+            ? 'list__item--active' 
+            : ''
+          }`}>
             <a className="item__area" onClick={() => navigate('/homeScreen')} style={{ cursor: 'pointer' }}>
               <i className="fa-solid fa-house"></i>
               <span className="area__text">Inicio</span>
@@ -236,16 +241,6 @@ const Layout = ({ children }) => {
           {/* Opciones para Estudiantes */}
           {userData?.rol === 'Estudiante' && (
     <>
-              <li className={`list__item ${
-                location.pathname.startsWith('/simulations') 
-                  ? 'list__item--active' 
-                  : ''
-              }`}>
-                <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
-                  <i className="fa-solid fa-play-circle"></i>
-                  <span className="area__text">Empezar Simulación</span>
-                </a>
-              </li>
               <li className={`list__item ${location.pathname === '/history' ? 'list__item--active' : ''}`}>
                   <a className="item__area" onClick={() => navigate('/history')} style={{ cursor: 'pointer' }}>
                       <i className="fa-solid fa-clock-rotate-left"></i>

@@ -31,11 +31,11 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Paleta de colores
   const colorPalette = [
-    '#FF0000', '#FF3300', '#FF6600', '#FF9900', '#FFCC00', '#FFFF00',
-    '#00FF00', '#00CC33', '#009966', '#006699', '#0033CC', '#0000FF',
-    '#6600FF', '#9933FF', '#CC66FF', '#FF00FF', '#FF33CC', '#FF6699',
+    '#FF0000', '#FF6600', '#FFCC00', '#FFFF00',
+    '#00FF00', '#00CC33', '#006699', '#0000FF',
+    '#6600FF', '#9933FF', '#FF00FF', '#FF33CC',
     '#000000', '#FFFFFF', '#888888'
-  ];
+];
 
  socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
 

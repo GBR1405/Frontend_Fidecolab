@@ -1284,6 +1284,22 @@ th.hidden-column {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.image-modal-overlay.closing {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .image-modal {
@@ -1295,6 +1311,35 @@ th.hidden-column {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transform: scale(0.9);
+  opacity: 0;
+  animation: zoomIn 0.3s ease-out forwards;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.image-modal.closing {
+  animation: zoomOut 0.2s ease-in forwards;
+}
+
+@keyframes zoomOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
 }
 
 .modal-header {
@@ -1346,7 +1391,7 @@ th.hidden-column {
 }
 
 .image-item.selected {
-  border-color: #2196F3;
+  border-color: #0d24a1;
   box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
 }
 

@@ -530,7 +530,7 @@ const ProfessorStudents = () => {
                   <th className="table__header" width="20%">Curso/Grupo</th>
                   <th className="table__header" width="10%">Acciones</th>
                 </thead>
-                <tbody className="table__body">
+                <tbody className="table__body_P">
                   {estudiantes && estudiantes.length > 0 ? (
                     currentStudents.map((est, index) => (
                       <tr className="table__row" key={index}>

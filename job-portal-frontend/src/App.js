@@ -36,6 +36,7 @@ const SalaEspera = lazy(() => import("./pages/WaitingRoom.js"));
 const PanelProfesor = lazy(() => import("./pages/ProfessorDashboard.js"));
 const Ejemplo = lazy(() => import("./pages/Signup.js"));
 const Canvas = lazy(() => import("./pages/Canvas.js"));
+const PaginSimulacion = lazy(() => import("./pages/FilterPersonalization.js"));
 
 // Rutas de administración
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.js"));
@@ -43,7 +44,7 @@ const AdminCursosYProfesores = lazy(() => import("./pages/TeacherAndCourses.js")
 const AdminDepuracion = lazy(() => import("./pages/Depuration.js"));
 const AdminHistorial = lazy(() => import("./pages/Historial.js"));
 const AdminReportes = lazy(() => import("./pages/Reports.js"));
-const PaginSimulacion = lazy(() => import("./pages/FilterPersonalization.js"));
+
 const AgregarContenido = lazy(() => import("./pages/AddGames.js"));
 
 

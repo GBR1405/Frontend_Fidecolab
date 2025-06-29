@@ -118,6 +118,16 @@ const FilterPersonalization = () => {
             reverseButtons: true
         }).then(async (result) => {
             if (result.isConfirmed) {
+                // Mostrar SweetAlert de carga
+                Swal.fire({
+                    title: "Eliminando...",
+                    text: "Por favor espere",
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 try {
                     const response = await fetch(`${apiUrl}/eliminar_personalizacion`, {
                         method: "DELETE",
@@ -128,20 +138,42 @@ const FilterPersonalization = () => {
                         },
                         body: JSON.stringify({ personalizationId })
                     });
-    
+
+                    Swal.close(); // Cierra el Swal de carga
+
                     if (response.ok) {
-                        Swal.fire("Eliminado", "La personalización ha sido eliminada.", "success");
-                        setPersonalizations(personalizations.filter(p => p.Personalizacion_ID_PK !== personalizationId));
+                        Swal.fire({
+                            title: "¡Eliminado!",
+                            text: "La personalización fue eliminada correctamente.",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // Actualizar la lista eliminando el item
+                        setPersonalizations(prev =>
+                            prev.filter(p => p.Personalizacion_ID_PK !== personalizationId)
+                        );
                     } else {
-                        Swal.fire("Error", "No se pudo eliminar la personalización.", "error");
+                        Swal.fire({
+                            title: "Error",
+                            text: "No se pudo eliminar la personalización.",
+                            icon: "error"
+                        });
                     }
                 } catch (error) {
                     console.error("Error al eliminar personalización:", error);
-                    Swal.fire("Error", "Hubo un problema al eliminar la personalización.", "error");
+                    Swal.close(); // Asegura que se cierre el loader si hay error
+                    Swal.fire({
+                        title: "Error",
+                        text: "Hubo un problema al eliminar la personalización.",
+                        icon: "error"
+                    });
                 }
             }
         });
     };
+
 
     const startGameWithGroup = async (personalization, grupoID) => {
         try {

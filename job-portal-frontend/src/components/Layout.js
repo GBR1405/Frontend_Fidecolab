@@ -234,11 +234,16 @@ const Layout = ({ children }) => {
           {/* Opciones para Estudiantes */}
           {userData?.rol === 'Estudiante' && (
     <>
-              <li className={`list__item ${location.pathname === '/simulations' ? 'list__item--active' : ''}`}>
-                  <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
-                      <i className="fa-solid fa-flag"></i>
-                      <span className="area__text">Simulaciones</span>
-                  </a>
+              <li className={`list__item ${
+                location.pathname === '/simulations' || 
+                location.pathname.startsWith('/simulations/editor') 
+                ? 'list__item--active' 
+                : ''
+              }`}>
+                <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
+                  <i className="fa-solid fa-play-circle"></i>
+                  <span className="area__text">Empezar Simulación</span>
+                </a>
               </li>
               <li className={`list__item ${location.pathname === '/history' ? 'list__item--active' : ''}`}>
                   <a className="item__area" onClick={() => navigate('/history')} style={{ cursor: 'pointer' }}>

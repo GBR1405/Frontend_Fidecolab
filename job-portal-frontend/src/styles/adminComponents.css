@@ -2261,6 +2261,7 @@ body, html {
 /* Estilos para la carga */
 
 /* Loader azul rey centrado */
+/* Loader azul rey perfectamente centrado */
 .loader-blue-king {
   width: 40px;
   height: 40px;
@@ -2268,10 +2269,12 @@ body, html {
   background: var(--c), var(--c), var(--c), var(--c);
   background-size: 21px 21px;
   animation: l5 1.5s infinite cubic-bezier(0.3,1,0,1);
-  margin: 0 auto;
-  position: relative;
+  
+  /* Centrado absoluto */
+  position: absolute;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 @keyframes l5 {
@@ -2291,6 +2294,10 @@ body, html {
   100% { 
     background-position: 100% 0, 100% 100%, 0 100%, 0 0;
   }
+}
+
+.table__body tr td {
+  position: relative; /* Necesario para el centrado absoluto del loader */
 }
 
 /* Animación de aparición para los items */

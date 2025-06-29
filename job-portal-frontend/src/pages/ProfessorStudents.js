@@ -551,20 +551,23 @@ const ProfessorStudents = () => {
                     ))
                   ) : (
                     <>
-                      <tr>
-                        <td colSpan="5" className="loader__container">
+                      <tr className="table__row loader__row">
+                      <td colSpan="5">
+                        <div className="loader__wrapper">
                           <div className="loader"></div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          colSpan="5"
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="table__row no-data__row">
+                      <td colSpan="5">
+                        <div
                           className="no-data"
-                          style={{ display: showNoData ? 'table-cell' : 'none' }}
+                          style={{ display: showNoData ? 'flex' : 'none' }}
                         >
                           No hay estudiantes registrados
-                        </td>
-                      </tr>
+                        </div>
+                      </td>
+                    </tr>
                     </>
                   )}
                 </tbody>

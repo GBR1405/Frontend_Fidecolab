@@ -27,7 +27,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const lastPoint = useRef(null);
   const animationRef = useRef(null);
   const tintaConsumida = useRef(0);
-  const MAX_TINTA = 10000;
+  const MAX_TINTA = 5000;
 
   // Paleta de colores
   const colorPalette = [
@@ -642,9 +642,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
                   style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
                 />
               </div>
-              <span className="tinta-percentage">
-                {Math.round((tinta / MAX_TINTA) * 100)}%
-              </span>
             </div>
           </div>
         </div>

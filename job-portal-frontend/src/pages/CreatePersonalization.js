@@ -226,14 +226,14 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button 
+              <button className='styled-select'
                 onClick={() => setCurrentImagePage(p => Math.max(p - 1, 1))}
                 disabled={currentImagePage === 1}
               >
                 Anterior
               </button>
               <span>Página {currentImagePage} de {totalPages}</span>
-              <button 
+              <button  className='styled-select'
                 onClick={() => setCurrentImagePage(p => Math.min(p + 1, totalPages))}
                 disabled={currentImagePage === totalPages}
               >

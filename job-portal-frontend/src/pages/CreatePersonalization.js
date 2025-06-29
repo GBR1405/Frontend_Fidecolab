@@ -196,7 +196,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
       <div className="image-modal-overlay">
         <div className="image-modal">
           <div className="modal-header">
-            <h3>Seleccionar Imagen</h3>
+            <h3>Elegir Imagen</h3>
             <button onClick={() => {
               setShowImageModal(false);
               setCurrentImagePage(1);
@@ -324,7 +324,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
                   transition: 'background-color 0.3s'
                 }}
               >
-                {juego.necesitaSeleccionarImagen ? 'Seleccionar Imagen' : 'Imagen Seleccionada'}
+                {juego.necesitaSeleccionarImagen ? 'Seleccionar Imagen' : 'Imagen Elegida'}
               </button>
             </>
           ) : (

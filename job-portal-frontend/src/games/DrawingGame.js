@@ -199,8 +199,9 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   useEffect(() => {
   if (!socket) return;
 
+  // Función para manejar acciones remotas en tiempo real
   const handleRemoteAction = (action) => {
-    if (action.userId === userId) return;
+    if (!action || action.userId === userId) return;
 
     setRemoteLines(prev => {
       const newRemoteLines = {...prev};
@@ -212,8 +213,17 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
           
         case 'pathUpdate':
           if (newRemoteLines[action.userId]) {
-            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path.id);
-            if (index >= 0) {
+            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
+            if (index >= 0 && action.path) {
+              newRemoteLines[action.userId][index] = action.path;
+            }
+          }
+          break;
+          
+        case 'pathComplete':
+          if (newRemoteLines[action.userId]) {
+            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
+            if (index >= 0 && action.path) {
               newRemoteLines[action.userId][index] = action.path;
             }
           }
@@ -228,26 +238,27 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     });
   };
 
-  socket.on('drawingAction', handleRemoteAction);
-  
-  // Agrega esto para forzar sincronización inicial
-  const syncInitialState = () => {
-    socket.emit('requestDrawingSync', { partidaId, equipoNumero, userId });
-  };
-  
-  socket.on('drawingSyncResponse', ({ actions }) => {
+  // Función para sincronización inicial
+  const handleSyncResponse = ({ actions }) => {
     const syncedLines = {};
-    actions.forEach(({ userId, path }) => {
-      syncedLines[userId] = [...(syncedLines[userId] || []), path];
+    actions?.forEach(({ userId, path }) => {
+      if (userId && path) {
+        syncedLines[userId] = [...(syncedLines[userId] || []), path];
+      }
     });
     setRemoteLines(syncedLines);
-  });
+  };
 
-  syncInitialState();
+  // Configurar listeners
+  socket.on('drawingAction', handleRemoteAction);
+  socket.on('drawingSyncResponse', handleSyncResponse);
+
+  // Solicitar sincronización inicial
+  socket.emit('requestDrawingSync', { partidaId, equipoNumero, userId });
 
   return () => {
     socket.off('drawingAction', handleRemoteAction);
-    socket.off('drawingSyncResponse');
+    socket.off('drawingSyncResponse', handleSyncResponse);
   };
 }, [socket, partidaId, equipoNumero, userId]);
 
@@ -322,11 +333,11 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   // Limpiar estado local
   setLines([]);
   
-  // Limpiar localStorage
+  // Limpiar localStorage completamente
   localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
   localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
 
-  // Notificar al servidor
+  // Notificar al servidor para borrado permanente
   socket.emit('drawingAction', {
     partidaId,
     equipoNumero,
@@ -335,15 +346,22 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       type: 'clear',
       userId,
       tinta: MAX_TINTA,
-      clearPermanent: true // Nueva bandera
+      permanent: true // Marcar como borrado permanente
     }
   });
 
-  // Resetear tinta
+  // Resetear estado de tinta
   tintaConsumida.current = 0;
   setTinta(MAX_TINTA);
 
-  Swal.fire('Dibujo borrado', 'Todos tus trazos han sido eliminados permanentemente', 'success');
+  // Feedback visual
+  Swal.fire({
+    title: 'Dibujo borrado',
+    text: 'Todos tus trazos han sido eliminados permanentemente',
+    icon: 'success',
+    timer: 1500,
+    showConfirmButton: false
+  });
 };
 
   // Configuración de Socket.io

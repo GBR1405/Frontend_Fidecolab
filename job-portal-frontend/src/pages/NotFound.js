@@ -32,7 +32,7 @@ const NotFound = () => {
 
 const styles = {
   errorContainer: {
-    backgroundColor: 'blue',
+    backgroundColor: 'rgb(1, 1, 138)',
     minHeight: '100vh',
     display: 'flex',
     justifyContent: 'center',

@@ -37,7 +37,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     '#000000', '#FFFFFF', '#888888'
   ];
 
-
+ socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
 
   // Cargar estado inicial desde localStorage
   useEffect(() => {

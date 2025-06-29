@@ -593,40 +593,38 @@
 
 /* Contenedor principal */
 .drawing-game-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 5vw auto;
+  gap: 2%;
+  align-content: center;
+  justify-items: center;
   width: 100%;
-  min-height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  height: 100%;
 }
 
 /* Panel de herramientas extendido */
 .drawing-tools-horizontal-extended {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: 50% 35% 10% 5%;  
+  justify-items: center;
   align-items: center;
-  gap: 20px;
-  padding: 15px;
+  padding: 0.5vw;
   background: white;
+  height: 100%;
   width: 100%;
-  max-width: 900px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-  flex-wrap: wrap;
 }
 
 /* Sección de colores */
 .colors-section-extended {
 }
 
-.color-row {
+.color-palette-wide {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5vw;
 }
 
 .color-rows-container {
@@ -643,10 +641,13 @@
 }
 
 .color-chip {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
+  all: unset;
+  width: 1vw;
+  height: 1vw;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .color-chip:hover {
@@ -738,13 +739,10 @@
 
 /* Canvas mejorado */
 .canvas-container {
-  position: relative;
-  width: 800px;
-  height: 600px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .drawing-canvas-enhanced {
@@ -754,37 +752,6 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   cursor: crosshair;
-}
-
-/* Media queries para pantallas pequeñas */
-@media (max-width: 900px) {
-  .drawing-tools-horizontal-extended {
-    flex-direction: column;
-    max-width: 800px;
-  }
-  
-  .color-row {
-    justify-content: center;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 850px) {
-  .canvas-container {
-    transform: scale(0.9);
-  }
-}
-
-@media (max-width: 750px) {
-  .canvas-container {
-    transform: scale(0.8);
-  }
-}
-
-@media (max-width: 650px) {
-  .canvas-container {
-    transform: scale(0.7);
-  }
 }
 
 /* Títulos */

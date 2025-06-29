@@ -450,11 +450,10 @@ const Depuration = () => {
                 <tbody className="table__body">
                   {loading ? (
                     <tr>
-                      <td colSpan="5" style={{ 
-                        position: 'relative',
-                        height: '200px' // Ajusta esta altura según necesites
-                      }}>
-                        <div className="loader-blue-king"></div>
+                      <td colSpan="5">
+                        <div className="loader-container">
+                          <div className="loader-blue-king"></div>
+                        </div>
                       </td>
                     </tr>
                   ) : (

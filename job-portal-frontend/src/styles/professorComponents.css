@@ -854,6 +854,57 @@
         inset 0 10px 4px -10px rgba(0, 0, 0, 0.1), /* Sombra superior */
         inset 0 -10px 4px -10px rgba(0, 0, 0, 0.1); /* Sombra inferior */
     }
+
+        /* Fade in */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #333;
+
+      display: table-cell;       /* ya visible desde el inicio */
+      vertical-align: middle;    /* centra verticalmente */
+      text-align: center;        /* centra horizontalmente */
+
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out forwards;
+      animation-delay: 5s;
+      height: 100px;             /* por si la fila está muy pequeña */
+    }
+
+    /* Activar cuando corresponde */
+    .no-data.visible {
+      display: table-cell;
+    }
+
+    /* Loader personalizado (azul rey) */
+    .loader {
+      margin: 30px auto;
+      width: 40px;
+      height: 40px;
+      --c: no-repeat linear-gradient(royalblue 0 0);
+      background: var(--c), var(--c), var(--c), var(--c);
+      background-size: 21px 21px;
+      animation: l5 1.5s infinite cubic-bezier(0.3, 1, 0, 1);
+    }
+
+    @keyframes l5 {
+      0%   {background-position: 0    0,100% 0   ,100% 100%,0 100%}
+      33%  {background-position: 0    0,100% 0   ,100% 100%,0 100%; width: 60px; height: 60px}
+      66%  {background-position: 100% 0,100% 100%,0    100%,0 0   ; width: 60px; height: 60px}
+      100% {background-position: 100% 0,100% 100%,0    100%,0 0   }
+    }
+
     
     .table__row{
         text-align: center;

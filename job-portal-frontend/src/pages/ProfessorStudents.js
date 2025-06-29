@@ -485,6 +485,19 @@ const ProfessorStudents = () => {
 
   const totalPages = Math.ceil(sortedStudents.length / studentsPerPage);
 
+  const [showNoData, setShowNoData] = useState(false);
+
+  useEffect(() => {
+    if (!estudiantes || estudiantes.length === 0) {
+      const timer = setTimeout(() => {
+        setShowNoData(true);
+      }, 5000); // Esperar 5 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [estudiantes]);
+
+
   return (
     <>
       <LayoutProfessor>       
@@ -537,11 +550,18 @@ const ProfessorStudents = () => {
                       </tr>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan="5" className="no-data">
-                        No hay estudiantes registrados
-                      </td>
-                    </tr>
+                    <>
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center' }}>
+                          <div className="loader"></div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan="5" className={`no-data ${showNoData ? 'visible' : ''}`}>
+                          No hay estudiantes registrados
+                        </td>
+                      </tr>
+                    </>
                   )}
                 </tbody>
                 <tfoot className="table__foot">

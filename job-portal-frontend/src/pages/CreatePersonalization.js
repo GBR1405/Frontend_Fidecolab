@@ -60,22 +60,38 @@ const CreatePersonalization = ({ personalizacionId }) => {
     const temas = await obtenerTemas(juego.Tipo_Juego_ID_PK);
     const dificultad = juego.Juego === "Dibujo" ? 1 : 1;
 
-    setJuegosSeleccionados((prev) => [
-      ...prev,
-      {
-        ...juego,
-        orden: prev.length + 1,
-        dificultad,
-        tema: juego.Juego === "Memoria" ? null : (temas.length > 0 ? temas[0].Tema_Juego_ID_PK : ""),
-        temas,
-      },
-    ]);
+    const nuevoJuego = {
+      ...juego,
+      orden: juegosSeleccionados.length + 1,
+      dificultad,
+      tema: juego.Juego === "Memoria" ? null : (temas.length > 0 ? temas[0].Tema_Juego_ID_PK : ""),
+      temas,
+      necesitaSeleccionarImagen: juego.Juego === "Rompecabezas"
+    };
+
+    setJuegosSeleccionados(prev => [...prev, nuevoJuego]);
+
+    // Abrir automáticamente el selector de imágenes para rompecabezas
+    if (juego.Juego === "Rompecabezas") {
+      const index = juegosSeleccionados.length;
+      setTimeout(() => {
+        const buttons = document.querySelectorAll('.select-image-button');
+        if (buttons[index]) {
+          buttons[index].click();
+        }
+      }, 100);
+    }
   };
 
   const actualizarJuego = (index, campo, valor) => {
     setJuegosSeleccionados((prev) => {
       const updatedJuegos = [...prev];
       updatedJuegos[index][campo] = valor;
+      
+      if (campo === 'tema' && updatedJuegos[index].necesitaSeleccionarImagen) {
+        updatedJuegos[index].necesitaSeleccionarImagen = false;
+      }
+      
       updatedJuegos[index].orden = index + 1;
       return updatedJuegos;
     });
@@ -159,11 +175,33 @@ const CreatePersonalization = ({ personalizacionId }) => {
   };
 
   const JuegoCard = ({ index, juego }) => {
-    const [selectedImage, setSelectedImage] = useState(juego.tema);
     const [currentPage, setCurrentPage] = useState(1);
+    const [modalOpen, setModalOpen] = useState(false);
     const imagesPerPage = 4;
 
     const openModal = () => {
+      setModalOpen(true);
+      renderModal();
+    };
+
+    const closeModal = () => {
+      setModalOpen(false);
+      Swal.close();
+    };
+
+    const handleImageSelect = (temaId) => {
+      if (temaId) {
+        actualizarJuego(index, "tema", temaId);
+        closeModal();
+      }
+    };
+
+    const changePage = (newPage) => {
+      setCurrentPage(newPage);
+      renderModal();
+    };
+
+    const renderModal = () => {
       const totalPages = Math.ceil(juego.temas.length / imagesPerPage);
       const startIdx = (currentPage - 1) * imagesPerPage;
       const endIdx = startIdx + imagesPerPage;
@@ -172,24 +210,42 @@ const CreatePersonalization = ({ personalizacionId }) => {
       Swal.fire({
         title: 'Seleccionar Imagen',
         html: `
-          <div class="image-gallery" style="display: flex; flex-wrap: wrap; justify-content: center;">
+          <div class="image-gallery" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
             ${currentImages.length > 0 ? 
               currentImages.map((tema) => `
-                <div class="image-item" style="margin: 10px; text-align: center;">
+                <div class="image-item" style="text-align: center;">
                   <img src="${tema.Contenido}" alt="Tema ${tema.Tema_Juego_ID_PK}" 
-                    style="width: 100px; height: 100px; cursor: pointer; border: ${selectedImage === tema.Tema_Juego_ID_PK ? '3px solid #4CAF50' : '1px solid #ddd'}" 
+                    style="
+                      width: 120px; 
+                      height: 120px; 
+                      cursor: pointer; 
+                      border: ${juego.tema === tema.Tema_Juego_ID_PK ? '3px solid #2196F3' : '1px solid #ddd'};
+                      border-radius: 8px;
+                      object-fit: cover;
+                      padding: 2px;
+                      transition: all 0.3s;
+                    "
+                    onmouseover="this.style.transform='scale(1.05)'"
+                    onmouseout="this.style.transform='scale(1)'"
                     data-id="${tema.Tema_Juego_ID_PK}" />
-                  <p style="margin-top: 5px; font-size: 12px;">Imagen ${tema.Tema_Juego_ID_PK}</p>
                 </div>
               `).join('') :
               `<span>No hay temas disponibles</span>`
             }
           </div>
           ${totalPages > 1 ? `
-            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
-              <button id="prevPage" class="swal2-button swal2-cancel" style="margin-right: 10px;" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
-              <span style="margin: 0 10px;">Página ${currentPage} de ${totalPages}</span>
-              <button id="nextPage" class="swal2-button swal2-cancel" style="margin-left: 10px;" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
+            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+              <button id="prevPage" class="swal2-button swal2-cancel" 
+                style="padding: 5px 15px; border-radius: 5px;" 
+                ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <span style="margin: 0 5px;">Página ${currentPage} de ${totalPages}</span>
+              <button id="nextPage" class="swal2-button swal2-cancel" 
+                style="padding: 5px 15px; border-radius: 5px;" 
+                ${currentPage === totalPages ? 'disabled' : ''}>
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
             </div>
           ` : ''}
         `,
@@ -203,7 +259,6 @@ const CreatePersonalization = ({ personalizacionId }) => {
             item.addEventListener('click', (e) => {
               const temaId = e.target.dataset.id;
               handleImageSelect(temaId);
-              Swal.close();
             });
           });
 
@@ -212,28 +267,20 @@ const CreatePersonalization = ({ personalizacionId }) => {
           
           if (prevBtn) {
             prevBtn.addEventListener('click', () => {
-              setCurrentPage(prev => Math.max(prev - 1, 1));
-              Swal.close();
-              setTimeout(openModal, 100);
+              changePage(currentPage - 1);
             });
           }
           
           if (nextBtn) {
             nextBtn.addEventListener('click', () => {
-              setCurrentPage(prev => Math.min(prev + 1, totalPages));
-              Swal.close();
-              setTimeout(openModal, 100);
+              changePage(currentPage + 1);
             });
           }
+        },
+        willClose: () => {
+          setModalOpen(false);
         }
       });
-    };
-
-    const handleImageSelect = (temaId) => {
-      if (temaId) {
-        setSelectedImage(temaId);
-        actualizarJuego(index, "tema", temaId);
-      }
     };
 
     const [, ref] = useDrag({
@@ -250,12 +297,6 @@ const CreatePersonalization = ({ personalizacionId }) => {
         }
       },
     });
-
-    const getSelectedImageUrl = () => {
-      if (!selectedImage) return null;
-      const tema = juego.temas.find(t => t.Tema_Juego_ID_PK === selectedImage);
-      return tema ? tema.Contenido : null;
-    };
 
     return (
       <div ref={(node) => ref(drop(node))} className="list__shape">
@@ -304,41 +345,25 @@ const CreatePersonalization = ({ personalizacionId }) => {
                 onClick={openModal} 
                 className="select-image-button"
                 style={{
-                  backgroundColor: selectedImage ? '#4CAF50' : '',
-                  color: selectedImage ? 'white' : '',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
+                  backgroundColor: juego.necesitaSeleccionarImagen ? '#FF5722' : '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  transition: 'background-color 0.3s'
                 }}
               >
-                {selectedImage ? (
-                  <>
-                    <span>Imagen seleccionada</span>
-                    {getSelectedImageUrl() && (
-                      <img 
-                        src={getSelectedImageUrl()} 
-                        alt="Seleccionada" 
-                        style={{
-                          width: '30px',
-                          height: '30px',
-                          borderRadius: '4px',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <span>Seleccionar imagen</span>
-                )}
+                {juego.necesitaSeleccionarImagen ? 'Seleccionar Imagen' : 'Imagen Seleccionada'}
               </button>
             </>
           ) : (
             <select
-              value={selectedImage || juego.tema}
+              value={juego.tema || ""}
               onChange={(e) => {
                 const newTemaId = e.target.value;
                 actualizarJuego(index, "tema", newTemaId);
-                setSelectedImage(newTemaId);
               }}
             >
               {juego.temas.length > 0 ? (
@@ -348,7 +373,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
                   </option>
                 ))
               ) : (
-                <option value="null">Ningún tema</option>
+                <option value="">Ningún tema</option>
               )}
             </select>
           )}

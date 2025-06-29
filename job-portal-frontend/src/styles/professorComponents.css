@@ -872,6 +872,7 @@
        align-items: center;
        height: 120px;
        width: 100%;
+       padding-top: 70px;
     }
 
     .loader__wrapper {

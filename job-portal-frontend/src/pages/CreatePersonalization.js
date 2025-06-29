@@ -226,14 +226,14 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button className='styled-select'
+              <button className='styled-select_Pagination'
                 onClick={() => setCurrentImagePage(p => Math.max(p - 1, 1))}
                 disabled={currentImagePage === 1}
               >
                 Anterior
               </button>
               <span>Página {currentImagePage} de {totalPages}</span>
-              <button  className='styled-select'
+              <button  className='styled-select_Pagination'
                 onClick={() => setCurrentImagePage(p => Math.min(p + 1, totalPages))}
                 disabled={currentImagePage === totalPages}
               >
@@ -314,7 +314,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
                 }}
                 className="select-image-button"
                 style={{
-                  backgroundColor: juego.necesitaSeleccionarImagen ? '#FF5722' : '#2196F3',
+                  backgroundColor: juego.necesitaSeleccionarImagen ? '#5f5f5f' : '#0d24a1',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',

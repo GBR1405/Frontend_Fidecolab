@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import '../styles/games.css';
 
 const DrawingGame = ({ gameConfig, onGameComplete }) => {
+  // Parámetros de la URL y contexto
   const { partidaId, equipoNumero } = useParams();
   const socket = useSocket();
   const stageRef = useRef(null);
@@ -26,8 +27,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const lastPoint = useRef(null);
   const animationRef = useRef(null);
   const tintaConsumida = useRef(0);
-  const MAX_TINTA = 5000;
-  const isUpdatingTinta = useRef(false);
+  const MAX_TINTA = 10000;
 
   // Paleta de colores
   const colorPalette = [
@@ -37,106 +37,196 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     '#000000', '#FFFFFF', '#888888'
   ];
 
-  // Unirse al equipo de dibujo
-  useEffect(() => {
-    if (socket) {
-      socket.emit('joinDrawingTeam', { partidaId, equipoNumero, userId });
-    }
-  }, [socket, partidaId, equipoNumero, userId]);
+ socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
 
-  // Manejar conexión socket y estados iniciales
+  // Cargar estado inicial desde localStorage
   useEffect(() => {
-    if (!socket) return;
-
-    const handleInitialState = ({ tintaState }) => {
-      if (tintaState?.[userId] !== undefined) {
-        const parsedTinta = parseInt(tintaState[userId]);
+  const loadSavedState = () => {
+    try {
+      const savedLines = localStorage.getItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+      const savedTinta = localStorage.getItem(`tinta-${partidaId}-${equipoNumero}-${userId}`);
+      
+      if (savedLines) {
+        const parsedLines = JSON.parse(savedLines);
+        if (Array.isArray(parsedLines)) {
+          setLines(parsedLines);
+        }
+      }
+      
+      if (savedTinta) {
+        const parsedTinta = parseInt(savedTinta);
         if (!isNaN(parsedTinta)) {
-          isUpdatingTinta.current = true;
           setTinta(parsedTinta);
           tintaConsumida.current = MAX_TINTA - parsedTinta;
-          isUpdatingTinta.current = false;
+          
+          // Emitir al servidor el estado de la tinta al cargar
+          if (socket) {
+            socket.emit('updateTintaState', {
+              partidaId,
+              equipoNumero,
+              userId,
+              tinta: parsedTinta
+            });
+          }
         }
+      }
+    } catch (error) {
+      console.error('Error loading saved state:', error);
+    }
+  };
+
+  loadSavedState();
+}, [partidaId, equipoNumero, userId, socket]);
+
+
+  useEffect(() => {
+  if (!socket) return;
+
+  const updateRemoteLines = (newData) => {
+    setRemoteLines((prev) => {
+      const merged = { ...prev };
+
+      for (const [userId, paths] of Object.entries(newData)) {
+        merged[userId] = paths;
+      }
+
+      return merged;
+    });
+  };
+
+  const handleDrawingAction = (action) => {
+    if (!action || action.userId === userId) return;
+
+    setRemoteLines((prev) => {
+      const updated = { ...prev };
+      const current = updated[action.userId] || [];
+
+      switch (action.type) {
+        case 'pathStart':
+          updated[action.userId] = [...current, action.path];
+          break;
+
+        case 'pathUpdate':
+        case 'pathComplete': {
+          const index = current.findIndex(p => p.id === action.path?.id);
+          if (index !== -1) current[index] = action.path;
+          else current.push(action.path);
+          updated[action.userId] = [...current];
+          break;
+        }
+
+        case 'clear':
+          delete updated[action.userId];
+          break;
+      }
+
+      return updated;
+    });
+  };
+
+  const handleGameState = ({ actions, tintaState }) => {
+    const grouped = {};
+
+    actions?.forEach(({ userId, path }) => {
+      if (!grouped[userId]) grouped[userId] = [];
+      grouped[userId].push(path);
+    });
+
+    updateRemoteLines(grouped);
+
+    if (tintaState?.[userId] !== undefined) {
+      const parsed = parseInt(tintaState[userId]);
+      if (!isNaN(parsed)) {
+        tintaConsumida.current = MAX_TINTA - parsed;
+        setTinta(parsed);
+      }
+    }
+  };
+
+  socket.on('drawingAction', handleDrawingAction);
+  socket.on('drawingGameState', handleGameState);
+
+  socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
+
+  return () => {
+    socket.off('drawingAction', handleDrawingAction);
+    socket.off('drawingGameState', handleGameState);
+  };
+}, [socket, partidaId, equipoNumero, userId]);
+
+
+  // Guardar líneas en localStorage cuando cambian
+  useEffect(() => {
+    const saveLines = () => {
+      try {
+        localStorage.setItem(
+          `lines-${partidaId}-${equipoNumero}-${userId}`, 
+          JSON.stringify(lines)
+        );
+      } catch (error) {
+        console.error('Error saving lines:', error);
       }
     };
 
-    const handleTintaUpdate = (newTinta) => {
-      if (isUpdatingTinta.current) return;
-      
-      isUpdatingTinta.current = true;
-      setTinta(newTinta);
-      tintaConsumida.current = MAX_TINTA - newTinta;
-      isUpdatingTinta.current = false;
+    saveLines();
+  }, [lines, partidaId, equipoNumero, userId]);
+
+  // Guardar tinta en localStorage cuando cambia
+  useEffect(() => {
+    const saveTinta = () => {
+      try {
+        localStorage.setItem(
+          `tinta-${partidaId}-${equipoNumero}-${userId}`, 
+          tinta.toString()
+        );
+      } catch (error) {
+        console.error('Error saving tinta:', error);
+      }
     };
 
-    const handleDrawingAction = (action) => {
-      if (!action || action.userId === userId) return;
+    saveTinta();
+  }, [tinta, partidaId, equipoNumero, userId]);
 
-      setRemoteLines(prev => {
-        const updated = { ...prev };
-        const current = updated[action.userId] || [];
+  // Manejo de herramientas y colores
+  const handleColorSelect = (colorHex) => {
+    setColor(colorHex);
+    if (tool === 'eraser') setTool('brush');
+    setShowColorPicker(false);
+  };
 
-        switch (action.type) {
-          case 'pathStart':
-            updated[action.userId] = [...current, action.path];
-            break;
-          case 'pathUpdate':
-          case 'pathComplete': {
-            const index = current.findIndex(p => p.id === action.path?.id);
-            if (index !== -1) current[index] = action.path;
-            else current.push(action.path);
-            updated[action.userId] = [...current];
-            break;
-          }
-          case 'clear':
-            delete updated[action.userId];
-            break;
-        }
-        return updated;
-      });
-    };
+  const toggleColorPicker = () => {
+    setShowColorPicker(!showColorPicker);
+  };
 
-    socket.on('initialDrawingState', handleInitialState);
-    socket.on('tintaUpdate', handleTintaUpdate);
-    socket.on('drawingAction', handleDrawingAction);
-
-    // Solicitar estado inicial al servidor
-    socket.emit('requestDrawingState', { partidaId, equipoNumero, userId });
-
-    return () => {
-      socket.off('initialDrawingState', handleInitialState);
-      socket.off('tintaUpdate', handleTintaUpdate);
-      socket.off('drawingAction', handleDrawingAction);
-    };
-  }, [socket, partidaId, equipoNumero, userId]);
-
-  // Función para actualizar tinta
-  const updateTinta = (newTinta) => {
-    if (isUpdatingTinta.current) return;
-    
-    newTinta = Math.max(0, Math.min(MAX_TINTA, newTinta));
-    
-    isUpdatingTinta.current = true;
-    setTinta(newTinta);
-    tintaConsumida.current = MAX_TINTA - newTinta;
-    
-    // Enviar al servidor
-    if (socket) {
-      socket.emit('updateTinta', {
-        partidaId,
-        equipoNumero,
-        userId,
-        tinta: newTinta
-      });
+  const handleToolSelect = (selectedTool) => {
+    setTool(selectedTool);
+    if (selectedTool === 'eraser') {
+      setLastColor(color);
+      setColor('#ffffff');
+    } else {
+      setColor(lastColor);
     }
+  };
+
+  // Iniciar nuevo trazo
+  const startNewLine = (pos) => {
+    const newLine = {
+      points: [pos.x, pos.y],
+      color: tool === 'eraser' ? '#ffffff' : color,
+      strokeWidth: brushSize,
+      userId,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    };
     
-    isUpdatingTinta.current = false;
+    setLines(prevLines => [...prevLines, newLine]);
+    return newLine;
   };
 
   // Dibujar línea
   const drawLine = (point) => {
     if (!isDrawing.current || tinta <= 0) return;
     
+    // Calcular consumo de tinta
     if (lastPoint.current) {
       const distance = Math.sqrt(
         Math.pow(point.x - lastPoint.current.x, 2) + 
@@ -156,20 +246,16 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       }
       
       tintaConsumida.current += distance;
-      updateTinta(MAX_TINTA - tintaConsumida.current);
+      const newTinta = MAX_TINTA - tintaConsumida.current;
+      setTinta(newTinta);
     }
     
     lastPoint.current = point;
     
+    // Actualizar última línea
     setLines(prevLines => {
       if (prevLines.length === 0) {
-        const newLine = {
-          points: [point.x, point.y],
-          color: tool === 'eraser' ? '#ffffff' : color,
-          strokeWidth: brushSize,
-          userId,
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        };
+        const newLine = startNewLine(point);
         emitDrawingAction('pathStart', newLine);
         return [newLine];
       }
@@ -190,11 +276,79 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       return updatedLines;
     });
     
+    // Renderizado optimizado
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
     animationRef.current = requestAnimationFrame(() => {});
   };
+
+  useEffect(() => {
+  if (!socket) return;
+
+  // Función para manejar acciones remotas en tiempo real
+  const handleRemoteAction = (action) => {
+    if (!action || action.userId === userId) return;
+
+    setRemoteLines(prev => {
+      const newRemoteLines = {...prev};
+      
+      switch (action.type) {
+        case 'pathStart':
+          newRemoteLines[action.userId] = [...(newRemoteLines[action.userId] || []), action.path];
+          break;
+          
+        case 'pathUpdate':
+          if (newRemoteLines[action.userId]) {
+            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
+            if (index >= 0 && action.path) {
+              newRemoteLines[action.userId][index] = action.path;
+            }
+          }
+          break;
+          
+        case 'pathComplete':
+          if (newRemoteLines[action.userId]) {
+            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
+            if (index >= 0 && action.path) {
+              newRemoteLines[action.userId][index] = action.path;
+            }
+          }
+          break;
+          
+        case 'clear':
+          delete newRemoteLines[action.userId];
+          socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
+          break;
+      }
+      
+      return newRemoteLines;
+    });
+  };
+
+  // Función para sincronización inicial
+  const handleSyncResponse = ({ actions }) => {
+    const syncedLines = {};
+    actions?.forEach(({ userId, path }) => {
+      if (userId && path) {
+        syncedLines[userId] = [...(syncedLines[userId] || []), path];
+      }
+    });
+    setRemoteLines(syncedLines);
+  };
+
+  // Configurar listeners
+  socket.on('drawingAction', handleRemoteAction);
+  socket.on('drawingSyncResponse', handleSyncResponse);
+
+  // Solicitar sincronización inicial
+  socket.emit('requestDrawingSync', { partidaId, equipoNumero, userId });
+
+  return () => {
+    socket.off('drawingAction', handleRemoteAction);
+    socket.off('drawingSyncResponse', handleSyncResponse);
+  };
+}, [socket, partidaId, equipoNumero, userId]);
 
   // Emitir acción de dibujo
   const emitDrawingAction = (type, line) => {
@@ -262,73 +416,161 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     endDrawing();
   };
 
-  // Iniciar nuevo trazo
-  const startNewLine = (pos) => {
-    const newLine = {
-      points: [pos.x, pos.y],
-      color: tool === 'eraser' ? '#ffffff' : color,
-      strokeWidth: brushSize,
-      userId,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    };
-    
-    setLines(prevLines => [...prevLines, newLine]);
-    return newLine;
-  };
-
   // Limpiar dibujos
   const clearUserDrawing = () => {
-    updateTinta(MAX_TINTA);
-    
-    setLines([]);
-    
-    if (socket) {
-      socket.emit('drawingAction', {
-        partidaId,
-        equipoNumero,
-        userId,
-        action: {
-          type: 'clear',
-          tinta: MAX_TINTA
+  // Limpiar estado local
+  setLines([]);
+  
+  // Limpiar localStorage completamente
+  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
+
+  // Notificar al servidor para borrado permanente
+  socket.emit('drawingAction', {
+    partidaId,
+    equipoNumero,
+    userId,
+    action: {
+      type: 'clear',
+      userId,
+      tinta: MAX_TINTA,
+      permanent: true
+    }
+  });
+
+// Limpiar trazos remotos del usuario borrado (por seguridad)
+  setRemoteLines(prev => {
+    const updated = { ...prev };
+    delete updated[userId];
+    return updated;
+  });
+
+  // Reiniciar el canvas como si se hubiera recargado
+  socket.emit('initDrawingGame', {
+    partidaId,
+    equipoNumero,
+    userId
+  });
+
+  // Resetear estado de tinta
+  tintaConsumida.current = 0;
+  setTinta(MAX_TINTA);
+
+  // Feedback visual
+  Swal.fire({
+    title: 'Dibujo borrado',
+    text: 'Todos tus trazos han sido eliminados permanentemente',
+    icon: 'success',
+    timer: 1500,
+    showConfirmButton: false
+  });
+};
+
+  // Configuración de Socket.io
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDrawingAction = (action) => {
+      if (!action || action.userId === userId) return;
+
+      setRemoteLines(prev => {
+        const newRemoteLines = { ...prev };
+        
+        try {
+          switch (action.type) {
+            case 'pathStart':
+              if (!newRemoteLines[action.userId]) {
+                newRemoteLines[action.userId] = [];
+              }
+              if (action.path) {
+                newRemoteLines[action.userId].push(action.path);
+              }
+              break;
+              
+            case 'pathUpdate':
+            case 'pathComplete':
+              if (Array.isArray(newRemoteLines[action.userId])) {
+                const index = newRemoteLines[action.userId].findIndex(
+                  line => line.id === action.path?.id
+                );
+                if (index >= 0 && action.path) {
+                  newRemoteLines[action.userId][index] = action.path;
+                }
+              }
+              break;
+              
+            case 'clear':
+              if (newRemoteLines[action.userId]) {
+                delete newRemoteLines[action.userId];
+              }
+              break;
+          }
+        } catch (error) {
+          console.error('Error processing drawing action:', error);
+        }
+        
+        return newRemoteLines;
+      });
+    };
+
+    const handleGameState = (data) => {
+  if (!data) return;
+
+  const newRemoteLines = {};
+  
+  try {
+    // Procesar acciones remotas
+    if (Array.isArray(data.actions)) {
+      data.actions.forEach(({ userId, path }) => {
+        if (userId && path) {
+          if (!newRemoteLines[userId]) {
+            newRemoteLines[userId] = [];
+          }
+          newRemoteLines[userId].push(path);
         }
       });
     }
-
-    setRemoteLines(prev => {
-      const updated = { ...prev };
-      delete updated[userId];
-      return updated;
-    });
-
-    Swal.fire({
-      title: 'Dibujo borrado',
-      text: 'Todos tus trazos han sido eliminados permanentemente',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false
-    });
-  };
-
-  // Manejo de herramientas y colores
-  const handleColorSelect = (colorHex) => {
-    setColor(colorHex);
-    if (tool === 'eraser') setTool('brush');
-    setShowColorPicker(false);
-  };
-
-  const toggleColorPicker = () => {
-    setShowColorPicker(!showColorPicker);
-  };
-
-  const handleToolSelect = (selectedTool) => {
-    setTool(selectedTool);
-    if (selectedTool === 'eraser') {
-      setLastColor(color);
-      setColor('#ffffff');
-    } else {
-      setColor(lastColor);
+    
+    setRemoteLines(newRemoteLines);
+    
+    // Solo actualizar tinta si no estamos dibujando actualmente
+    if (!isDrawing.current && data.tintaState?.[userId]) {
+      const newTinta = parseInt(data.tintaState[userId]);
+      if (!isNaN(newTinta)) {
+        // Mantener consistencia entre estado local y remoto
+        const delta = tintaConsumida.current - (MAX_TINTA - newTinta);
+        
+        // Solo actualizar si la diferencia es significativa
+        if (Math.abs(delta) > 10) { // Umbral de 10 unidades
+          setTinta(newTinta);
+          tintaConsumida.current = MAX_TINTA - newTinta;
+        }
+      }
     }
-  };
+  } catch (error) {
+    console.error('Error processing game state:', error);
+  }
+};
+
+    socket.on('drawingAction', handleDrawingAction);
+    socket.on('drawingGameState', handleGameState);
+    
+    // Solicitar estado inicial
+    socket.emit('initDrawingGame', { 
+      partidaId, 
+      equipoNumero, 
+      userId 
+    });
+
+    return () => {
+      socket.off('drawingAction', handleDrawingAction);
+      socket.off('drawingGameState', handleGameState);
+      
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [socket, partidaId, equipoNumero, userId]);
 
   // Renderizado
   return (
@@ -470,6 +712,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
                 : []
             )}
 
+            
             {/* Líneas locales */}
             {lines.map((line) => (
               line?.points?.length > 1 && (

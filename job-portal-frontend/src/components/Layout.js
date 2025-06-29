@@ -235,10 +235,9 @@ const Layout = ({ children }) => {
           {userData?.rol === 'Estudiante' && (
     <>
               <li className={`list__item ${
-                location.pathname === '/simulations' || 
-                location.pathname === '/simulations/editor'
-                ? 'list__item--active' 
-                : ''
+                location.pathname.startsWith('/simulations') 
+                  ? 'list__item--active' 
+                  : ''
               }`}>
                 <a className="item__area" onClick={() => navigate('/simulations')} style={{ cursor: 'pointer' }}>
                   <i className="fa-solid fa-play-circle"></i>

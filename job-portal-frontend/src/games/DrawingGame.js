@@ -68,6 +68,82 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     loadSavedState();
   }, [partidaId, equipoNumero, userId]);
 
+  useEffect(() => {
+  if (!socket) return;
+
+  const updateRemoteLines = (newData) => {
+    setRemoteLines((prev) => {
+      const merged = { ...prev };
+
+      for (const [userId, paths] of Object.entries(newData)) {
+        merged[userId] = paths;
+      }
+
+      return merged;
+    });
+  };
+
+  const handleDrawingAction = (action) => {
+    if (!action || action.userId === userId) return;
+
+    setRemoteLines((prev) => {
+      const updated = { ...prev };
+      const current = updated[action.userId] || [];
+
+      switch (action.type) {
+        case 'pathStart':
+          updated[action.userId] = [...current, action.path];
+          break;
+
+        case 'pathUpdate':
+        case 'pathComplete': {
+          const index = current.findIndex(p => p.id === action.path?.id);
+          if (index !== -1) current[index] = action.path;
+          else current.push(action.path);
+          updated[action.userId] = [...current];
+          break;
+        }
+
+        case 'clear':
+          delete updated[action.userId];
+          break;
+      }
+
+      return updated;
+    });
+  };
+
+  const handleGameState = ({ actions, tintaState }) => {
+    const grouped = {};
+
+    actions?.forEach(({ userId, path }) => {
+      if (!grouped[userId]) grouped[userId] = [];
+      grouped[userId].push(path);
+    });
+
+    updateRemoteLines(grouped);
+
+    if (tintaState?.[userId] !== undefined) {
+      const parsed = parseInt(tintaState[userId]);
+      if (!isNaN(parsed)) {
+        tintaConsumida.current = MAX_TINTA - parsed;
+        setTinta(parsed);
+      }
+    }
+  };
+
+  socket.on('drawingAction', handleDrawingAction);
+  socket.on('drawingGameState', handleGameState);
+
+  socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
+
+  return () => {
+    socket.off('drawingAction', handleDrawingAction);
+    socket.off('drawingGameState', handleGameState);
+  };
+}, [socket, partidaId, equipoNumero, userId]);
+
+
   // Guardar líneas en localStorage cuando cambian
   useEffect(() => {
     const saveLines = () => {
@@ -231,6 +307,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
           
         case 'clear':
           delete newRemoteLines[action.userId];
+          socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
           break;
       }
       

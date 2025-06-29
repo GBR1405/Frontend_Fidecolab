@@ -423,8 +423,22 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       type: 'clear',
       userId,
       tinta: MAX_TINTA,
-      permanent: true // Marcar como borrado permanente
+      permanent: true
     }
+  });
+
+// Limpiar trazos remotos del usuario borrado (por seguridad)
+  setRemoteLines(prev => {
+    const updated = { ...prev };
+    delete updated[userId];
+    return updated;
+  });
+
+  // Reiniciar el canvas como si se hubiera recargado
+  socket.emit('initDrawingGame', {
+    partidaId,
+    equipoNumero,
+    userId
   });
 
   // Resetear estado de tinta

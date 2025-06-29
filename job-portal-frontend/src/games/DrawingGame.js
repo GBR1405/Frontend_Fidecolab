@@ -28,6 +28,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const animationRef = useRef(null);
   const tintaConsumida = useRef(0);
   const MAX_TINTA = 5000;
+  const isUpdatingTinta = useRef(false);
 
   // Paleta de colores
   const colorPalette = [
@@ -61,18 +62,11 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
         if (savedTinta) {
           const parsedTinta = parseInt(savedTinta);
           if (!isNaN(parsedTinta)) {
+            // Actualizar sin disparar sincronización
+            isUpdatingTinta.current = true;
             setTinta(parsedTinta);
             tintaConsumida.current = MAX_TINTA - parsedTinta;
-            
-            // Sincronizar tinta con el servidor
-            if (socket) {
-              socket.emit('updateTintaState', {
-                partidaId,
-                equipoNumero,
-                userId,
-                tinta: parsedTinta
-              });
-            }
+            isUpdatingTinta.current = false;
           }
         }
       } catch (error) {
@@ -81,7 +75,61 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     };
 
     loadSavedState();
-  }, [partidaId, equipoNumero, userId, socket]);
+  }, [partidaId, equipoNumero, userId]);
+
+  useEffect(() => {
+    if (!socket || isUpdatingTinta.current) return;
+
+    const handleTintaUpdate = (newTinta) => {
+      // Solo actualizar si hay una diferencia significativa (>1%)
+      if (Math.abs(newTinta - tinta) > (MAX_TINTA * 0.01)) {
+        isUpdatingTinta.current = true;
+        setTinta(newTinta);
+        tintaConsumida.current = MAX_TINTA - newTinta;
+        localStorage.setItem(
+          `tinta-${partidaId}-${equipoNumero}-${userId}`, 
+          newTinta.toString()
+        );
+        isUpdatingTinta.current = false;
+      }
+    };
+
+    socket.on('tintaUpdate', handleTintaUpdate);
+
+    return () => {
+      socket.off('tintaUpdate', handleTintaUpdate);
+    };
+  }, [socket, partidaId, equipoNumero, userId, tinta]);
+
+  // Función para actualizar tinta de forma consistente
+  const updateTinta = (newTinta) => {
+    if (isUpdatingTinta.current) return;
+    
+    newTinta = Math.max(0, Math.min(MAX_TINTA, newTinta));
+    
+    isUpdatingTinta.current = true;
+    setTinta(newTinta);
+    tintaConsumida.current = MAX_TINTA - newTinta;
+    
+    // Actualizar localStorage
+    localStorage.setItem(
+      `tinta-${partidaId}-${equipoNumero}-${userId}`, 
+      newTinta.toString()
+    );
+    
+    // Enviar al servidor con un throttle
+    if (socket) {
+      socket.emit('updateTinta', {
+        partidaId,
+        equipoNumero,
+        userId,
+        tinta: newTinta
+      });
+    }
+    
+    isUpdatingTinta.current = false;
+  };
+
 
   // Manejar eventos de socket para dibujo
   useEffect(() => {
@@ -252,7 +300,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const drawLine = (point) => {
     if (!isDrawing.current || tinta <= 0) return;
     
-    // Calcular consumo de tinta
     if (lastPoint.current) {
       const distance = Math.sqrt(
         Math.pow(point.x - lastPoint.current.x, 2) + 
@@ -273,7 +320,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
       
       tintaConsumida.current += distance;
       const newTinta = MAX_TINTA - tintaConsumida.current;
-      setTinta(newTinta);
+      updateTinta(newTinta); // Usar la nueva función de actualización
     }
     
     lastPoint.current = point;
@@ -377,25 +424,39 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-    // Limpiar estado local
-    setLines([]);
-    setTinta(MAX_TINTA);
-    tintaConsumida.current = 0;
+    updateTinta(MAX_TINTA); // Usar la función consistente
     
-    // Limpiar localStorage
+    // Limpiar líneas
+    setLines([]);
     localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-    localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
-
+    
     // Notificar al servidor
-    socket.emit('drawingAction', {
-      partidaId,
-      equipoNumero,
-      userId,
-      action: {
-        type: 'clear',
-        tinta: MAX_TINTA
-      }
+    if (socket) {
+      socket.emit('drawingAction', {
+        partidaId,
+        equipoNumero,
+        userId,
+        action: {
+          type: 'clear',
+          tinta: MAX_TINTA
+        }
+      });
+    }
+
+    setRemoteLines(prev => {
+      const updated = { ...prev };
+      delete updated[userId];
+      return updated;
     });
+
+    Swal.fire({
+      title: 'Dibujo borrado',
+      text: 'Todos tus trazos han sido eliminados permanentemente',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  
 
     // Limpiar trazos remotos del usuario
     setRemoteLines(prev => {

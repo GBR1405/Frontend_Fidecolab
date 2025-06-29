@@ -552,12 +552,16 @@ const ProfessorStudents = () => {
                   ) : (
                     <>
                       <tr>
-                        <td colSpan="5" style={{ textAlign: 'center' }}>
+                        <td colSpan="5" className="loader__container">
                           <div className="loader"></div>
                         </td>
                       </tr>
                       <tr>
-                        <td colSpan="5" className={`no-data ${showNoData ? 'visible' : ''}`}>
+                        <td
+                          colSpan="5"
+                          className="no-data"
+                          style={{ display: showNoData ? 'table-cell' : 'none' }}
+                        >
                           No hay estudiantes registrados
                         </td>
                       </tr>

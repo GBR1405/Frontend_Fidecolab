@@ -574,109 +574,109 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Renderizado
   return (
-    <div className="drawing-game-container">
-      {/* Barra de herramientas */}
-      <div className="drawing-tools-horizontal-extended">
-        {/* Sección de colores */}
-        <div className="colors-section-extended">
-          <div className="color-palette-wide">
-            <div className="color-rows-container">
-              <div className="color-row">
-                {colorPalette.map((colorHex, index) => (
-                  <button
-                    key={`color-${index}`}
-                    className={`color-chip ${color === colorHex ? 'active' : ''}`}
-                    style={{ backgroundColor: colorHex }}
-                    onClick={() => handleColorSelect(colorHex)}
-                    title={`Color ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="custom-color-container">
-              <button 
-                className="color-picker-toggle"
-                onClick={toggleColorPicker}
-                style={{ backgroundColor: color }}
-                title="Seleccionar color"
-              />
-              {showColorPicker && (
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => handleColorSelect(e.target.value)}
-                  className="custom-color-picker-large"
-                  onBlur={() => setShowColorPicker(false)}
+  <div className="drawing-game-container">
+    {/* Barra de herramientas ahora horizontal */}
+    <div className="drawing-tools-horizontal-extended">
+      {/* Sección de colores */}
+      <div className="colors-section-extended">
+        <div className="color-palette-wide">
+          <div className="color-rows-container">
+            <div className="color-row">
+              {colorPalette.map((colorHex, index) => (
+                <button
+                  key={`color-${index}`}
+                  className={`color-chip ${color === colorHex ? 'active' : ''}`}
+                  style={{ backgroundColor: colorHex }}
+                  onClick={() => handleColorSelect(colorHex)}
+                  title={`Color ${index + 1}`}
                 />
-              )}
+              ))}
             </div>
           </div>
-        </div>
-        
-        {/* Sección de herramientas */}
-        <div className="tools-section-extended">                    
-          <div className="tool-row">
+          <div className="custom-color-container">
             <button 
-              className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
-              onClick={() => handleToolSelect('brush')}
-              title="Pincel"
-            >
-              <i className="fas fa-paint-brush"></i>
-            </button>
-            <button 
-              className="tool-btn"
-              onClick={clearUserDrawing}
-              title="Limpiar mi dibujo"
-            >
-              <i className="fas fa-trash-alt"></i>
-            </button>
-            
-            {/* Indicador de tinta */}
-            <div className="tinta-indicator">
-              <div className="tinta-tank-vertical" style={{ height: '100px', width: '30px' }}>
-                <div
-                  className={`tinta-tank-fill ${
-                    tinta <= 1000 ? 'tinta-tank-critical' : 
-                    tinta <= 3000 ? 'tinta-tank-low' : ''
-                  }`}
-                  style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Control de tamaño */}
-        <div className="size-section">
-          <div className="size-controls-horizontal">
-            <div className="size-indicator">
+              className="color-picker-toggle"
+              onClick={toggleColorPicker}
+              style={{ backgroundColor: color }}
+              title="Seleccionar color"
+            />
+            {showColorPicker && (
               <input
-                type="range"
-                min="1"
-                max="30"
-                value={brushSize}
-                onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                className="size-slider-horizontal"
+                type="color"
+                value={color}
+                onChange={(e) => handleColorSelect(e.target.value)}
+                className="custom-color-picker-large"
+                onBlur={() => setShowColorPicker(false)}
               />
-            </div>
-            <span className="brush-size-label">{brushSize}px</span>
+            )}
           </div>
         </div>
       </div>
       
-      {/* Área de dibujo */}
-      <div className="canvas-container">
-        <Stage
-          width={800}
-          height={600}
-          ref={stageRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleMouseDown}
-          onTouchMove={handleMouseMove}
-          onTouchEnd={handleMouseUp}
-        >
+      {/* Sección de herramientas */}
+      <div className="tools-section-extended">                    
+        <div className="tool-row">
+          <button 
+            className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
+            onClick={() => handleToolSelect('brush')}
+            title="Pincel"
+          >
+            <i className="fas fa-paint-brush"></i>
+          </button>
+          <button 
+            className="tool-btn"
+            onClick={clearUserDrawing}
+            title="Limpiar mi dibujo"
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      </div>
+      
+      {/* Control de tamaño */}
+      <div className="size-section">
+        <div className="size-controls-horizontal">
+          <div className="size-indicator">
+            <input
+              type="range"
+              min="1"
+              max="30"
+              value={brushSize}
+              onChange={(e) => setBrushSize(parseInt(e.target.value))}
+              className="size-slider-horizontal"
+            />
+          </div>
+          <span className="brush-size-label">{brushSize}px</span>
+        </div>
+      </div>
+      
+      {/* Indicador de tinta */}
+      <div className="tinta-indicator">
+        <div className="tinta-tank-vertical" style={{ height: '100px', width: '30px' }}>
+          <div
+            className={`tinta-tank-fill ${
+              tinta <= 1000 ? 'tinta-tank-critical' : 
+              tinta <= 3000 ? 'tinta-tank-low' : ''
+            }`}
+            style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
+          />
+        </div>
+      </div>
+    </div>
+    
+    {/* Área de dibujo - ahora con tamaño fijo */}
+    <div className="canvas-container">
+      <Stage
+        width={800}
+        height={600}
+        ref={stageRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleMouseDown}
+        onTouchMove={handleMouseMove}
+        onTouchEnd={handleMouseUp}
+      >
           <Layer>
             {/* Fondo blanco */}
             <Rect 

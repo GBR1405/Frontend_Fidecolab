@@ -124,16 +124,38 @@ const CreatePersonalization = ({ personalizacionId }) => {
       const bytes = CryptoJS.AES.decrypt(userInfoCookie, secretKey);
       const userData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
       const usuarioId = userData.id;
-
       const token = Cookies.get("authToken");
 
-      axios
-        .post(`${apiURL}/personalizacion`, {
+      // Confirmación antes de guardar
+      Swal.fire({
+        title: '¿Guardar configuración?',
+        text: '¿Deseas guardar esta personalización con la configuración y orden actual?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+          title: "Guardando...",
+          text: "Por favor espera mientras se guarda la configuración.",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        axios.post(`${apiURL}/personalizacion`, {
           personalizacionId,
           usuarioId,
           juegos: juegosSeleccionados.map((juego) => ({
             ...juego,
-            tema: juego.Juego === "Memoria" ? null : juego.temas.find((t) => t.Tema_Juego_ID_PK === juego.tema)?.Tema_Juego_ID_PK || juego.tema
+            tema:
+              juego.Juego === "Memoria"
+                ? null
+                : juego.temas.find((t) => t.Tema_Juego_ID_PK === juego.tema)?.Tema_Juego_ID_PK || juego.tema,
           })),
           titulo: tituloPersonalizacion,
         }, {
@@ -144,24 +166,28 @@ const CreatePersonalization = ({ personalizacionId }) => {
           credentials: "include"
         })
         .then((res) => {
-            if (res.data.success) {
-              Swal.fire("¡Guardado!", "Configuración guardada exitosamente", "success")
-              .then(() => {
-                window.location.reload();
+          Swal.close(); // Cierra el loading
+          if (res.data.success) {
+            Swal.fire("¡Guardado!", "Configuración guardada exitosamente", "success").then(() => {
+              window.location.reload();
             });
-            }
-          })
-          .catch((err) => {
-            const errorMessage = err.response && err.response.data && err.response.data.error
-              ? err.response.data.error
-              : "No se pudo guardar la configuración"; 
-            Swal.fire("Error", errorMessage, "error");
-          });
+          } else {
+            Swal.fire("Error", "No se pudo guardar la configuración", "error");
+          }
+        })
+        .catch((err) => {
+          Swal.close(); // Cierra el loading en caso de error
+          const errorMessage =
+            err.response?.data?.error || "No se pudo guardar la configuración";
+          Swal.fire("Error", errorMessage, "error");
+        });
+      });
 
     } catch (error) {
       Swal.fire("Error", "Hubo un error al desencriptar la información del usuario.", "error");
     }
   };
+
 
   const moveCard = (dragIndex, hoverIndex) => {
     const draggedItem = juegosSeleccionados[dragIndex];

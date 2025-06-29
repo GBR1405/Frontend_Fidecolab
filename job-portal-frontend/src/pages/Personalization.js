@@ -316,107 +316,74 @@ const Depuration = () => {
   };
 
   const handleSave = async (tipoJuego, contenido) => {
-  if (!tipoJuego) {
-    alert("Selecciona un tipo de juego.");
-    return;
-  }
+    if (!tipoJuego) {
+      alert("Selecciona un tipo de juego.");
+      return;
+    }
 
-  let requestData = {
-    tipoJuegoID: tipoJuego.Tipo_Juego_ID_PK,
-    contenido: contenido || ""
-  };
+    let requestData = { tipoJuegoID: tipoJuego.Tipo_Juego_ID_PK, contenido: contenido || "" };
 
-  // Subir imagen si es Rompecabezas
-  if (tipoJuego.Juego === "Rompecabezas" && file) {
-    try {
-      setIsLoading(true);
-      Swal.fire({
-        title: 'Subiendo imagen...',
-        text: 'Por favor espera mientras se sube la imagen.',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
+    // Si es "Rompecabezas" y hay imagen, subirla a ImgBB
+    if (tipoJuego.Juego === "Rompecabezas" && file) {
+      try {
+        setIsLoading(true);
+        Swal.fire({
+          title: 'Cargando...',
+          text: 'Por favor espera mientras se sube la imagen.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const result = await uploadImageToImgBB(file);
+
+        if (result.success) {
+          requestData.contenido = result.url;
+        } else {
+          Swal.fire("Error", result.message, "error");
+          setIsLoading(false);
+          return;
         }
-      });
-
-      const result = await uploadImageToImgBB(file);
-
-      if (result.success) {
-        requestData.contenido = result.url;
-      } else {
-        Swal.fire("Error", result.message, "error");
+      } catch (error) {
+        console.error("Error subiendo la imagen:", error);
+        Swal.fire("Error", "Hubo un problema inesperado al subir la imagen.", "error");
         setIsLoading(false);
         return;
       }
-    } catch (error) {
-      console.error("Error subiendo la imagen:", error);
-      Swal.fire("Error", "Hubo un problema inesperado al subir la imagen.", "error");
-      setIsLoading(false);
-      return;
-    } finally {
-      Swal.close();
     }
-  }
 
-  // Confirmación antes de guardar
-  const confirmResult = await Swal.fire({
-    title: '¿Guardar personalización?',
-    text: '¿Deseas guardar esta personalización con la configuración y orden actual?',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, guardar',
-    cancelButtonText: 'Cancelar'
-  });
-
-  if (!confirmResult.isConfirmed) return;
-
-  try {
-    setIsLoading(true);
-
-    Swal.fire({
-      title: 'Guardando...',
-      text: 'Por favor espera mientras se guarda la personalización.',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
-    const response = await axios({
-      method: "POST",
-      url: `${apiURL}/agregar_contenido`,
-      data: requestData,
-      credentials: true,
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    Swal.close(); // Cierra el loading
-
-    if (response.data.success) {
-      Swal.fire("¡Éxito!", "Contenido guardado correctamente.", "success").then(() => {
-        window.location.reload();
+    try {
+      const response = await axios({
+        method: "POST",  // Definir el método como POST
+        url: `${apiURL}/agregar_contenido`,  // La URL a la que se hace la solicitud
+        data: requestData,  // Los datos a enviar en el cuerpo de la solicitud
+        credentials: true,  // Incluir cookies, similar a withcredentials: 'include'
+        headers: {
+          "Authorization": `Bearer ${token}`,  // Añadir el token de autorización al encabezado
+          "Content-Type": "application/json"  // Establecer el tipo de contenido como JSON
+        }
       });
 
-      setContenidoAhorcado("");
-      setContenidoDibujo("");
-      setContenidoRompecabezas("");
-      setFile(null);
-      setImagePreview(null);
-    } else {
-      Swal.fire("Error", "Error al guardar el contenido.", "error");
+      if (response.data.success) {
+        Swal.fire("¡Éxito!", "Contenido guardado correctamente.", "success").then(() => {
+          window.location.reload(); // Recarga la página después de cerrar la alerta
+        });
+        setContenidoAhorcado("");
+        setContenidoDibujo("");
+        setContenidoRompecabezas("");
+        setFile(null);
+        setImagePreview(null);
+      } else {
+        Swal.fire("Error", "Error al guardar el contenido.", "error");
+      }
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      Swal.fire("Error", "Hubo un error en el guardado.", "error");
+    } finally {
+      setIsLoading(false); // Desactivar el estado de carga
     }
-  } catch (error) {
-    console.error("Error al guardar:", error);
-    Swal.close();
-    Swal.fire("Error", "Hubo un error en el guardado.", "error");
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   const totalPages = Math.ceil(filteredTemas.length / itemsPerPage);
 

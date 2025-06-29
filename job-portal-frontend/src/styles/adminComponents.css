@@ -561,12 +561,12 @@
         }
 
         .button__page.active{
-            background-color: #6174e0;
+            background-color: #3b7cc7;
         }
         
         .button__page:nth-child(n):focus,
         .button__page:nth-child(n).active {
-            background-color: var(--blue-royal-clr);
+            background-color: #3b7cc7;
         }
     }
 }
@@ -908,12 +908,12 @@
         }
 
         .button__page.active{
-            background-color: #6174e0;
+            background-color: #3b7cc7;
         }
         
         .button__page:nth-child(n):focus,
         .button__page:nth-child(n).active {
-            background-color: var(--blue-royal-clr);
+            background-color: #3b7cc7;
         }
     }
 }
@@ -1329,12 +1329,12 @@
         }
 
         .button__page.active{
-            background-color: #6174e0;
+            background-color: #3b7cc7;
         }
         
         .button__page:nth-child(n):focus,
         .button__page:nth-child(n).active {
-            background-color: var(--blue-royal-clr);
+            background-color: #3b7cc7;
         }
     }
 }
@@ -1658,12 +1658,12 @@
         }
 
         .button__page.active{
-            background-color: #6174e0;
+            background-color: #3b7cc7;
         }
         
         .button__page:nth-child(n):focus,
         .button__page:nth-child(n).active {
-            background-color: var(--blue-royal-clr);
+            background-color: #3b7cc7;
         }
     }
 
@@ -2037,9 +2037,9 @@ body, html {
 }
 
 .pagination-btn.active {
-    background-color: #4299e1;
+    background-color: #3b7cc7;
     color: white;
-    border-color: #4299e1;
+    border-color: #3b7cc7;
 }
 
 /* Media queries para responsividad */
@@ -2216,9 +2216,9 @@ body, html {
 }
 
 .pagination-btn.active {
-  background-color: #4299e1;
+  background-color: #3b7cc7;
   color: white;
-  border-color: #4299e1;
+  border-color: #3b7cc7;
 }
 
 .pagination-btn:disabled {

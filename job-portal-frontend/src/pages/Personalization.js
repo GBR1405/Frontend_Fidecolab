@@ -449,9 +449,9 @@ const Depuration = () => {
                 </thead>
                 <tbody className="table__body">
                   {loading ? (
-                    <tr className="table__row">
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                        <div className="loader-blue"></div>
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '40px 0' }}>
+                        <div className="loader-blue-king"></div>
                       </td>
                     </tr>
                   ) : (

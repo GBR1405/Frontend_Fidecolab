@@ -251,24 +251,39 @@ const Depuration = () => {
     const selectedFile = event.target.files[0];
     
     if (!selectedFile) return;
-  
+
     // Validar tipo de archivo
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(selectedFile.type)) {
       Swal.fire('Error', 'Solo se permiten archivos JPG, JPEG o PNG', 'error');
       return;
     }
-  
+
     // Validar tamaño si lo necesitas (ejemplo 2MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       Swal.fire('Error', 'La imagen no debe exceder 2MB', 'error');
       return;
     }
-  
-    setFile(selectedFile);
+
+    // Mostrar advertencia si la imagen no es cuadrada
     const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        if (img.width !== img.height) {
+          Swal.fire({
+            title: 'Advertencia',
+            text: 'La imagen no es cuadrada y será recortada al centro',
+            icon: 'warning',
+            confirmButtonText: 'Entendido'
+          });
+        }
+        setImagePreview(e.target.result);
+      };
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(selectedFile);
+    setFile(selectedFile);
   };
 
   const handleImageClick = (url) => {
@@ -494,13 +509,28 @@ const Depuration = () => {
               </div>
               <form className="box__content" onSubmit={(e) => { e.preventDefault(); handleSave(tipoJuegos.find(j => j.Juego === "Ahorcado"), contenidoAhorcado); }}>
                 <div className="box__input">
-                  <input
-                    type="text"
-                    placeholder="Agregue una palabra."
-                    value={contenidoAhorcado}
-                    onChange={(e) => setContenidoAhorcado(e.target.value)}
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Agregue una palabra."
+                  value={contenidoAhorcado}
+                  onChange={(e) => {
+                    // Validar que solo contenga letras básicas (a-z, A-Z) sin acentos ni caracteres especiales
+                    const regex = /^[a-zA-Z]*$/;
+                    if (regex.test(e.target.value)) {
+                      setContenidoAhorcado(e.target.value.toLowerCase());
+                    } else if (e.target.value === "") {
+                      setContenidoAhorcado("");
+                    }
+                  }}
+                  onKeyPress={(e) => {
+                    // Prevenir entrada de caracteres no permitidos
+                    const regex = /^[a-zA-Z]$/;
+                    if (!regex.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </div>
                 <div className="box__button">
                   <button type="submit" disabled={isLoading}>Agregar</button>
                 </div>

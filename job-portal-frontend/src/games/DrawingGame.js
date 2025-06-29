@@ -613,13 +613,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
               <i className="fas fa-paint-brush"></i>
             </button>
             <button 
-              className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
-              onClick={() => handleToolSelect('eraser')}
-              title="Borrador"
-            >
-              <i className="fas fa-eraser"></i>
-            </button>
-            <button 
               className="tool-btn"
               onClick={clearUserDrawing}
               title="Limpiar mi dibujo"

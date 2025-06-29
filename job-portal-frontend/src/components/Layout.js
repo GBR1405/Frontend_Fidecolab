@@ -236,7 +236,7 @@ const Layout = ({ children }) => {
     <>
               <li className={`list__item ${
                 location.pathname === '/simulations' || 
-                location.pathname.startsWith('/simulations/editor') 
+                location.pathname === '/simulations/editor'
                 ? 'list__item--active' 
                 : ''
               }`}>

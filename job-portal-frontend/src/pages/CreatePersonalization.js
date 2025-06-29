@@ -47,11 +47,18 @@ const CreatePersonalization = ({ personalizacionId }) => {
   };
 
   const agregarJuego = async (juego) => {
-    if (juegosSeleccionados.length >= 5) return;
+    if (juegosSeleccionados.length >= 5) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Límite alcanzado',
+        text: 'Solo puedes seleccionar hasta 5 juegos',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
 
     const temas = await obtenerTemas(juego.Tipo_Juego_ID_PK);
-
-    const dificultad = juego.Juego === "Dibujo" ? 1 : 1; // Simplificado
+    const dificultad = juego.Juego === "Dibujo" ? 1 : 1;
 
     setJuegosSeleccionados((prev) => [
       ...prev,
@@ -152,64 +159,81 @@ const CreatePersonalization = ({ personalizacionId }) => {
   };
 
   const JuegoCard = ({ index, juego }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false); 
-    const [selectedImage, setSelectedImage] = useState(juego.tema); 
+    const [selectedImage, setSelectedImage] = useState(juego.tema);
+    const [currentPage, setCurrentPage] = useState(1);
+    const imagesPerPage = 4;
 
     const openModal = () => {
-        Swal.fire({
-            title: 'Seleccionar Imagen',
-            html: `
-                <div class="image-gallery">
-                    ${juego.temas.length > 0 ? 
-                        juego.temas.map((tema) => `
-                            <div class="image-item" style="display: inline-block; margin: 10px;">
-                                <img src="${tema.Contenido}" alt="Tema ${tema.Contenido}" style="width: 100px; height: 100px; cursor: pointer;" data-id="${tema.Tema_Juego_ID_PK}" />
-                            </div>
-                        `).join('') :
-                        `<span>No hay temas disponibles</span>`
-                    }
+      const totalPages = Math.ceil(juego.temas.length / imagesPerPage);
+      const startIdx = (currentPage - 1) * imagesPerPage;
+      const endIdx = startIdx + imagesPerPage;
+      const currentImages = juego.temas.slice(startIdx, endIdx);
+
+      Swal.fire({
+        title: 'Seleccionar Imagen',
+        html: `
+          <div class="image-gallery" style="display: flex; flex-wrap: wrap; justify-content: center;">
+            ${currentImages.length > 0 ? 
+              currentImages.map((tema) => `
+                <div class="image-item" style="margin: 10px; text-align: center;">
+                  <img src="${tema.Contenido}" alt="Tema ${tema.Tema_Juego_ID_PK}" 
+                    style="width: 100px; height: 100px; cursor: pointer; border: ${selectedImage === tema.Tema_Juego_ID_PK ? '3px solid #4CAF50' : '1px solid #ddd'}" 
+                    data-id="${tema.Tema_Juego_ID_PK}" />
+                  <p style="margin-top: 5px; font-size: 12px;">Imagen ${tema.Tema_Juego_ID_PK}</p>
                 </div>
-            `,
-            showCancelButton: true,
-            cancelButtonText: 'Cerrar',
-            showConfirmButton: false,
-            allowOutsideClick: true,
-            didOpen: () => {
-                const items = document.querySelectorAll('.image-item img');
-                items.forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        const temaId = e.target.dataset.id;  // Obtener el ID del tema
-                        handleImageSelect(temaId);  // Usar el TemaID en lugar de la URL
-                        Swal.close();  // Cierra el modal
-                    });
-                });
+              `).join('') :
+              `<span>No hay temas disponibles</span>`
             }
-        });
-    };
-    
-    // Función para cerrar el modal
-    const closeModal = () => {
-        setIsModalOpen(false);
-    };
-    
-    const handleImageSelect = (temaId) => {
-        // Verificar si el TemaID es válido
-        if (temaId) {
-            setSelectedImage(temaId);  // Actualizar el estado con el TemaID
-            actualizarJuego(index, "tema", temaId);  // Guardar el TemaID
+          </div>
+          ${totalPages > 1 ? `
+            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
+              <button id="prevPage" class="swal2-button swal2-cancel" style="margin-right: 10px;" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+              <span style="margin: 0 10px;">Página ${currentPage} de ${totalPages}</span>
+              <button id="nextPage" class="swal2-button swal2-cancel" style="margin-left: 10px;" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
+            </div>
+          ` : ''}
+        `,
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar',
+        showConfirmButton: false,
+        allowOutsideClick: true,
+        didOpen: () => {
+          const items = document.querySelectorAll('.image-item img');
+          items.forEach(item => {
+            item.addEventListener('click', (e) => {
+              const temaId = e.target.dataset.id;
+              handleImageSelect(temaId);
+              Swal.close();
+            });
+          });
+
+          const prevBtn = document.getElementById('prevPage');
+          const nextBtn = document.getElementById('nextPage');
+          
+          if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+              setCurrentPage(prev => Math.max(prev - 1, 1));
+              Swal.close();
+              setTimeout(openModal, 100);
+            });
+          }
+          
+          if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+              setCurrentPage(prev => Math.min(prev + 1, totalPages));
+              Swal.close();
+              setTimeout(openModal, 100);
+            });
+          }
         }
+      });
     };
 
-    const handleSave = () => {
-        if (!selectedImage) {
-            alert('Por favor, selecciona una imagen.');
-            // Si no se seleccionó ninguna imagen, seleccionar la primera por defecto
-            setSelectedImage(juego.temas.length > 0 ? juego.temas[0].Contenido : '');
-            actualizarJuego(index, "tema", juego.temas.length > 0 ? juego.temas[0].Contenido : '');
-        } else {
-            // Guardar la selección
-            actualizarJuego(index, "tema", selectedImage);
-        }
+    const handleImageSelect = (temaId) => {
+      if (temaId) {
+        setSelectedImage(temaId);
+        actualizarJuego(index, "tema", temaId);
+      }
     };
 
     const [, ref] = useDrag({
@@ -227,117 +251,115 @@ const CreatePersonalization = ({ personalizacionId }) => {
       },
     });
 
+    const getSelectedImageUrl = () => {
+      if (!selectedImage) return null;
+      const tema = juego.temas.find(t => t.Tema_Juego_ID_PK === selectedImage);
+      return tema ? tema.Contenido : null;
+    };
+
     return (
-        <div ref={(node) => ref(drop(node))} className="list__shape">
-
-            {/* Icono del juego */}
-            <div className="list__image">
-                <i className={`fa-solid ${juego.Juego === 'Rompecabezas' ? 'fa-puzzle-piece' : juego.Juego === 'Dibujo' ? 'fa-paintbrush' : juego.Juego === 'Sopa de letras' ? 'fa-a' : 'fa-brain'}`}></i>
-            </div>
-
-            {/* Nombre y tiempo del juego */}
-            <div className="list__text">
-                <div className="list__title">
-                    <h4>{juego.Juego}</h4>
-                </div>
-                <div className="list__data">
-                    <span>Tiempo: </span>
-                    <span>{juego.Juego === 'Rompecabezas' ? '3 minutos' : juego.Juego === 'Dibujo' ? '8 minutos' : '5 minutos'}</span>
-                </div>
-            </div>
-
-            {/* Selector de dificultad */}
-            <div className="list__dificulty">
-                {juego.Juego === "Dibujo" ? (
-                    <select
-                        value={juego.dificultad}
-                        onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
-                    >
-                        <option value="0" disabled selected>Dificultad:</option>
-                        <option value="1">Fácil (7 min)</option>
-                        <option value="2">Medio (5 min)</option>
-                        <option value="3">Difícil (3 min)</option>
-                    </select>
-                ) : (
-                    <select
-                        value={juego.dificultad}
-                        onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
-                    >
-                        <option value="0" disabled selected>Dificultad:</option>
-                        <option value="1">Fácil</option>
-                        <option value="2">Medio</option>
-                        <option value="3">Difícil</option>
-                    </select>
-                )}
-            </div>
-
-            {/* Selector de temas */}
-            <div className="list__dificulty">
-                <label htmlFor={`temaSelect-${index}`}></label>
-
-                {juego.Juego === 'Rompecabezas' ? (
-                    <>
-                        {/* Botón para abrir el modal */}
-                        <button onClick={openModal} className="select-image-button">
-                            {selectedImage ? (
-                                <span style={{ fontSize: '0.95rem', marginLeft: '4px' }}>Imagen seleccionada</span>  // Mostrar solo el texto si hay una imagen seleccionada
-                            ) : (
-                                <span>Imagen</span>  // Mostrar el texto predeterminado cuando no se ha seleccionado una imagen
-                            )}
-                        </button>
-                        
-                        {/* Modal para seleccionar imagen */}
-                        {isModalOpen && (
-                            <div className="modal">
-                                <div className="modal-content">
-                                    <button onClick={closeModal} className="modal-close-button">X</button>
-                                    <h3>Seleccionar Imagen</h3>
-                                    <div className="image-gallery">
-                                        {juego.temas.length > 0 ? (
-                                            juego.temas.map((tema) => (
-                                                <div key={tema.Tema_Juego_ID_PK} className="image-item" onClick={() => handleImageSelect(tema.Tema_Juego_ID_PK)}>
-                                                    <img src={tema.Contenido} alt={`Tema ${tema.Contenido}`} style={{ width: '100px', height: '100px' }} />
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <span>No hay temas disponibles</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <select
-                        id={`temaSelect-${index}`}
-                        value={selectedImage || juego.tema}  // Usar selectedImage si está definida, de lo contrario usar el tema original
-                        onChange={(e) => {
-                            const newTemaId = e.target.value;
-                            actualizarJuego(index, "tema", newTemaId);  // Pasar solo el ID al actualizar
-                            setSelectedImage(newTemaId);  // Actualizar selectedImage con el TemaID
-                        }}
-                    >
-                        {juego.temas.length > 0 ? (
-                            juego.temas.map((tema) => (
-                                <option key={tema.Tema_Juego_ID_PK} value={tema.Tema_Juego_ID_PK}>
-                                    {tema.Contenido}
-                                </option>
-                            ))
-                        ) : (
-                            <option value="null">Ningún tema</option>
-                        )}
-                    </select>
-                )}
-            </div>
-
-            {/* Eliminar juego */}
-            <button onClick={() => eliminarJuego(index)} className="list__action__s">
-                Eliminar
-            </button>
+      <div ref={(node) => ref(drop(node))} className="list__shape">
+        <div className="list__image">
+          <i className={`fa-solid ${juego.Juego === 'Rompecabezas' ? 'fa-puzzle-piece' : juego.Juego === 'Dibujo' ? 'fa-paintbrush' : juego.Juego === 'Sopa de letras' ? 'fa-a' : 'fa-brain'}`}></i>
         </div>
-    );
-};
 
+        <div className="list__text">
+          <div className="list__title">
+            <h4>{juego.Juego}</h4>
+          </div>
+          <div className="list__data">
+            <span>Tiempo: </span>
+            <span>{juego.Juego === 'Rompecabezas' ? '3 minutos' : juego.Juego === 'Dibujo' ? '8 minutos' : '5 minutos'}</span>
+          </div>
+        </div>
+
+        <div className="list__dificulty">
+          {juego.Juego === "Dibujo" ? (
+            <select
+              value={juego.dificultad}
+              onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
+            >
+              <option value="0" disabled selected>Dificultad:</option>
+              <option value="1">Fácil (7 min)</option>
+              <option value="2">Medio (5 min)</option>
+              <option value="3">Difícil (3 min)</option>
+            </select>
+          ) : (
+            <select
+              value={juego.dificultad}
+              onChange={(e) => actualizarJuego(index, "dificultad", e.target.value)}
+            >
+              <option value="0" disabled selected>Dificultad:</option>
+              <option value="1">Fácil</option>
+              <option value="2">Medio</option>
+              <option value="3">Difícil</option>
+            </select>
+          )}
+        </div>
+
+        <div className="list__dificulty">
+          {juego.Juego === 'Rompecabezas' ? (
+            <>
+              <button 
+                onClick={openModal} 
+                className="select-image-button"
+                style={{
+                  backgroundColor: selectedImage ? '#4CAF50' : '',
+                  color: selectedImage ? 'white' : '',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {selectedImage ? (
+                  <>
+                    <span>Imagen seleccionada</span>
+                    {getSelectedImageUrl() && (
+                      <img 
+                        src={getSelectedImageUrl()} 
+                        alt="Seleccionada" 
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          borderRadius: '4px',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <span>Seleccionar imagen</span>
+                )}
+              </button>
+            </>
+          ) : (
+            <select
+              value={selectedImage || juego.tema}
+              onChange={(e) => {
+                const newTemaId = e.target.value;
+                actualizarJuego(index, "tema", newTemaId);
+                setSelectedImage(newTemaId);
+              }}
+            >
+              {juego.temas.length > 0 ? (
+                juego.temas.map((tema) => (
+                  <option key={tema.Tema_Juego_ID_PK} value={tema.Tema_Juego_ID_PK}>
+                    {tema.Contenido}
+                  </option>
+                ))
+              ) : (
+                <option value="null">Ningún tema</option>
+              )}
+            </select>
+          )}
+        </div>
+
+        <button onClick={() => eliminarJuego(index)} className="list__action__s">
+          Eliminar
+        </button>
+      </div>
+    );
+  };
 
   return (
     <LayoutProfessor>
@@ -366,46 +388,43 @@ const CreatePersonalization = ({ personalizacionId }) => {
               <h3>Orden de los juegos</h3>
             </div>
             <div className="box__order">
-            <div className="order__list">
-            {juegosSeleccionados.map((juego, index) => (
-              <JuegoCard 
-                key={`juego-${juego.Tipo_Juego_ID_PK}-${index}`}
-                index={index}
-                juego={juego}
-                actualizarJuego={actualizarJuego}
-                eliminarJuego={eliminarJuego}
-              />
-            ))}
-          </div>
+              <div className="order__list">
+                {juegosSeleccionados.map((juego, index) => (
+                  <JuegoCard 
+                    key={`juego-${juego.Tipo_Juego_ID_PK}-${index}`}
+                    index={index}
+                    juego={juego}
+                  />
+                ))}
+              </div>
             </div>
-
           </div>
           <div className="content__box">
             <div className="box__title">
-                <h3>Juegos disponibles</h3>
+              <h3>Juegos disponibles</h3>
             </div>
             <div className="box__games">
-                {juegosDisponibles.map((juego) => (
+              {juegosDisponibles.map((juego) => (
                 <button
-                    key={juego.Tipo_Juego_ID_PK}
-                    className="game__shape"
-                    onClick={() => agregarJuego(juego)}
+                  key={juego.Tipo_Juego_ID_PK}
+                  className="game__shape"
+                  onClick={() => agregarJuego(juego)}
+                  disabled={juegosSeleccionados.length >= 5}
                 >
-                    <div className="game__image">
+                  <div className="game__image">
                     <i className={`fa-solid ${juego.Juego === 'Rompecabezas' ? 'fa-puzzle-piece' : juego.Juego === 'Dibujo' ? 'fa-paintbrush' : juego.Juego === 'Memoria' ? 'fa-brain' : 'fa-circle-question'}`}></i>
-                    </div>
-                    <div className="game__text">
+                  </div>
+                  <div className="game__text">
                     <h4 className="game__title">{juego.Juego}</h4>
                     <div className="game__description">
-                        <span>Tiempo:</span>
-                        <span>{juego.Juego === 'Rompecabezas' ? '3 minutos' : juego.Juego === 'Dibujo' ? '8 minutos' : '5 minutos'}</span>
+                      <span>Tiempo:</span>
+                      <span>{juego.Juego === 'Rompecabezas' ? '3 minutos' : juego.Juego === 'Dibujo' ? '8 minutos' : '5 minutos'}</span>
                     </div>
-                    </div>
+                  </div>
                 </button>
-                ))}
+              ))}
             </div>
-            </div>
-
+          </div>
         </div>
       </section>
     </LayoutProfessor>

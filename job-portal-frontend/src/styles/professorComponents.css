@@ -696,6 +696,10 @@
         animation: popIn 0.4s ease-out forwards;
     }
 
+    .game__shape.animate {
+    animation: popIn 0.4s ease-out forwards;
+    }
+
         /* Animar en cadena usando delay por índice */
     .box__games .game__shape:nth-child(1) { animation-delay: 0s; }
     .box__games .game__shape:nth-child(2) { animation-delay: 0.1s; }

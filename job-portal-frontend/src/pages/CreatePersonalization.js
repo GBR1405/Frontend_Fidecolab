@@ -17,6 +17,12 @@ const CreatePersonalization = ({ personalizacionId }) => {
   const [currentImagePage, setCurrentImagePage] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+  // Retrasar ligeramente para que React pinte primero
+  setTimeout(() => setAnimate(true), 10);
+}, []);
 
   useEffect(() => {
     axios.get(`${apiURL}/tipo-juegos`).then((res) => {
@@ -426,15 +432,20 @@ const CreatePersonalization = ({ personalizacionId }) => {
               <h3>Juegos disponibles</h3>
             </div>
             <div className="box__games">
-              {juegosDisponibles.map((juego) => (
+              {juegosDisponibles.map((juego, index) => (
                 <button
                   key={juego.Tipo_Juego_ID_PK}
-                  className="game__shape"
+                  className={`game__shape ${animate ? 'animate' : ''}`}
                   onClick={() => agregarJuego(juego)}
                   disabled={juegosSeleccionados.length >= 5}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="game__image">
-                    <i className={`fa-solid ${juego.Juego === 'Rompecabezas' ? 'fa-puzzle-piece' : juego.Juego === 'Dibujo' ? 'fa-paintbrush' : juego.Juego === 'Memoria' ? 'fa-brain' : 'fa-circle-question'}`}></i>
+                    <i className={`fa-solid ${
+                      juego.Juego === 'Rompecabezas' ? 'fa-puzzle-piece' :
+                      juego.Juego === 'Dibujo' ? 'fa-paintbrush' :
+                      juego.Juego === 'Memoria' ? 'fa-brain' : 'fa-circle-question'
+                    }`}></i>
                   </div>
                   <div className="game__text">
                     <h4 className="game__title">{juego.Juego}</h4>

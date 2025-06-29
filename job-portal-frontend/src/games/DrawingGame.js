@@ -37,6 +37,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     '#000000', '#FFFFFF', '#888888'
   ];
 
+
+
   // Cargar estado inicial desde localStorage
   useEffect(() => {
     const loadSavedState = () => {
@@ -194,6 +196,61 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     animationRef.current = requestAnimationFrame(() => {});
   };
 
+  useEffect(() => {
+  if (!socket) return;
+
+  const handleRemoteAction = (action) => {
+    if (action.userId === userId) return;
+
+    setRemoteLines(prev => {
+      const newRemoteLines = {...prev};
+      
+      switch (action.type) {
+        case 'pathStart':
+          newRemoteLines[action.userId] = [...(newRemoteLines[action.userId] || []), action.path];
+          break;
+          
+        case 'pathUpdate':
+          if (newRemoteLines[action.userId]) {
+            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path.id);
+            if (index >= 0) {
+              newRemoteLines[action.userId][index] = action.path;
+            }
+          }
+          break;
+          
+        case 'clear':
+          delete newRemoteLines[action.userId];
+          break;
+      }
+      
+      return newRemoteLines;
+    });
+  };
+
+  socket.on('drawingAction', handleRemoteAction);
+  
+  // Agrega esto para forzar sincronización inicial
+  const syncInitialState = () => {
+    socket.emit('requestDrawingSync', { partidaId, equipoNumero, userId });
+  };
+  
+  socket.on('drawingSyncResponse', ({ actions }) => {
+    const syncedLines = {};
+    actions.forEach(({ userId, path }) => {
+      syncedLines[userId] = [...(syncedLines[userId] || []), path];
+    });
+    setRemoteLines(syncedLines);
+  });
+
+  syncInitialState();
+
+  return () => {
+    socket.off('drawingAction', handleRemoteAction);
+    socket.off('drawingSyncResponse');
+  };
+}, [socket, partidaId, equipoNumero, userId]);
+
   // Emitir acción de dibujo
   const emitDrawingAction = (type, line) => {
     if (!socket || !line) return;
@@ -262,36 +319,32 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-    setLines([]);
-    
-    if (socket) {
-      try {
-        socket.emit('drawingAction', {
-          partidaId,
-          equipoNumero,
-          userId,
-          action: { 
-            type: 'clear', 
-            userId,
-            tinta: MAX_TINTA
-          }
-        });
-      } catch (error) {
-        console.error('Error clearing drawing:', error);
-      }
+  // Limpiar estado local
+  setLines([]);
+  
+  // Limpiar localStorage
+  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
+
+  // Notificar al servidor
+  socket.emit('drawingAction', {
+    partidaId,
+    equipoNumero,
+    userId,
+    action: {
+      type: 'clear',
+      userId,
+      tinta: MAX_TINTA,
+      clearPermanent: true // Nueva bandera
     }
+  });
 
-    tintaConsumida.current = 0;
-    setTinta(MAX_TINTA);
+  // Resetear tinta
+  tintaConsumida.current = 0;
+  setTinta(MAX_TINTA);
 
-    Swal.fire({
-      title: 'Tinta recargada',
-      text: '¡Puedes volver a dibujar!',
-      icon: 'success',
-      timer: 1000,
-      showConfirmButton: false
-    });
-  };
+  Swal.fire('Dibujo borrado', 'Todos tus trazos han sido eliminados permanentemente', 'success');
+};
 
   // Configuración de Socket.io
   useEffect(() => {

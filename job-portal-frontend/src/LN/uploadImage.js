@@ -5,10 +5,13 @@ export const uploadImageToImgBB = async (file) => {
         return { success: false, message: "API Key no definida" };
     }
 
-    const formData = new FormData();
-    formData.append("image", file);
-
     try {
+        // Primero procesamos la imagen para hacerla cuadrada
+        const squareImage = await createSquareImage(file);
+        
+        const formData = new FormData();
+        formData.append("image", squareImage);
+
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
             method: "POST",
             body: formData,
@@ -40,4 +43,59 @@ export const uploadImageToImgBB = async (file) => {
             message: "No se pudo conectar con el servidor de ImgBB.",
         };
     }
+};
+
+// Función auxiliar para crear una imagen cuadrada recortando el centro
+const createSquareImage = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Crear un canvas para el recorte
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Determinar el tamaño del cuadrado (el lado más pequeño)
+                const size = Math.min(img.width, img.height);
+                
+                // Configurar el canvas con el tamaño cuadrado
+                canvas.width = size;
+                canvas.height = size;
+                
+                // Calcular las coordenadas para recortar el centro
+                const sx = (img.width - size) / 2;
+                const sy = (img.height - size) / 2;
+                
+                // Dibujar la porción cuadrada de la imagen original
+                ctx.drawImage(
+                    img, 
+                    sx, sy,         // Coordenadas de inicio del recorte
+                    size, size,     // Ancho y alto del recorte
+                    0, 0,           // Coordenadas de inicio en el canvas
+                    size, size      // Ancho y alto en el canvas
+                );
+                
+                // Convertir el canvas a Blob
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al crear la imagen cuadrada"));
+                        return;
+                    }
+                    
+                    // Crear un nuevo File con el blob
+                    const squareFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    
+                    resolve(squareFile);
+                }, 'image/jpeg', 0.92); // Calidad del 92%
+            };
+            img.onerror = () => reject(new Error("Error al cargar la imagen"));
+            img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error("Error al leer el archivo"));
+        reader.readAsDataURL(file);
+    });
 };

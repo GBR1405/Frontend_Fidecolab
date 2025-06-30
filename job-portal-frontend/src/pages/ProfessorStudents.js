@@ -85,7 +85,6 @@ const ProfessorStudents = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Datos recibidos:", data); // Verifica si los datos son correctos
                 setEstudiantes(data.estudiantes); // Asegúrate de que 'estudiantes' es el nombre correcto de la propiedad
             } else {
                 console.error("Error al obtener los estudiantes");

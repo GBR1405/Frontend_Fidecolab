@@ -150,7 +150,6 @@ const Layout = ({ children }) => {
 
         if (decryptedData) {
           const parsedToken = JSON.parse(decryptedData);
-          console.log(parsedToken);
 
           const fullName = `${parsedToken.nombre} ${parsedToken.apellido1} ${parsedToken.apellido2}`;
           setUserData({

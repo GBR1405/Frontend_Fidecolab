@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/loadingScreen.css'; // Asegúrate de tener este archivo CSS
+import "../styles/LoadingScreen.css";
 
 const LoadingScreen = ({ loading }) => {
   const [fadeOut, setFadeOut] = useState(false);

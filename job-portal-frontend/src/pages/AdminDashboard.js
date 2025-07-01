@@ -18,12 +18,60 @@ const AdminDashboard = () => {
         totalPersonalizaciones: '0000'
     });
     const [isLoading, setIsLoading] = useState(true);
+    const [animationIntervals, setAnimationIntervals] = useState({});
 
     const images = [
         'https://cdn.ufidelitas.ac.cr/wp-content/uploads/2023/10/14161844/ODT-2382-BannesBlogs_Grados_100V.jpg',
         'https://cdn.ufidelitas.ac.cr/wp-content/uploads/2023/10/14161829/ODT-2382-BannesBlogs_EDC.jpg',
         'https://moria.aurens.com/content/blog_post/1100/1638249155-fide-genrica.png'
     ];
+
+    const startMetricAnimation = (metricKey) => {
+    const interval = setInterval(() => {
+        setDisplayValues(prev => {
+            const randomDigits = Array(4).fill(0).map(() => Math.floor(Math.random() * 10)).join('');
+            return { ...prev, [metricKey]: randomDigits };
+        });
+    }, 100);
+
+    setAnimationIntervals(prev => ({
+        ...prev,
+        [metricKey]: interval
+    }));
+};
+
+const stopMetricAnimation = (metricKey, finalValue) => {
+    if (animationIntervals[metricKey]) {
+        clearInterval(animationIntervals[metricKey]);
+    }
+
+    const finalString = finalValue.toString().padStart(4, '0');
+    let fixedDigits = 0;
+
+    const digitFixInterval = setInterval(() => {
+        setDisplayValues(prev => {
+            const current = prev[metricKey].split('');
+            for (let i = 0; i < fixedDigits; i++) {
+                current[i] = finalString[i]; // Fijar los dígitos ya anclados
+            }
+            // Cambiar los restantes aleatoriamente
+            for (let i = fixedDigits; i < 4; i++) {
+                current[i] = Math.floor(Math.random() * 10).toString();
+            }
+            return { ...prev, [metricKey]: current.join('') };
+        });
+
+        fixedDigits++;
+        if (fixedDigits > 4) {
+            clearInterval(digitFixInterval);
+            // Fijar el valor final definitivo
+            setDisplayValues(prev => ({
+                ...prev,
+                [metricKey]: finalString
+            }));
+        }
+    }, 500); // Cada 0.5s se fija un nuevo dígito
+};
 
     // Función para generar un número aleatorio de 4 dígitos como string
     const generateRandomNumberString = () => {
@@ -77,14 +125,12 @@ const animateNumberChange = (targetValue, metricKey) => {
     const fetchMetrics = async () => {
     try {
         setIsLoading(true);
-        
-        // Inicializar con números aleatorios en movimiento
-        setDisplayValues({
-            partidasJugadas: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
-            totalEstudiantes: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
-            totalProfesores: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
-            totalPersonalizaciones: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join('')
-        });
+
+        // Iniciar animaciones para cada métrica
+        startMetricAnimation('partidasJugadas');
+        startMetricAnimation('totalEstudiantes');
+        startMetricAnimation('totalProfesores');
+        startMetricAnimation('totalPersonalizaciones');
 
         const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/metricas`, {
             method: 'GET',
@@ -95,18 +141,16 @@ const animateNumberChange = (targetValue, metricKey) => {
             },
         });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener las métricas');
-        }
+        if (!response.ok) throw new Error('Error al obtener las métricas');
 
         const data = await response.json();
         setMetrics(data);
 
-        // Animar cada métrica con un pequeño retraso entre ellas para mejor efecto visual
-        setTimeout(() => animateNumberChange(data.partidasJugadas, 'partidasJugadas'), 0);
-        setTimeout(() => animateNumberChange(data.totalEstudiantes, 'totalEstudiantes'), 200);
-        setTimeout(() => animateNumberChange(data.totalProfesores, 'totalProfesores'), 400);
-        setTimeout(() => animateNumberChange(data.totalPersonalizaciones, 'totalPersonalizaciones'), 600);
+        // Detener animación y fijar cada métrica con animación progresiva
+        setTimeout(() => stopMetricAnimation('partidasJugadas', data.partidasJugadas), 0);
+        setTimeout(() => stopMetricAnimation('totalEstudiantes', data.totalEstudiantes), 300);
+        setTimeout(() => stopMetricAnimation('totalProfesores', data.totalProfesores), 600);
+        setTimeout(() => stopMetricAnimation('totalPersonalizaciones', data.totalPersonalizaciones), 900);
 
     } catch (error) {
         console.error("Error fetching metrics:", error);

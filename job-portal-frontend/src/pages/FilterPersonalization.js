@@ -231,6 +231,8 @@ const FilterPersonalization = () => {
                 cancelButtonText: 'No'
             });
 
+            console.log('Confirmación del usuario:', partidaId);
+
             if (confirm.isConfirmed) {
                 Swal.fire({ title: 'Finalizando partida...', didOpen: () => Swal.showLoading() });
                 socket.emit('finishGame', partidaId, (response) => {

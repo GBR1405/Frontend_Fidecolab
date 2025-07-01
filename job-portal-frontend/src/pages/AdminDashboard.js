@@ -31,79 +31,89 @@ const AdminDashboard = () => {
     };
 
     // Función para animar el cambio de número
-    const animateNumberChange = (targetValue, metricKey) => {
-        const targetString = targetValue.toString().padStart(4, '0');
-        let currentDisplay = '0000';
+    // Función para animar el cambio de número
+const animateNumberChange = (targetValue, metricKey) => {
+    const targetString = targetValue.toString().padStart(4, '0');
+    const animationDuration = 2000; // Duración total de la animación en ms
+    const digitDuration = animationDuration / targetString.length;
+    
+    // Primero, establecer todos los dígitos en animación aleatoria
+    const initialRandom = Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join('');
+    setDisplayValues(prev => ({
+        ...prev,
+        [metricKey]: initialRandom
+    }));
+    
+    // Animación para cada dígito
+    targetString.split('').forEach((targetDigit, index) => {
+        // Intervalo para animar este dígito específico
+        const digitInterval = setInterval(() => {
+            setDisplayValues(prev => {
+                const newDisplay = prev[metricKey].split('');
+                newDisplay[index] = Math.floor(Math.random() * 10).toString();
+                return {
+                    ...prev,
+                    [metricKey]: newDisplay.join('')
+                };
+            });
+        }, 100); // Cambia este valor para ajustar la velocidad de la animación
         
-        // Animación para cada dígito
-        targetString.split('').forEach((targetDigit, index) => {
-            setTimeout(() => {
-                const interval = setInterval(() => {
-                    setDisplayValues(prev => {
-                        const newDisplay = prev[metricKey].split('');
-                        newDisplay[index] = Math.floor(Math.random() * 10).toString();
-                        return {
-                            ...prev,
-                            [metricKey]: newDisplay.join('')
-                        };
-                    });
-                }, 50);
-
-                setTimeout(() => {
-                    clearInterval(interval);
-                    setDisplayValues(prev => {
-                        const newDisplay = prev[metricKey].split('');
-                        newDisplay[index] = targetDigit;
-                        return {
-                            ...prev,
-                            [metricKey]: newDisplay.join('')
-                        };
-                    });
-                }, 500 + (index * 300));
-            }, index * 300);
-        });
-    };
+        // Detener la animación de este dígito después de su tiempo asignado
+        setTimeout(() => {
+            clearInterval(digitInterval);
+            setDisplayValues(prev => {
+                const newDisplay = prev[metricKey].split('');
+                newDisplay[index] = targetDigit;
+                return {
+                    ...prev,
+                    [metricKey]: newDisplay.join('')
+                };
+            });
+        }, (index + 1) * digitDuration);
+    });
+};
 
     // Función para obtener las métricas del backend
     const fetchMetrics = async () => {
-        try {
-            setIsLoading(true);
-            // Inicializar con números aleatorios
-            setDisplayValues({
-                partidasJugadas: generateRandomNumberString(),
-                totalEstudiantes: generateRandomNumberString(),
-                totalProfesores: generateRandomNumberString(),
-                totalPersonalizaciones: generateRandomNumberString()
-            });
+    try {
+        setIsLoading(true);
+        
+        // Inicializar con números aleatorios en movimiento
+        setDisplayValues({
+            partidasJugadas: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
+            totalEstudiantes: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
+            totalProfesores: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join(''),
+            totalPersonalizaciones: Array(4).fill(0).map(() => Math.floor(Math.random() * 10).toString()).join('')
+        });
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/metricas`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+        const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/metricas`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-            if (!response.ok) {
-                throw new Error('Error al obtener las métricas');
-            }
-
-            const data = await response.json();
-            setMetrics(data);
-
-            // Animar cada métrica
-            animateNumberChange(data.partidasJugadas, 'partidasJugadas');
-            animateNumberChange(data.totalEstudiantes, 'totalEstudiantes');
-            animateNumberChange(data.totalProfesores, 'totalProfesores');
-            animateNumberChange(data.totalPersonalizaciones, 'totalPersonalizaciones');
-
-        } catch (error) {
-            console.error("Error fetching metrics:", error);
-        } finally {
-            setIsLoading(false);
+        if (!response.ok) {
+            throw new Error('Error al obtener las métricas');
         }
-    };
+
+        const data = await response.json();
+        setMetrics(data);
+
+        // Animar cada métrica con un pequeño retraso entre ellas para mejor efecto visual
+        setTimeout(() => animateNumberChange(data.partidasJugadas, 'partidasJugadas'), 0);
+        setTimeout(() => animateNumberChange(data.totalEstudiantes, 'totalEstudiantes'), 200);
+        setTimeout(() => animateNumberChange(data.totalProfesores, 'totalProfesores'), 400);
+        setTimeout(() => animateNumberChange(data.totalPersonalizaciones, 'totalPersonalizaciones'), 600);
+
+    } catch (error) {
+        console.error("Error fetching metrics:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     useEffect(() => {
         fetchMetrics();

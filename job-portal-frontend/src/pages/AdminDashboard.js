@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 
@@ -19,6 +20,7 @@ const AdminDashboard = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [animationIntervals, setAnimationIntervals] = useState({});
+    const navigate = useNavigate();
 
     const images = [
         'https://cdn.ufidelitas.ac.cr/wp-content/uploads/2023/10/14161844/ODT-2382-BannesBlogs_Grados_100V.jpg',
@@ -41,36 +43,46 @@ const AdminDashboard = () => {
 };
 
 const stopMetricAnimation = (metricKey, finalValue) => {
-    if (animationIntervals[metricKey]) {
-        clearInterval(animationIntervals[metricKey]);
-    }
-
     const finalString = finalValue.toString().padStart(4, '0');
     let fixedDigits = 0;
 
+    // Detener la animación previa de esa métrica si existe
+    if (animationIntervals[metricKey]) {
+        clearInterval(animationIntervals[metricKey]);
+        setAnimationIntervals(prev => {
+            const copy = { ...prev };
+            delete copy[metricKey];
+            return copy;
+        });
+    }
+
     const digitFixInterval = setInterval(() => {
         setDisplayValues(prev => {
-            const current = prev[metricKey].split('');
-            for (let i = 0; i < fixedDigits; i++) {
-                current[i] = finalString[i]; // Fijar los dígitos ya anclados
+            const current = prev[metricKey]?.split('') || ['0', '0', '0', '0'];
+            for (let i = 0; i < 4; i++) {
+                if (i < fixedDigits) {
+                    current[i] = finalString[i]; // Fijar dígitos ya definidos
+                } else {
+                    current[i] = Math.floor(Math.random() * 10).toString(); // Resto sigue animando
+                }
             }
-            // Cambiar los restantes aleatoriamente
-            for (let i = fixedDigits; i < 4; i++) {
-                current[i] = Math.floor(Math.random() * 10).toString();
-            }
-            return { ...prev, [metricKey]: current.join('') };
+            return {
+                ...prev,
+                [metricKey]: current.join('')
+            };
         });
 
         fixedDigits++;
+
+        // Si ya fijamos los 4 dígitos, detenemos
         if (fixedDigits > 4) {
             clearInterval(digitFixInterval);
-            // Fijar el valor final definitivo
             setDisplayValues(prev => ({
                 ...prev,
                 [metricKey]: finalString
             }));
         }
-    }, 500); // Cada 0.5s se fija un nuevo dígito
+    }, 500);
 };
 
     // Función para generar un número aleatorio de 4 dígitos como string
@@ -263,7 +275,8 @@ const animateNumberChange = (targetValue, metricKey) => {
                         <div className="right__title">
                             <h3>Accesos directos</h3>
                         </div>
-                        <div className="right__box">
+
+                        <div className="right__box" onClick={() => navigate('/admin/history')} style={{ cursor: 'pointer' }}>
                             <div className="box__shape">
                                 <i className="fa-solid fa-clock-rotate-left"></i>
                             </div>
@@ -272,7 +285,8 @@ const animateNumberChange = (targetValue, metricKey) => {
                                 <p className="text__description">Puedes ver el historial de las partidas.</p>
                             </div>
                         </div>
-                        <div className="right__box">
+
+                        <div className="right__box" onClick={() => navigate('/admin/reports')} style={{ cursor: 'pointer' }}>
                             <div className="box__shape">
                                 <i className="fa-solid fa-envelope-open-text"></i>
                             </div>
@@ -281,22 +295,24 @@ const animateNumberChange = (targetValue, metricKey) => {
                                 <p className="text__description">Puedes ver reportes personalizados respecto al último cuatrimestre.</p>
                             </div>
                         </div>
-                        <div className="right__box">
+
+                        <div className="right__box" onClick={() => navigate('/admin/depuration')} style={{ cursor: 'pointer' }}>
                             <div className="box__shape">
                                 <i className="fa-solid fa-eraser"></i>
                             </div>
                             <div className="right__text">
                                 <p className="text__title">Depuración</p>
-                                <p className="text__description">Puedes generar una limpieza de usuarios u otro archivos.</p>
+                                <p className="text__description">Puedes generar una limpieza de usuarios u otros archivos.</p>
                             </div>
                         </div>
-                        <div className="right__box">
+
+                        <div className="right__box" onClick={() => navigate('/admin/personalize_editor')} style={{ cursor: 'pointer' }}>
                             <div className="box__shape">
                                 <i className="fa-solid fa-pen-to-square"></i>
                             </div>
                             <div className="right__text">
-                                <p className="text__title">Personalizacion</p>
-                                <p className="text__description">Puedes personalizar y ayudar a darle mas vida a las partidas.</p>
+                                <p className="text__title">Personalización</p>
+                                <p className="text__description">Puedes personalizar y ayudar a darle más vida a las partidas.</p>
                             </div>
                         </div>
                     </div>

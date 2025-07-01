@@ -84,10 +84,6 @@
         color: var(--blue-royal-clr);
     }
     
-    .container__left{
-        grid-area: left;
-    }
-    
     .container__right{
         grid-area: right;
         display: flex;
@@ -132,6 +128,101 @@
         font-weight: 500;
         line-height: 16px;
     }
+
+    /* #CAMBIO Inicio del agregado de codigo */
+    .container__left{
+        grid-area: left;  
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+    }
+    
+    .left__slider {
+        width: 95%;
+        height: 95%;
+        border-radius: 1em;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .slider__images {
+        position: absolute;
+        width: max-content;
+        height: 100%;
+        left: 0;
+        top: 0;
+        display: flex;
+        transition: 1s;
+    }
+    
+    .image__item {
+        width: 80vw;
+        height: 90vh;
+        object-fit: cover;
+    }
+    
+    .slider__nav {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        padding-inline: 5%;
+    
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .nav__button {
+        width: 3.5vw;
+        height: 3.5vw;
+        border-radius: 0.6vw;
+        background-color: var(--orange-clr);
+        color: #fff;
+        border: none;
+        font-size: 2.5vw;    
+        cursor: pointer;
+        transition: 0.5s;
+    
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .nav__button:hover{
+        background-color: var(--dark--orange-clr);
+        transition: 0.5s;
+    }
+    
+    .slider__list {
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        color: #fff;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .list__dot {
+        list-style: none;
+        width: 1vw;
+        height: 1vw;
+        background-color: var(--dark--orange-clr); 
+        margin: 0.5vw;
+        border-radius: 0.2vw;
+        transition: 0.5s;
+    }
+    
+    .dot__active {
+        width: 2vw;
+        background-color: var(--orange-clr);
+    }    
+
+    /* #CAMBIO Fin del agregado de codigo */
 }
 
 /* Pantalla de Historial */

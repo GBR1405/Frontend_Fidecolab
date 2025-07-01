@@ -6,6 +6,7 @@ import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
 import DrawingDemoView from '../games/DrawingDemoView ';
 import Cookies from "js-cookie";
+import LoadingScreen from './LoadingScreen';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
@@ -68,6 +69,8 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
       socket.off('teamProgressUpdate', handleProgressUpdate);
     };
   }, [socket, partidaId, currentGameType]);
+
+  
   
   // Ordenar equipos por número
   const sortedTeams = Object.keys(teamProgress)
@@ -753,14 +756,7 @@ const handleAutoNextGame = () => {
   });
 };
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner"></div>
-        <p>Cargando configuración de juegos...</p>
-      </div>
-    );
-  }
+  <LoadingScreen loading={loading} />
 
   if (error) {
     return (

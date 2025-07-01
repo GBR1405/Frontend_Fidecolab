@@ -4,6 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import Swal from 'sweetalert2';
 import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
+import "../styles/animationRecharge.css";
 import DrawingDemoView from '../games/DrawingDemoView ';
 import Cookies from "js-cookie";
 
@@ -776,9 +777,10 @@ const handleAutoNextGame = () => {
 
   if (!gameConfig) {
     return (
-      <div className="error-screen">
+      <div className="loading-screen">
+        <div className="loader"></div>
         <h2>Error de configuración</h2>
-        <p>No hay configuración de juegos disponible</p>
+        <p className="loading-text">No hay configuración de juegos disponible</p>
       </div>
     );
   }

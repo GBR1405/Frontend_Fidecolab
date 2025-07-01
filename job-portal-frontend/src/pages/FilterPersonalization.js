@@ -210,7 +210,7 @@ const FilterPersonalization = () => {
 
         const status = data.status;
         const partidaId = data.partidaId;
-        console.log('Respuesta del servidor:', data);
+        console.log('Respuesta del servidor:', data.status);
 
         if (status === 1) {
             // Partida vencida, cerrarla automáticamente
@@ -237,7 +237,6 @@ const FilterPersonalization = () => {
                 socket.emit('finishGame', partidaId, async (response) => {
                     await Swal.fire('Partida Finalizada', 'La partida fue cerrada.', 'success');
                     // Intentar iniciar nuevamente
-                    await startGameWithGroup(personalization, grupoID);
                 });
             } else {
                 Swal.fire('Información', 'La partida existente no fue cancelada.', 'info');

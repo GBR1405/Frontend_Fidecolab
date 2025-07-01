@@ -6,7 +6,6 @@ import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
 import DrawingDemoView from '../games/DrawingDemoView ';
 import Cookies from "js-cookie";
-import LoadingScreen from './LoadingScreen';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
@@ -756,7 +755,14 @@ const handleAutoNextGame = () => {
   });
 };
 
-  <LoadingScreen loading={loading} />
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loader"></div>
+        <p className="loading-text">Cargando configuración de juegos...</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (

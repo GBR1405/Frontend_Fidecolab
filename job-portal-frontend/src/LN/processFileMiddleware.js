@@ -1,29 +1,40 @@
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
-// Middleware para procesar el archivo XLSX y extraer los datos relevantes
 export const processFileMiddleware = async (file) => {
   try {
-    // Leer el archivo XLSX
     const fileBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(fileBuffer, { type: "buffer" });
-    
-    // Extraer la primera hoja del archivo
+    const workbook = XLSX.read(fileBuffer, { type: "array" });
+
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Matriz de arrays
 
-    // Aquí puedes hacer la transformación necesaria para los datos
-    const profesores = data.map((prof) => ({
-      name: prof.Nombre,
-      lastName1: prof.Apellido1,
-      lastName2: prof.Apellido2,
-      email: prof.Correo,
-      gender: prof.Genero_ID_FK, // Asegúrate de que esto sea correcto según tu archivo
-    }));
+    // Buscar la fila donde están los encabezados reales
+    const headerIndex = rows.findIndex(row =>
+      row[0] === "Nombre" &&
+      row[1] === "Apellido1" &&
+      row[2] === "Apellido2" &&
+      row[3] === "Correo"
+    );
 
-    // Retornar los datos procesados
+    if (headerIndex === -1) {
+      throw new Error("No se encontró encabezado válido en la plantilla.");
+    }
+
+    // Obtener datos debajo de la fila de encabezado
+    const profesores = rows
+      .slice(headerIndex + 1)
+      .filter(row => row.length >= 4 && row[0]) // evitar vacíos
+      .map(row => ({
+        name: row[0].trim(),
+        lastName1: row[1].trim(),
+        lastName2: row[2].trim(),
+        email: row[3].trim(),
+        gender: "3" // Fijado como pediste
+      }));
+
     return profesores;
   } catch (error) {
-    console.error('Error al procesar el archivo:', error);
-    throw new Error('Error al procesar el archivo');
+    console.error("Error al procesar el archivo:", error);
+    throw new Error("Error al procesar el archivo");
   }
 };

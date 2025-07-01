@@ -206,7 +206,45 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                     <div className="container__right">
-                        {/* ... resto de tu código ... */}
+                        <div className="right__title">
+                            <h3>Accesos directos</h3>
+                        </div>
+                        <div className="right__box">
+                            <div className="box__shape">
+                                <i className="fa-solid fa-clock-rotate-left"></i>
+                            </div>
+                            <div className="right__text">
+                                <p className="text__title">Historial</p>
+                                <p className="text__description">Puedes ver el historial de las partidas.</p>
+                            </div>
+                        </div>
+                        <div className="right__box">
+                            <div className="box__shape">
+                                <i className="fa-solid fa-envelope-open-text"></i>
+                            </div>
+                            <div className="right__text">
+                                <p className="text__title">Reportes</p>
+                                <p className="text__description">Puedes ver reportes personalizados respecto al último cuatrimestre.</p>
+                            </div>
+                        </div>
+                        <div className="right__box">
+                            <div className="box__shape">
+                                <i className="fa-solid fa-eraser"></i>
+                            </div>
+                            <div className="right__text">
+                                <p className="text__title">Depuración</p>
+                                <p className="text__description">Puedes generar una limpieza de usuarios u otro archivos.</p>
+                            </div>
+                        </div>
+                        <div className="right__box">
+                            <div className="box__shape">
+                                <i className="fa-solid fa-pen-to-square"></i>
+                            </div>
+                            <div className="right__text">
+                                <p className="text__title">Personalizacion</p>
+                                <p className="text__description">Puedes personalizar y ayudar a darle mas vida a las partidas.</p>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </LayoutAdmin>

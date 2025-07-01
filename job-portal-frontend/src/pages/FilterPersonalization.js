@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import LayoutProfessor from "../components/Layout";
 import Cookies from "js-cookie";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { useSocket } from '../context/SocketContext';
 
 
 const token = Cookies.get("authToken");
@@ -17,6 +18,7 @@ const FilterPersonalization = () => {
     const [gruposDisponibles, setGruposDisponibles] = useState([]); // Estado para los grupos disponibles
     const [searchTerm, setSearchTerm] = useState(""); // Estado para el filtro por nombre
     const [gameCount, setGameCount] = useState("todos"); // Estado para el filtro de cantidad de juegos
+    const { socket } = useSocket();
 
     // Cargar personalizaciones
     useEffect(() => {
@@ -175,86 +177,88 @@ const FilterPersonalization = () => {
     };
 
 
+    
     const startGameWithGroup = async (personalization, grupoID) => {
-        try {
+    try {
 
-            Swal.fire({
-                title: 'Iniciando partida...',
-                html: 'Por favor espera un momento',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const response = await fetch(`${apiUrl}/start-simulation`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    personalizationId: personalization.Personalizacion_ID_PK,
-                    grupoID: grupoID
-                })
-            });
-    
-            const data = await response.json();
-
-            Swal.close();
-    
-            if (response.ok) {
-                const partidaId = data.partidaId;
-    
-                // Mostrar SweetAlert de éxito
-                await Swal.fire({
-                    title: 'Partida Iniciada',
-                    text: `La partida se ha iniciado correctamente`,
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
-                });
-    
-                // Aquí puedes redirigir a la página de la partida o realizar otras acciones
-                console.log('Partida iniciada con ID:', partidaId);
-    
-            } else if (response.status === 400 && data.message === 'Ya existe una partida iniciada') {
-                const confirmResult = await Swal.fire({
-                    title: 'Partida existente',
-                    text: 'Ya tienes una partida iniciada. ¿Deseas cancelarla?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, cancelar',
-                    cancelButtonText: 'No',
-                });
-    
-                if (confirmResult.isConfirmed) {
-                    const cancelResponse = await fetch(`${apiUrl}/cancel-simulation`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        }
-                    });
-    
-                    if (cancelResponse.ok) {
-                        await Swal.fire('Partida Cancelada', 'Intenta iniciar una nueva partida.', 'success');
-                    } else {
-                        Swal.fire('Error', 'No se pudo cancelar la partida.', 'error');
-                    }
-                } else {
-                    Swal.fire('Información', 'La partida existente no fue cancelada.', 'info');
-                }
-            } else {
-                Swal.fire('Error', 'Hubo un problema al iniciar la simulación.', 'error');
+        
+        Swal.fire({
+            title: 'Iniciando partida...',
+            html: 'Por favor espera un momento',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-        } catch (error) {
-            console.error('Error al iniciar la simulación:', error);
-            Swal.fire('Error', 'Hubo un problema al iniciar la simulación.', 'error');
+        });
+
+        const response = await fetch(`${apiUrl}/start-simulation`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                personalizationId: personalization.Personalizacion_ID_PK,
+                grupoID: grupoID
+            })
+        });
+
+        const data = await response.json();
+        Swal.close();
+
+        const status = data.status;
+        const partidaId = data.partidaId;
+
+        if (status === 1) {
+            // Partida vencida, cerrarla automáticamente
+            Swal.fire({ title: 'Finalizando partida anterior...', didOpen: () => Swal.showLoading() });
+            socket.emit('finishGame', partidaId, async (response) => {
+                await Swal.fire('Partida Finalizada', 'La partida anterior fue cerrada automáticamente.', 'info');
+                // Intentar iniciar nuevamente
+                await startGameWithGroup(personalization, grupoID);
+            });
+
+        } else if (status === 2) {
+            // Partida activa, preguntar al usuario si desea finalizarla
+            const confirm = await Swal.fire({
+                title: 'Partida en curso',
+                text: 'Ya tienes una partida activa. ¿Deseas finalizarla?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'No'
+            });
+
+            if (confirm.isConfirmed) {
+                Swal.fire({ title: 'Finalizando partida...', didOpen: () => Swal.showLoading() });
+                socket.emit('finishGame', partidaId, async (response) => {
+                    await Swal.fire('Partida Finalizada', 'La partida fue cerrada.', 'success');
+                    // Intentar iniciar nuevamente
+                    await startGameWithGroup(personalization, grupoID);
+                });
+            } else {
+                Swal.fire('Información', 'La partida existente no fue cancelada.', 'info');
+            }
+
+        } else if (status === 3) {
+            // Nueva partida creada exitosamente
+            await Swal.fire('Partida Iniciada', 'La partida se ha iniciado correctamente.', 'success');
+            console.log('Partida iniciada con ID:', partidaId);
+            // Aquí puedes redirigir al juego si lo deseas
+
+        } else {
+            Swal.fire('Error', 'Respuesta inesperada del servidor.', 'error');
         }
-    };
+
+    } catch (error) {
+        console.error('Error al iniciar la simulación:', error);
+        Swal.close();
+        Swal.fire('Error', 'Hubo un problema al iniciar la simulación.', 'error');
+    }
+};
+
 
     const handleCreateNew = (e) => {
         e.preventDefault();

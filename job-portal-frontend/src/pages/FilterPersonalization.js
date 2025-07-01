@@ -18,7 +18,7 @@ const FilterPersonalization = () => {
     const [gruposDisponibles, setGruposDisponibles] = useState([]); // Estado para los grupos disponibles
     const [searchTerm, setSearchTerm] = useState(""); // Estado para el filtro por nombre
     const [gameCount, setGameCount] = useState("todos"); // Estado para el filtro de cantidad de juegos
-    const { socket } = useSocket();
+    const socket = useSocket();
 
     // Cargar personalizaciones
     useEffect(() => {
@@ -210,6 +210,7 @@ const FilterPersonalization = () => {
 
         const status = data.status;
         const partidaId = data.partidaId;
+        console.log('Respuesta del servidor:', data);
 
         if (status === 1) {
             // Partida vencida, cerrarla automáticamente

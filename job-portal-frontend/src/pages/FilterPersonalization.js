@@ -215,10 +215,9 @@ const FilterPersonalization = () => {
         if (status === 1) {
             // Partida vencida, cerrarla automáticamente
             Swal.fire({ title: 'Finalizando partida anterior...', didOpen: () => Swal.showLoading() });
-            socket.emit('finishGame', partidaId, async (response) => {
-                await Swal.fire('Partida Finalizada', 'La partida anterior fue cerrada automáticamente.', 'info');
+            socket.emit('finishGame', partidaId, (response) => {
+                 Swal.fire('Partida Finalizada', 'La partida anterior fue cerrada automáticamente.', 'info');
                 // Intentar iniciar nuevamente
-                await startGameWithGroup(personalization, grupoID);
             });
 
         } else if (status === 2) {
@@ -234,8 +233,8 @@ const FilterPersonalization = () => {
 
             if (confirm.isConfirmed) {
                 Swal.fire({ title: 'Finalizando partida...', didOpen: () => Swal.showLoading() });
-                socket.emit('finishGame', partidaId, async (response) => {
-                    await Swal.fire('Partida Finalizada', 'La partida fue cerrada.', 'success');
+                socket.emit('finishGame', partidaId, (response) => {
+                    Swal.fire('Partida Finalizada', 'La partida fue cerrada.', 'success');
                     // Intentar iniciar nuevamente
                 });
             } else {

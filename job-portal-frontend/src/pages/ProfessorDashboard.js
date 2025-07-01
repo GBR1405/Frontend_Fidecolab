@@ -710,51 +710,66 @@ const handleAutoNextGame = () => {
   };
 
   const finishGame = () => {
-  Swal.fire({
-    title: 'Finalizar partida',
-    text: '¿Estás seguro que deseas finalizar la partida? Esto no se puede deshacer.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, finalizar',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      socket.emit('finishGame', partidaId, (response) => {
-        if (response.error) {
-          Swal.fire('Error', 'No se pudo finalizar la partida', 'error');
-        } else {
-          // Mostrar pantalla con temporizador visual
+      Swal.fire({
+        title: 'Finalizar partida',
+        text: '¿Estás seguro que deseas finalizar la partida? Esto no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, finalizar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Mostrar mensaje de espera
           Swal.fire({
-            title: '🎉 Partida finalizada con éxito',
-            html: 'Serás redirigido a los resultados en <b>8</b> segundos...',
-            icon: 'success',
-            timer: 8000,
-            timerProgressBar: true,
+            title: 'Finalizando partida',
+            html: 'Se está finalizando la partida, espere por favor...',
             allowOutsideClick: false,
             allowEscapeKey: false,
             showConfirmButton: false,
             didOpen: () => {
               Swal.showLoading();
-              const content = Swal.getHtmlContainer();
-              const b = content.querySelector('b');
-              let timeLeft = 8;
-              const interval = setInterval(() => {
-                timeLeft--;
-                if (b) b.textContent = timeLeft;
-                if (timeLeft <= 0) clearInterval(interval);
-              }, 1000);
-            },
-            willClose: () => {
-              window.location.href = `/resultados/${partidaId}`;
+            }
+          });
+
+          socket.emit('finishGame', partidaId, (response) => {
+            // Cerrar el mensaje de espera antes de mostrar el resultado
+            Swal.close();
+            
+            if (response.error) {
+              Swal.fire('Error', 'No se pudo finalizar la partida', 'error');
+            } else {
+              // Mostrar pantalla con temporizador visual
+              Swal.fire({
+                title: '🎉 Partida finalizada con éxito',
+                html: 'Serás redirigido a los resultados en <b>8</b> segundos...',
+                icon: 'success',
+                timer: 8000,
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                  Swal.showLoading();
+                  const content = Swal.getHtmlContainer();
+                  const b = content.querySelector('b');
+                  let timeLeft = 8;
+                  const interval = setInterval(() => {
+                    timeLeft--;
+                    if (b) b.textContent = timeLeft;
+                    if (timeLeft <= 0) clearInterval(interval);
+                  }, 1000);
+                },
+                willClose: () => {
+                  window.location.href = `/resultados/${partidaId}`;
+                }
+              });
             }
           });
         }
       });
-    }
-  });
-};
+    };
 
   if (loading) {
     return (

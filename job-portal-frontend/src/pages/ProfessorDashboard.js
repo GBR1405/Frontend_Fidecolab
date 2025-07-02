@@ -145,7 +145,6 @@ const SimulationProfessor = () => {
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
   const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
-  const [lastSyncTime, setLastSyncTime] = useState(Date.now());
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -153,69 +152,6 @@ const SimulationProfessor = () => {
     totalTeams: 0,
     teams: []
   });
-
-  useEffect(() => {
-  if (!socket || !partidaId || !gameConfig) return;
-
-  // Función para sincronizar el temporizador con el juego actual
-  const syncTimerWithCurrentGame = () => {
-    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
-    if (!currentGame) return;
-
-    // Calcular el tiempo basado en el juego actual
-    const gameTime = calculateGameTime(
-      currentGame.tipo,
-      currentGame.dificultad,
-      currentGame.configEspecifica
-    );
-
-    // Calcular tiempo transcurrido desde el último sync
-    const now = Date.now();
-    const elapsedSeconds = Math.floor((now - lastSyncTime) / 1000);
-    const newRemaining = Math.max(gameTime - elapsedSeconds, 0);
-
-    // Solo actualizar si hay cambios significativos
-    if (
-      currentGame.tipo !== timer.gameType ||
-      currentGame.dificultad !== timer.difficulty ||
-      Math.abs(newRemaining - timer.remaining) > 5 // Diferencia de más de 5 segundos
-    ) {
-      setTimer({
-        remaining: newRemaining,
-        total: gameTime,
-        active: newRemaining > 0,
-        gameType: currentGame.tipo,
-        difficulty: currentGame.dificultad
-      });
-    }
-
-    setLastSyncTime(now);
-  };
-
-  // Sincronización inicial
-  syncTimerWithCurrentGame();
-
-  // Configurar intervalo de sincronización (cada 2 segundos)
-  const syncInterval = setInterval(syncTimerWithCurrentGame, 2000);
-
-  // Escuchar eventos de cambio de juego desde otros clientes
-  const handleGameChange = (newIndex) => {
-    if (newIndex !== gameConfig.currentIndex) {
-      setGameConfig(prev => ({
-        ...prev,
-        currentIndex: newIndex
-      }));
-      syncTimerWithCurrentGame();
-    }
-  };
-
-  socket.on('gameIndexChanged', handleGameChange);
-
-  return () => {
-    clearInterval(syncInterval);
-    socket.off('gameIndexChanged', handleGameChange);
-  };
-}, [socket, partidaId, gameConfig, gameConfig?.currentIndex, lastSyncTime]);
 
   useEffect(() => {
   if (!socket || !partidaId || !gameConfig) return;
@@ -320,7 +256,66 @@ const SimulationProfessor = () => {
   }, [socket, partidaId]);
 
 
+// 1. Efecto principal de sincronización
+useEffect(() => {
+  if (!socket || !partidaId || !gameConfig) return;
 
+  // Función para verificar y corregir el temporizador
+  const checkTimerConsistency = () => {
+    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
+    
+    // Si el temporizador no coincide con el juego actual, corregirlo
+    if (!currentGame || timer.gameType !== currentGame.tipo || timer.difficulty !== currentGame.dificultad) {
+      const gameTime = calculateGameTime(
+        currentGame.tipo,
+        currentGame.dificultad,
+        currentGame.configEspecifica
+      );
+
+      setTimer({
+        remaining: gameTime,
+        total: gameTime,
+        active: true,
+        gameType: currentGame.tipo,
+        difficulty: currentGame.dificultad
+      });
+    }
+  };
+
+  // Verificar cada 2 segundos (ajustable)
+  const consistencyInterval = setInterval(checkTimerConsistency, 2000);
+
+  // También verificar cuando cambia la visibilidad de la pestaña
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkTimerConsistency();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    clearInterval(consistencyInterval);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [socket, partidaId, gameConfig, timer.gameType, timer.difficulty]);
+
+// 2. Efecto para el contador del temporizador
+useEffect(() => {
+  if (!timer.active) return;
+
+  const timerInterval = setInterval(() => {
+    setTimer(prev => ({
+      ...prev,
+      remaining: Math.max(prev.remaining - 1, 0),
+      active: prev.remaining > 1
+    }));
+  }, 1000);
+
+  return () => clearInterval(timerInterval);
+}, [timer.active]);
+
+// 3. Función optimizada para cambiar de juego
   
   const changeDemoTeam = (direction) => {
     const currentIndex = demoState.teams.indexOf(demoState.currentTeam);
@@ -409,20 +404,6 @@ useEffect(() => {
       }
     });
   };
-
-  useEffect(() => {
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      // Forzar sincronización inmediata al volver a la pestaña
-      setLastSyncTime(Date.now());
-    }
-  };
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, []);
 
 
   // Agrega esto cerca de los otros efectos
@@ -633,33 +614,36 @@ useEffect(() => {
 }, [timer.active]);
 
 const TimerDisplay = () => {
-  // Efecto para animación cuando el tiempo es crítico
+  // Verificar coherencia local
+  const currentGame = gameConfig?.juegos[gameConfig.currentIndex];
+  const isConsistent = currentGame && 
+                      timer.gameType === currentGame.tipo && 
+                      timer.difficulty === currentGame.dificultad;
+
+  // Efecto para animación de tiempo crítico
   useEffect(() => {
-    if (timer.remaining <= 30 && timer.active) {
-      const timerElement = document.querySelector('.time-display.low-time');
-      if (timerElement) {
-        timerElement.classList.add('pulse');
-        setTimeout(() => timerElement.classList.remove('pulse'), 1000);
-      }
+    if (isConsistent && timer.remaining <= 30 && timer.active) {
+      const timerElement = document.querySelector('.time-display');
+      timerElement?.classList.add('pulsing');
+      setTimeout(() => timerElement?.classList.remove('pulsing'), 1000);
     }
-  }, [timer.remaining]);
+  }, [timer.remaining, isConsistent]);
 
   return (
-    <div className="timer-container">
-      <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
+    <div className={`timer-container ${!isConsistent ? 'syncing' : ''}`}>
+      <div className={`time-display ${timer.remaining <= 30 ? 'critical' : ''}`}>
         {formatTime(timer.remaining)}
+        {!isConsistent && <span className="sync-badge">Sincronizando...</span>}
       </div>
-      <div className="time-details">
-        <span className="time-game-type">{timer.gameType}</span>
-        {timer.difficulty && (
-          <span className="time-difficulty">({timer.difficulty})</span>
-        )}
+      <div className="time-meta">
+        <span className="game-type">{timer.gameType}</span>
+        {timer.difficulty && <span className="difficulty">({timer.difficulty})</span>}
       </div>
-      <div className="time-progress-bar">
+      <div className="progress-bar">
         <div 
-          className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
+          className="progress-fill"
           style={{ width: `${(timer.remaining / timer.total) * 100}%` }}
-        ></div>
+        />
       </div>
     </div>
   );

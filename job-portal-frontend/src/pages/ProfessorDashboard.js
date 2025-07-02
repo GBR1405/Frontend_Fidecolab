@@ -146,6 +146,7 @@ const SimulationProfessor = () => {
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
   const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
   const [lastSync, setLastSync] = useState(Date.now());
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -401,37 +402,49 @@ useEffect(() => {
 
   // Función para sincronizar con el backend
   const syncWithBackend = () => {
-    socket.emit('getCurrentGameState', partidaId, (response) => {
-      if (response && response.currentGame) {
-        const gameTime = calculateGameTime(
-          response.currentGame.tipo,
-          response.currentGame.dificultad,
-          response.currentGame.configEspecifica
-        );
+    if (isSyncing) return;
+    setIsSyncing(true);
+    
+    socket.emit('getGameState', partidaId, (response) => {
+      setIsSyncing(false);
+      
+      if (!response || !response.currentGame) return;
 
-        setTimer(prev => {
-          // Solo actualizar si hay cambios importantes
-          if (prev.gameType !== response.currentGame.tipo || 
-              prev.difficulty !== response.currentGame.dificultad ||
-              Math.abs(prev.remaining - response.remainingTime) > 2) {
-            return {
-              remaining: response.remainingTime || gameTime,
-              total: gameTime,
-              active: (response.remainingTime || gameTime) > 0,
-              gameType: response.currentGame.tipo,
-              difficulty: response.currentGame.dificultad
-            };
-          }
-          return prev;
-        });
+      // Calcular tiempo total del juego actual
+      const gameTime = calculateGameTime(
+        response.currentGame.tipo,
+        response.currentGame.dificultad,
+        response.currentGame.configEspecifica
+      );
 
+      // Actualizar el temporizador si hay cambios
+      setTimer(prev => {
+        const shouldUpdate = 
+          prev.gameType !== response.currentGame.tipo ||
+          prev.difficulty !== response.currentGame.dificultad ||
+          Math.abs(prev.remaining - (response.remainingTime || gameTime)) > 1;
+        
+        if (shouldUpdate) {
+          return {
+            remaining: response.remainingTime || gameTime,
+            total: gameTime,
+            active: (response.remainingTime || gameTime) > 0,
+            gameType: response.currentGame.tipo,
+            difficulty: response.currentGame.dificultad
+          };
+        }
+        return prev;
+      });
+
+      // Actualizar el índice del juego si es necesario
+      if (gameConfig?.currentIndex !== response.currentIndex) {
         setGameConfig(prev => ({
           ...prev,
           currentIndex: response.currentIndex
         }));
-
-        setLastSync(Date.now());
       }
+
+      setLastSync(Date.now());
     });
   };
 
@@ -441,10 +454,21 @@ useEffect(() => {
   // Sincronizar cada 1 segundo exactamente
   const syncInterval = setInterval(syncWithBackend, 1000);
 
-  return () => clearInterval(syncInterval);
-}, [socket, partidaId]);
+  // También sincronizar cuando la pestaña vuelve a estar activa
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      syncWithBackend();
+    }
+  };
 
-// 3. Efecto para el contador del temporizador
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    clearInterval(syncInterval);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [socket, partidaId, gameConfig?.currentIndex]);
+
 useEffect(() => {
   if (!timer.active) return;
 

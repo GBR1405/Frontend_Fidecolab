@@ -13,6 +13,7 @@ const token = Cookies.get("authToken");
 
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
+  const [allTeams, setAllTeams] = useState([]);
   
 
   const navigate = useNavigate();
@@ -33,6 +34,29 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [navigate]);
+
+  useEffect(() => {
+  if (!socket || !partidaId) return;
+
+  // 1. Obtener todos los equipos
+  socket.emit('getTeamsForPartida', partidaId, (response) => {
+    if (response.success) {
+      setAllTeams(response.equipos);
+    }
+  });
+
+  // 2. Obtener progreso actual
+  const updateProgress = () => {
+    socket.emit('getTeamProgress', partidaId, (progress) => {
+      setTeamProgress(progress);
+    });
+  };
+
+  updateProgress();
+  const interval = setInterval(updateProgress, 2000);
+
+  return () => clearInterval(interval);
+}, [socket, partidaId]);
   
   useEffect(() => {
     if (!socket) return;
@@ -74,10 +98,13 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   
   
   // Ordenar equipos por número
-  const sortedTeams = Object.keys(teamProgress)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .filter(team => teamProgress[team][currentGameType] !== undefined);
+  const sortedTeams = [...allTeams].sort((a, b) => {
+    const progressA = teamProgress[a]?.[currentGameType] ?? 0;
+    const progressB = teamProgress[b]?.[currentGameType] ?? 0;
+    return progressB - progressA;
+  });
+
+  
   
   if (sortedTeams.length === 0) {
     return (
@@ -88,12 +115,39 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   }
   
   return (
-    <div className="team-progress-container">
-      {sortedTeams.map(team => (
+  <div className="team-progress-container">
+    {sortedTeams.map(team => {
+      // Ahorcado: mostrar correctas vs errores
+      if (currentGameType === 'Ahorcado') {
+        const letrasEncontradas = teamProgress[team]?.correctas ?? 0;
+        const letrasErradas = teamProgress[team]?.errores ?? 0;
+        const total = letrasEncontradas + letrasErradas || 1;
+
+        const porcentajeCorrectas = (letrasEncontradas / total) * 100;
+        const porcentajeErrores = (letrasErradas / total) * 100;
+
+        return (
+          <div key={team} className="team-progress-item">
+            <div className="team-header">
+              <span className="team-name">Equipo {team}</span>
+              <span className="team-progress-value">
+                Letras encontradas: {letrasEncontradas} / Errores: {letrasErradas}
+              </span>
+            </div>
+            <div className="progress-bar dual">
+              <div className="progress-fill correct" style={{ width: `${porcentajeCorrectas}%` }}></div>
+              <div className="progress-fill wrong" style={{ width: `${porcentajeErrores}%` }}></div>
+            </div>
+          </div>
+        );
+      }
+
+      // Otros juegos: barra de progreso normal
+      return (
         <div key={team} className="team-progress-item">
           <div className="team-header">
             <span className="team-name">Equipo {team}</span>
-            {teamProgress[team][currentGameType] !== undefined ? (
+            {teamProgress[team]?.[currentGameType] !== undefined ? (
               <span className="team-progress-value">
                 {teamProgress[team][currentGameType]}%
               </span>
@@ -101,7 +155,7 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
               <span className="team-inactive">Conectado</span>
             )}
           </div>
-          {teamProgress[team][currentGameType] !== undefined ? (
+          {teamProgress[team]?.[currentGameType] !== undefined ? (
             <div className="progress-bar">
               <div 
                 className="progress-fill"
@@ -114,9 +168,10 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
             </div>
           )}
         </div>
-      ))}
-    </div>
-  );
+      );
+    })}
+  </div>
+);
 };
 
 const SimulationProfessor = () => {
@@ -144,6 +199,7 @@ const SimulationProfessor = () => {
   const [demoActive, setDemoActive] = useState(false);
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
+  
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -301,6 +357,7 @@ useEffect(() => {
       }
     });
   };
+
 
 
   // Agrega esto cerca de los otros efectos

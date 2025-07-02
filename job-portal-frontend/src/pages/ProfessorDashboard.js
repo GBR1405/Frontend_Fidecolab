@@ -576,25 +576,28 @@ const handleAutoNextGame = () => {
 
   // Manejar el cambio de juego con animación
   const handleGameChangeWithTransition = (data) => {
-    console.log('Actualización de juego recibida:', data);
-    
-    setTransitionGame({
-      tipo: data.currentGame.tipo,
-      configEspecifica: data.currentGame.configEspecifica,
-      dificultad: data.currentGame.dificultad,
-      tema: data.currentGame.tema
-    });
-    setShowTransition(true);
-    
-    if (transitionTimeoutRef.current) {
-      clearTimeout(transitionTimeoutRef.current);
-    }
-    
-    transitionTimeoutRef.current = setTimeout(() => {
-      setShowTransition(false);
-      updateGameState(data.currentIndex);
-    }, 3000);
-  };
+  setTransitionGame({
+    tipo: data.currentGame.tipo,
+    configEspecifica: data.currentGame.configEspecifica,
+    dificultad: data.currentGame.dificultad,
+    tema: data.currentGame.tema
+  });
+  setShowTransition(true);
+
+  if (transitionTimeoutRef.current) {
+    clearTimeout(transitionTimeoutRef.current);
+  }
+
+  transitionTimeoutRef.current = setTimeout(() => {
+    setShowTransition(false);
+
+    // ✅ ESTA es la única parte que debe cambiar el índice
+    setGameConfig(prev => ({
+      ...prev,
+      currentIndex: data.currentIndex
+    }));
+  }, 3000);
+};
 
   useEffect(() => {
   if (!socket || !partidaId) return;
@@ -679,7 +682,6 @@ const handleAutoNextGame = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         const newIndex = gameConfig.currentIndex + 1;
-        updateGameState(newIndex);
         setDemoActive(false);
         
         const nextGame = gameConfig.juegos[newIndex];

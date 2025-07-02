@@ -709,10 +709,6 @@ const handleAutoNextGame = () => {
           Swal.fire('Error', 'No se pudo cambiar al siguiente juego', 'error');
         } else {
           
-          setGameConfig(prev => ({
-            ...prev,
-            currentIndex: prev.currentIndex + 1
-          }));
 
           setTimeout(() => {
             socket.emit('RequestTimeSync', partidaId);

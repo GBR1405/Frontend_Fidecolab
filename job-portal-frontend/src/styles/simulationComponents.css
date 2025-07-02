@@ -414,3 +414,38 @@
   font-weight: 500;
   text-align: center;
 }
+
+/* Pantalla de wating room */
+
+.data__player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3vw 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  height: 2vw;
+}
+
+.player__text {
+  font-size: 0.9vw;
+  font-weight: 500;
+  color: var(--primary-text-clr);
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fa-circle,
+.fa-regular.fa-circle {
+  font-size: 0.7vw;
+  margin-left: 0.5vw;
+}
+
+.connected {
+  color: #4caf50;
+}
+
+.not-connected {
+  color: #ccc;
+}

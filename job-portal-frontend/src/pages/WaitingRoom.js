@@ -352,7 +352,7 @@ const WaitingRoom = () => {
               {Object.entries(teamGroups).map(([teamNumber, members]) => (
                 <div className="content__widget" key={teamNumber}>
                   <div className="widget__title">
-                    <h3>Grupo {teamNumber} ({members.length}/4)</h3>
+                    <h3>Grupo {teamNumber}</h3>
                   </div>
                   <div className="widget__data">
                     {Array.from({ length: 4 }).map((_, index) => {
@@ -364,12 +364,17 @@ const WaitingRoom = () => {
                               <span className="player__text" title={user.fullName}>
                                 {user.fullName}
                               </span>
-                              {isUserConnected(user.userId) && (
-                                <i className="fa-solid fa-circle" title="Conectado"></i>
+                              {isUserConnected(user.userId) ? (
+                                <i className="fa-solid fa-circle connected" title="Conectado"></i>
+                              ) : (
+                                <i className="fa-regular fa-circle not-connected" title="Desconectado"></i>
                               )}
                             </>
                           ) : (
-                            <span className="player__text">[Vacío]</span>
+                            <>
+                              <span className="player__text">[Vacío]</span>
+                              <i className="fa-regular fa-circle not-connected"></i>
+                            </>
                           )}
                         </div>
                       );

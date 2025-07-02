@@ -31,7 +31,7 @@
   display: grid;
   grid-template-columns: 80% 20%;
   max-height: calc(100vh - 12.5vh);
-  overflow: hidden;
+  overflow: hidden; /* Mantenemos esto para evitar doble scroll */
  
   /* #CAMBIO Inicio del codigo agregado */
 
@@ -42,14 +42,16 @@
     box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
     border-radius: 1em;
     border-radius: 1em 1em 1em 1em;
+    overflow-y: auto; /* Agregamos scroll vertical cuando sea necesario */
+    padding-right: 0.5vw; /* Espacio para el scroll */
   }
 
   .background__content{  
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr; 
-    justify-items: center;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Hacemos responsive el grid */
     gap: 1vw; 
     padding: 1vw;
+    min-height: min-content; /* Aseguramos que el contenido defina la altura */
   }
 
   /* #CAMBIO Fin del codigo agregado */
@@ -479,3 +481,23 @@
   box-shadow: none;
 }
 
+/* estilo scroll */
+
+/* Estilo personalizado para el scrollbar */
+.container__background::-webkit-scrollbar {
+  width: 8px;
+}
+
+.container__background::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.container__background::-webkit-scrollbar-thumb {
+  background: var(--blue-royal-clr);
+  border-radius: 10px;
+}
+
+.container__background::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-royal-clr);
+}

@@ -21,6 +21,7 @@ const WaitingRoom = () => {
   const userId = localStorage.getItem('userId');
   const userFullName = localStorage.getItem('userFullName');
   const userRole = localStorage.getItem('role'); // Obtener el rol del usuario
+  const [visibleTeams, setVisibleTeams] = useState([]);
   
   const [teamGroups, setTeamGroups] = useState({});
 
@@ -155,6 +156,17 @@ const WaitingRoom = () => {
         }
       }
     };
+
+    useEffect(() => {
+  if (Object.keys(teamGroups).length > 0) {
+    // Mostrar equipos uno por uno con intervalo de 200ms
+    Object.keys(teamGroups).forEach((teamNumber, index) => {
+      setTimeout(() => {
+        setVisibleTeams(prev => [...prev, teamNumber]);
+      }, index * 200);
+    });
+  }
+}, [teamGroups]);
 
   // Función para mostrar el SweetAlert con el temporizador de 3 segundos
   const showSweetAlertTimer = () => {
@@ -355,6 +367,11 @@ const WaitingRoom = () => {
           <div className="container__background">
             <div className="background__content">
               {Object.entries(teamGroups).map(([teamNumber, members]) => (
+                <div 
+                  className={`content__widget ${visibleTeams.includes(teamNumber) ? 'pop-animation' : ''}`}
+                  key={teamNumber}
+                  style={{ display: visibleTeams.includes(teamNumber) ? 'grid' : 'none' }}
+                >
                 <div className="content__widget" key={teamNumber}>
                   <div className="widget__title">
                     <h3>Grupo {teamNumber}</h3>
@@ -384,6 +401,7 @@ const WaitingRoom = () => {
                       );
                     })}
                   </div>
+                </div>
                 </div>
               ))}
             </div>

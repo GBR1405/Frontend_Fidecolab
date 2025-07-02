@@ -21,6 +21,9 @@ const WaitingRoom = () => {
   const userId = localStorage.getItem('userId');
   const userFullName = localStorage.getItem('userFullName');
   const userRole = localStorage.getItem('role'); // Obtener el rol del usuario
+  
+  const [teamGroups, setTeamGroups] = useState({});
+
 
   // Función para obtener el número de equipo del estudiante
   const fetchTeamNumber = async () => {
@@ -59,6 +62,17 @@ const WaitingRoom = () => {
     if (socket && partidaId && userId && userFullName) {
       // Unirse a la sala con el ID y el nombre completo
       socket.emit('JoinRoom', partidaId, { userId, fullName: userFullName, role: userRole });
+
+      if (socket && partidaId) {
+        socket.emit('GetGroupStructure', parseInt(partidaId), (response) => {
+          if (response.success) {
+            setTeamGroups(response.teams);
+          } else {
+            console.error('Error al obtener los grupos:', response.error);
+          }
+        });
+      }
+
   
       // Escuchar eventos de la sala
       socket.on('UpdateUsers', (usuarios) => {
@@ -97,6 +111,10 @@ const WaitingRoom = () => {
       };
     }
   }, [socket, partidaId, userId, userFullName, userRole]);
+
+  const isUserConnected = (userId) => {
+    return users.some(u => u.userId === userId);
+  };
 
   const getUniqueUsers = (users) => {
     const uniqueUsers = [];
@@ -271,6 +289,23 @@ const WaitingRoom = () => {
     }
   };
 
+  useEffect(() => {
+  if (socket && users.length > 0) {
+    const last = users[users.length - 1];
+    if (last && last.fullName !== userFullName) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `${last.fullName} se ha conectado`,
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+  }
+}, [users]);
+
+
   return (
     <div className="body__room">
       <header className="header">
@@ -314,32 +349,34 @@ const WaitingRoom = () => {
           {/* #CAMBIO Inicio del codigo agregado */}
           <div className="container__background">
             <div className="background__content">
-              {filteredUsers.length === 0 ? (
-                <div className="empty-state">
-                  <i className="fa-solid fa-users-slash"></i>
-                  <p>Esperando a que se conecten los estudiantes...</p>
-                </div>
-              ) : (
-                filteredUsers.map((user, index) => (
-                  <div
-                    className={`content__widget ${index === filteredUsers.length - 1 ? 'pop' : ''}`}
-                    key={user.id}
-                    data-position={index + 1}
-                  >
-                    <div className="widget__title">
-                      <h3>Estudiante {index + 1}</h3>
-                    </div>
-                    <div className="widget__data">
-                      <div className="data__player">
-                        <span className="player__text" title={user.fullName}>
-                          {user.fullName}
-                        </span>
-                        <i className="fa-solid fa-circle" title="Conectado"></i>
-                      </div>
-                    </div>
+              {Object.entries(teamGroups).map(([teamNumber, members]) => (
+                <div className="content__widget" key={teamNumber}>
+                  <div className="widget__title">
+                    <h3>Grupo {teamNumber} ({members.length}/4)</h3>
                   </div>
-                ))
-              )}
+                  <div className="widget__data">
+                    {Array.from({ length: 4 }).map((_, index) => {
+                      const user = members[index];
+                      return (
+                        <div className="data__player" key={index}>
+                          {user ? (
+                            <>
+                              <span className="player__text" title={user.fullName}>
+                                {user.fullName}
+                              </span>
+                              {isUserConnected(user.userId) && (
+                                <i className="fa-solid fa-circle" title="Conectado"></i>
+                              )}
+                            </>
+                          ) : (
+                            <span className="player__text">[Vacío]</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           {/* #CAMBIO Fin del codigo agregado */}

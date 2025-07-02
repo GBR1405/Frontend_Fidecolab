@@ -351,27 +351,56 @@ const formatTime = (seconds) => {
 
 // 2. Efecto para manejar actualizaciones del temporizador
 useEffect(() => {
-  if (!socket) return;
+  if (!socket || !partidaId || !gameConfig) return;
 
+  // Función para reiniciar completamente el temporizador
+  const resetTimerForCurrentGame = () => {
+    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
+    if (!currentGame) return;
+
+    const initialTime = calculateGameTime(
+      currentGame.tipo, 
+      currentGame.dificultad,
+      currentGame.configEspecifica
+    );
+
+    setTimer({
+      remaining: initialTime,
+      total: initialTime,
+      active: true,
+      gameType: currentGame.tipo,
+      difficulty: currentGame.dificultad
+    });
+  };
+
+  // Escuchar cambios de juego
+  const handleGameChanged = (newGameIndex) => {
+    resetTimerForCurrentGame();
+  };
+
+  // Escuchar actualizaciones del temporizador
   const handleTimerUpdate = (data) => {
-    console.log('Actualización de temporizador recibida:', data);
     setTimer({
       remaining: data.remaining,
       total: data.total,
       active: data.remaining > 0,
       gameType: data.gameType,
-      difficulty: data.difficulty,
+      difficulty: data.difficulty
     });
-
   };
 
+  // Configurar listeners
+  socket.on('gameChanged', handleGameChanged);
   socket.on('timerUpdate', handleTimerUpdate);
-  socket.emit('RequestTimeSync', partidaId);
+
+  // Reiniciar el temporizador al montar y cuando cambia gameConfig
+  resetTimerForCurrentGame();
 
   return () => {
+    socket.off('gameChanged', handleGameChanged);
     socket.off('timerUpdate', handleTimerUpdate);
   };
-}, [socket, partidaId, gameConfig]);
+}, [socket, partidaId, gameConfig, gameConfig?.currentIndex]); 
 
 useEffect(() => {
   if (!socket || !partidaId) return;

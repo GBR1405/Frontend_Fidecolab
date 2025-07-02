@@ -39,6 +39,7 @@
     background-color: var(--white-smoke-clr);
     box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
     border-radius: 1em;
+    border-radius: 1em 1em 1em 1em;
   }
 
   .background__content{  
@@ -456,3 +457,23 @@
 .not-connected {
   color: #ccc;
 }
+
+.connection-dot {
+  width: 0.8vw;
+  height: 0.8vw;
+  border-radius: 50%;
+  margin-left: 0.5vw;
+  flex-shrink: 0;
+  transition: box-shadow 0.3s ease;
+}
+
+.dot-online {
+  background-color: #4caf50;
+  box-shadow: 0 0 5px 1px rgba(76, 175, 80, 0.6);
+}
+
+.dot-offline {
+  background-color: #ccc;
+  box-shadow: none;
+}
+

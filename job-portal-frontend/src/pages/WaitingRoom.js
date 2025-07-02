@@ -118,11 +118,7 @@ const WaitingRoom = () => {
 }, [teamGroups]);
 
   const isUserConnected = (userId) => {
-  return users.some(u => {
-    const uId = `${u.userId}`.trim().toLowerCase();
-    const tId = `${userId}`.trim().toLowerCase();
-    return uId === tId;
-  });
+  return users.some(u => Number(u.userId) === Number(userId));
 };
 
   const getUniqueUsers = (users) => {
@@ -373,10 +369,10 @@ const WaitingRoom = () => {
                               <span className="player__text" title={user.fullName}>
                                 {user.fullName}
                               </span>
-                              <i
-                                className={`fa-solid fa-circle ${isUserConnected(user.userId) ? 'connected' : 'not-connected'}`}
-                                title={isUserConnected(user.userId) ? 'Conectado ✔️' : 'Desconectado ❌'}
-                              ></i>
+                              <span
+                                className={`connection-dot ${isUserConnected(user.userId) ? 'dot-online' : 'dot-offline'}`}
+                                title={isUserConnected(user.userId) ? 'Conectado' : 'Desconectado'}
+                              ></span>
                             </>
                           ) : (
                             <>

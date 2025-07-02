@@ -30,18 +30,26 @@
   height: 100%;
   display: grid;
   grid-template-columns: 80% 20%;
+ 
+  /* #CAMBIO Inicio del codigo agregado */
 
-  .container__content{
+  .container__background{
+    height: 100%;
+    width: 100%;
     background-color: var(--white-smoke-clr);
     box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
     border-radius: 1em;
+  }
 
+  .background__content{  
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr; 
     justify-items: center;
     gap: 1vw; 
     padding: 1vw;
   }
+
+  /* #CAMBIO Fin del codigo agregado */
 
   .content__widget{
     background-color: white;

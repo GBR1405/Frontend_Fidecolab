@@ -311,35 +311,38 @@ const WaitingRoom = () => {
       </header>     
       <main className="main">
         <section className="room__container">
-          <div className="container__content">
-            {filteredUsers.length === 0 ? (
-              <div className="empty-state">
-                <i className="fa-solid fa-users-slash"></i>
-                <p>Esperando a que se conecten los estudiantes...</p>
-              </div>
-            ) : (
-              filteredUsers.map((user, index) => (
-                <div
-                  className={`content__widget ${index === filteredUsers.length - 1 ? 'pop' : ''}`}
-                  key={user.id}
-                  data-position={index + 1}
-                >
-                  <div className="widget__title">
-                    <h3>Estudiante {index + 1}</h3>
-                  </div>
-                  <div className="widget__data">
-                    <div className="data__player">
-                      <span className="player__text" title={user.fullName}>
-                        {user.fullName}
-                      </span>
-                      <i className="fa-solid fa-circle" title="Conectado"></i>
+          {/* #CAMBIO Inicio del codigo agregado */}
+          <div className="container__background">
+            <div className="background__content">
+              {filteredUsers.length === 0 ? (
+                <div className="empty-state">
+                  <i className="fa-solid fa-users-slash"></i>
+                  <p>Esperando a que se conecten los estudiantes...</p>
+                </div>
+              ) : (
+                filteredUsers.map((user, index) => (
+                  <div
+                    className={`content__widget ${index === filteredUsers.length - 1 ? 'pop' : ''}`}
+                    key={user.id}
+                    data-position={index + 1}
+                  >
+                    <div className="widget__title">
+                      <h3>Estudiante {index + 1}</h3>
+                    </div>
+                    <div className="widget__data">
+                      <div className="data__player">
+                        <span className="player__text" title={user.fullName}>
+                          {user.fullName}
+                        </span>
+                        <i className="fa-solid fa-circle" title="Conectado"></i>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-          
+          {/* #CAMBIO Fin del codigo agregado */}
           <div className="container__information">
             <div className="information__title">
               <h3>Información</h3>

@@ -614,36 +614,33 @@ useEffect(() => {
 }, [timer.active]);
 
 const TimerDisplay = () => {
-  // Verificar coherencia local
-  const currentGame = gameConfig?.juegos[gameConfig.currentIndex];
-  const isConsistent = currentGame && 
-                      timer.gameType === currentGame.tipo && 
-                      timer.difficulty === currentGame.dificultad;
-
-  // Efecto para animación de tiempo crítico
+  // Efecto para animación cuando el tiempo es crítico
   useEffect(() => {
-    if (isConsistent && timer.remaining <= 30 && timer.active) {
-      const timerElement = document.querySelector('.time-display');
-      timerElement?.classList.add('pulsing');
-      setTimeout(() => timerElement?.classList.remove('pulsing'), 1000);
+    if (timer.remaining <= 30 && timer.active) {
+      const timerElement = document.querySelector('.time-display.low-time');
+      if (timerElement) {
+        timerElement.classList.add('pulse');
+        setTimeout(() => timerElement.classList.remove('pulse'), 1000);
+      }
     }
-  }, [timer.remaining, isConsistent]);
+  }, [timer.remaining]);
 
   return (
-    <div className={`timer-container ${!isConsistent ? 'syncing' : ''}`}>
-      <div className={`time-display ${timer.remaining <= 30 ? 'critical' : ''}`}>
+    <div className="timer-container">
+      <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
         {formatTime(timer.remaining)}
-        {!isConsistent && <span className="sync-badge">Sincronizando...</span>}
       </div>
-      <div className="time-meta">
-        <span className="game-type">{timer.gameType}</span>
-        {timer.difficulty && <span className="difficulty">({timer.difficulty})</span>}
+      <div className="time-details">
+        <span className="time-game-type">{timer.gameType}</span>
+        {timer.difficulty && (
+          <span className="time-difficulty">({timer.difficulty})</span>
+        )}
       </div>
-      <div className="progress-bar">
+      <div className="time-progress-bar">
         <div 
-          className="progress-fill"
+          className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
           style={{ width: `${(timer.remaining / timer.total) * 100}%` }}
-        />
+        ></div>
       </div>
     </div>
   );

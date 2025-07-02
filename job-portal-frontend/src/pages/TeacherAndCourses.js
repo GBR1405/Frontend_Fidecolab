@@ -889,6 +889,12 @@ const AdminProfessorCourses = () => {
                                 <h3>Lista Cursos</h3>
                             </div>
                             <table className="box__table">
+                                <colgroup>
+                                    <col style={{width: '70%'}} /> {/* Columna Curso - 70% del ancho */}
+                                    <col style={{width: '30%'}} /> {/* Columna Grupo - 30% del ancho */}
+                                    {selectedTeacher && <col style={{width: 'auto'}} />} {/* Columnas adicionales */}
+                                    {selectedTeacher && <col style={{width: 'auto'}} />}
+                                </colgroup>
                                 <thead className="table__head">
                                         <th className="table__header">Curso</th>
                                         <th className="table__header">Grupo</th>

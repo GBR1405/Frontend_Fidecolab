@@ -350,58 +350,30 @@ const formatTime = (seconds) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-// 2. Efecto para manejar actualizaciones del temporizador
+
 useEffect(() => {
-  if (!socket || !partidaId || !gameConfig) return;
+  if (!socket || !partidaId || !gameConfig?.juegos || gameConfig.currentIndex == null) return;
 
-  // Función para reiniciar completamente el temporizador
-  const resetTimerForCurrentGame = () => {
-    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
-    if (!currentGame) return;
+  // Función para calcular tiempo inicial
+  const currentGame = gameConfig.juegos[gameConfig.currentIndex];
+  if (!currentGame) return;
 
-    const initialTime = calculateGameTime(
-      currentGame.tipo, 
-      currentGame.dificultad,
-      currentGame.configEspecifica
-    );
+  const initialTime = calculateGameTime(
+    currentGame.tipo, 
+    currentGame.dificultad,
+    currentGame.configEspecifica
+  );
 
-    setTimer({
-      remaining: initialTime,
-      total: initialTime,
-      active: true,
-      gameType: currentGame.tipo,
-      difficulty: currentGame.dificultad
-    });
-  };
+  setTimer({
+    remaining: initialTime,
+    total: initialTime,
+    active: true,
+    gameType: currentGame.tipo,
+    difficulty: currentGame.dificultad
+  });
 
-  // Escuchar cambios de juego
-  const handleGameChanged = (newGameIndex) => {
-    resetTimerForCurrentGame();
-  };
+}, [gameConfig?.currentIndex, gameConfig?.juegos]);
 
-  // Escuchar actualizaciones del temporizador
-  const handleTimerUpdate = (data) => {
-    setTimer({
-      remaining: data.remaining,
-      total: data.total,
-      active: data.remaining > 0,
-      gameType: data.gameType,
-      difficulty: data.difficulty
-    });
-  };
-
-  // Configurar listeners
-  socket.on('gameChanged', handleGameChanged);
-  socket.on('timerUpdate', handleTimerUpdate);
-
-  // Reiniciar el temporizador al montar y cuando cambia gameConfig
-  resetTimerForCurrentGame();
-
-  return () => {
-    socket.off('gameChanged', handleGameChanged);
-    socket.off('timerUpdate', handleTimerUpdate);
-  };
-}, [socket, partidaId, gameConfig, gameConfig?.currentIndex]); 
 
 useEffect(() => {
   if (!socket || !partidaId) return;

@@ -682,6 +682,7 @@ const handleAutoNextGame = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         const newIndex = gameConfig.currentIndex + 1;
+        updateGameState(newIndex);
         setDemoActive(false);
         
         const nextGame = gameConfig.juegos[newIndex];
@@ -707,7 +708,12 @@ const handleAutoNextGame = () => {
           setError(response.error);
           Swal.fire('Error', 'No se pudo cambiar al siguiente juego', 'error');
         } else {
-          // ✅ Espera 2 segundos y sincroniza el tiempo manualmente
+          
+          setGameConfig(prev => ({
+            ...prev,
+            currentIndex: prev.currentIndex + 1
+          }));
+
           setTimeout(() => {
             socket.emit('RequestTimeSync', partidaId);
           }, 2000);

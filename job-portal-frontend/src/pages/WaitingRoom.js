@@ -364,11 +364,10 @@ const WaitingRoom = () => {
                               <span className="player__text" title={user.fullName}>
                                 {user.fullName}
                               </span>
-                              {isUserConnected(user.userId) ? (
-                                <i className="fa-solid fa-circle connected" title="Conectado"></i>
-                              ) : (
-                                <i className="fa-regular fa-circle not-connected" title="Desconectado"></i>
-                              )}
+                              <i
+                                className={`fa-solid fa-circle ${isUserConnected(user.userId) ? 'connected' : 'not-connected'}`}
+                                title={isUserConnected(user.userId) ? 'Conectado' : 'Desconectado'}
+                              ></i>
                             </>
                           ) : (
                             <>

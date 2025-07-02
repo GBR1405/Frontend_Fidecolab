@@ -84,11 +84,15 @@
   }
   
   .widget__data {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-inline: 6%;
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-inline: 6%;
+  padding-top: 0.8vw;
+  padding-bottom: 1vw;
+  min-height: 10vw; /* antes era 60%, ahora se asegura un alto mínimo */
+  gap: 0.3vw;
+}
   
   .data__player {
     display: flex;

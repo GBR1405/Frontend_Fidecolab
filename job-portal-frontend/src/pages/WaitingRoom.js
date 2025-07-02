@@ -163,7 +163,7 @@ const WaitingRoom = () => {
     Object.keys(teamGroups).forEach((teamNumber, index) => {
       setTimeout(() => {
         setVisibleTeams(prev => [...prev, teamNumber]);
-      }, index * 100);
+      }, index * 135);
     });
   }
 }, [teamGroups]);

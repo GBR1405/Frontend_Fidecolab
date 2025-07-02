@@ -602,7 +602,8 @@ const AdminProfessorCourses = () => {
                     const lastName1 = document.getElementById('professorLastName1').value.trim();
                     const lastName2 = document.getElementById('professorLastName2').value.trim();
                     const email = document.getElementById('professorEmail').value.trim();
-                    const gender = document.getElementById('professorGender').value.trim();
+                    const genderElement = document.getElementById('professorGender');
+                    const gender = genderElement && genderElement.value.trim() !== '' ? parseInt(genderElement.value) : 3;
             
                     if (!name || !lastName1 || !lastName2 || !email || !gender) {
                         showErrorAlert("Por favor completa todos los campos.");

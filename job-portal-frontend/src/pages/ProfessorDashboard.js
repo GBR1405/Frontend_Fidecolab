@@ -145,6 +145,7 @@ const SimulationProfessor = () => {
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
   const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
+  const [lastSync, setLastSync] = useState(Date.now());
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -256,66 +257,7 @@ const SimulationProfessor = () => {
   }, [socket, partidaId]);
 
 
-// 1. Efecto principal de sincronización
-useEffect(() => {
-  if (!socket || !partidaId || !gameConfig) return;
 
-  // Función para verificar y corregir el temporizador
-  const checkTimerConsistency = () => {
-    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
-    
-    // Si el temporizador no coincide con el juego actual, corregirlo
-    if (!currentGame || timer.gameType !== currentGame.tipo || timer.difficulty !== currentGame.dificultad) {
-      const gameTime = calculateGameTime(
-        currentGame.tipo,
-        currentGame.dificultad,
-        currentGame.configEspecifica
-      );
-
-      setTimer({
-        remaining: gameTime,
-        total: gameTime,
-        active: true,
-        gameType: currentGame.tipo,
-        difficulty: currentGame.dificultad
-      });
-    }
-  };
-
-  // Verificar cada 2 segundos (ajustable)
-  const consistencyInterval = setInterval(checkTimerConsistency, 2000);
-
-  // También verificar cuando cambia la visibilidad de la pestaña
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      checkTimerConsistency();
-    }
-  };
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-
-  return () => {
-    clearInterval(consistencyInterval);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, [socket, partidaId, gameConfig, timer.gameType, timer.difficulty]);
-
-// 2. Efecto para el contador del temporizador
-useEffect(() => {
-  if (!timer.active) return;
-
-  const timerInterval = setInterval(() => {
-    setTimer(prev => ({
-      ...prev,
-      remaining: Math.max(prev.remaining - 1, 0),
-      active: prev.remaining > 1
-    }));
-  }, 1000);
-
-  return () => clearInterval(timerInterval);
-}, [timer.active]);
-
-// 3. Función optimizada para cambiar de juego
   
   const changeDemoTeam = (direction) => {
     const currentIndex = demoState.teams.indexOf(demoState.currentTeam);
@@ -455,46 +397,67 @@ const formatTime = (seconds) => {
 
 // 2. Efecto para manejar actualizaciones del temporizador
 useEffect(() => {
-  if (!socket || !partidaId || !gameConfig) return;
+  if (!socket || !partidaId) return;
 
-  const handleTimerUpdate = (data) => {
-    // Solo actualizar si coincide con el juego actual
-    if (data.gameType === gameConfig.juegos[gameConfig.currentIndex]?.tipo) {
-      setTimer({
-        remaining: data.remaining,
-        total: data.total,
-        active: data.remaining > 0,
-        gameType: data.gameType,
-        difficulty: data.difficulty
-      });
-    }
+  // Función para sincronizar con el backend
+  const syncWithBackend = () => {
+    socket.emit('getCurrentGameState', partidaId, (response) => {
+      if (response && response.currentGame) {
+        const gameTime = calculateGameTime(
+          response.currentGame.tipo,
+          response.currentGame.dificultad,
+          response.currentGame.configEspecifica
+        );
+
+        setTimer(prev => {
+          // Solo actualizar si hay cambios importantes
+          if (prev.gameType !== response.currentGame.tipo || 
+              prev.difficulty !== response.currentGame.dificultad ||
+              Math.abs(prev.remaining - response.remainingTime) > 2) {
+            return {
+              remaining: response.remainingTime || gameTime,
+              total: gameTime,
+              active: (response.remainingTime || gameTime) > 0,
+              gameType: response.currentGame.tipo,
+              difficulty: response.currentGame.dificultad
+            };
+          }
+          return prev;
+        });
+
+        setGameConfig(prev => ({
+          ...prev,
+          currentIndex: response.currentIndex
+        }));
+
+        setLastSync(Date.now());
+      }
+    });
   };
 
-  socket.on('timerUpdate', handleTimerUpdate);
+  // Sincronización inmediata al montar
+  syncWithBackend();
 
-  // Solicitar sincronización inicial
-  socket.emit('RequestCurrentGame', partidaId, (response) => {
-    if (!response.error) {
-      const gameTime = calculateGameTime(
-        response.currentGame.tipo,
-        response.currentGame.dificultad,
-        response.currentGame.configEspecifica
-      );
+  // Sincronizar cada 1 segundo exactamente
+  const syncInterval = setInterval(syncWithBackend, 1000);
 
-      setTimer({
-        remaining: gameTime,
-        total: gameTime,
-        active: true,
-        gameType: response.currentGame.tipo,
-        difficulty: response.currentGame.dificultad
-      });
-    }
-  });
+  return () => clearInterval(syncInterval);
+}, [socket, partidaId]);
 
-  return () => {
-    socket.off('timerUpdate', handleTimerUpdate);
-  };
-}, [socket, partidaId, gameConfig, forceTimerUpdate]); // Añadido forceTimerUpdate como dependencia
+// 3. Efecto para el contador del temporizador
+useEffect(() => {
+  if (!timer.active) return;
+
+  const timerInterval = setInterval(() => {
+    setTimer(prev => ({
+      ...prev,
+      remaining: Math.max(prev.remaining - 1, 0),
+      active: prev.remaining > 1
+    }));
+  }, 1000);
+
+  return () => clearInterval(timerInterval);
+}, [timer.active]);
 
 useEffect(() => {
   if (!socket || !partidaId) return;

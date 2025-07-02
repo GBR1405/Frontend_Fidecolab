@@ -145,6 +145,7 @@ const SimulationProfessor = () => {
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
   const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState(Date.now());
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -152,6 +153,69 @@ const SimulationProfessor = () => {
     totalTeams: 0,
     teams: []
   });
+
+  useEffect(() => {
+  if (!socket || !partidaId || !gameConfig) return;
+
+  // Función para sincronizar el temporizador con el juego actual
+  const syncTimerWithCurrentGame = () => {
+    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
+    if (!currentGame) return;
+
+    // Calcular el tiempo basado en el juego actual
+    const gameTime = calculateGameTime(
+      currentGame.tipo,
+      currentGame.dificultad,
+      currentGame.configEspecifica
+    );
+
+    // Calcular tiempo transcurrido desde el último sync
+    const now = Date.now();
+    const elapsedSeconds = Math.floor((now - lastSyncTime) / 1000);
+    const newRemaining = Math.max(gameTime - elapsedSeconds, 0);
+
+    // Solo actualizar si hay cambios significativos
+    if (
+      currentGame.tipo !== timer.gameType ||
+      currentGame.dificultad !== timer.difficulty ||
+      Math.abs(newRemaining - timer.remaining) > 5 // Diferencia de más de 5 segundos
+    ) {
+      setTimer({
+        remaining: newRemaining,
+        total: gameTime,
+        active: newRemaining > 0,
+        gameType: currentGame.tipo,
+        difficulty: currentGame.dificultad
+      });
+    }
+
+    setLastSyncTime(now);
+  };
+
+  // Sincronización inicial
+  syncTimerWithCurrentGame();
+
+  // Configurar intervalo de sincronización (cada 2 segundos)
+  const syncInterval = setInterval(syncTimerWithCurrentGame, 2000);
+
+  // Escuchar eventos de cambio de juego desde otros clientes
+  const handleGameChange = (newIndex) => {
+    if (newIndex !== gameConfig.currentIndex) {
+      setGameConfig(prev => ({
+        ...prev,
+        currentIndex: newIndex
+      }));
+      syncTimerWithCurrentGame();
+    }
+  };
+
+  socket.on('gameIndexChanged', handleGameChange);
+
+  return () => {
+    clearInterval(syncInterval);
+    socket.off('gameIndexChanged', handleGameChange);
+  };
+}, [socket, partidaId, gameConfig, gameConfig?.currentIndex, lastSyncTime]);
 
   useEffect(() => {
   if (!socket || !partidaId || !gameConfig) return;
@@ -345,6 +409,20 @@ useEffect(() => {
       }
     });
   };
+
+  useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      // Forzar sincronización inmediata al volver a la pestaña
+      setLastSyncTime(Date.now());
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, []);
 
 
   // Agrega esto cerca de los otros efectos

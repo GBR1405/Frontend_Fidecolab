@@ -702,13 +702,17 @@ const handleAutoNextGame = () => {
         }, 3000);
         
         socket.emit('nextGame', partidaId, (response) => {
-          if (response.error) {
-            console.error(response.error);
-            setError(response.error);
-            Swal.fire('Error', 'No se pudo cambiar al siguiente juego', 'error');
-            updateGameState(gameConfig.currentIndex - 1);
-          }
-        });
+        if (response.error) {
+          console.error(response.error);
+          setError(response.error);
+          Swal.fire('Error', 'No se pudo cambiar al siguiente juego', 'error');
+        } else {
+          // ✅ Espera 2 segundos y sincroniza el tiempo manualmente
+          setTimeout(() => {
+            socket.emit('RequestTimeSync', partidaId);
+          }, 2000);
+        }
+      });
       }
     });
   };

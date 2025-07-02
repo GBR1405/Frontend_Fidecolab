@@ -144,9 +144,6 @@ const SimulationProfessor = () => {
   const [demoActive, setDemoActive] = useState(false);
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
-  const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
-  const [lastSync, setLastSync] = useState(Date.now());
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -155,50 +152,7 @@ const SimulationProfessor = () => {
     teams: []
   });
 
-  useEffect(() => {
-  if (!socket || !partidaId || !gameConfig) return;
-
-  const syncInterval = setInterval(() => {
-    socket.emit('RequestCurrentGame', partidaId, (response) => {
-      if (response.error) {
-        console.error('Error al sincronizar juego:', response.error);
-        return;
-      }
-
-      // Verificar si el juego actual ha cambiado
-      if (response.currentGame.tipo !== timer.gameType || 
-          response.currentIndex !== gameConfig.currentIndex) {
-        
-        const gameTime = calculateGameTime(
-          response.currentGame.tipo,
-          response.currentGame.dificultad,
-          response.currentGame.configEspecifica
-        );
-
-        setTimer({
-          remaining: gameTime,
-          total: gameTime,
-          active: true,
-          gameType: response.currentGame.tipo,
-          difficulty: response.currentGame.dificultad
-        });
-
-        // Actualizar el índice si es necesario
-        if (response.currentIndex !== gameConfig.currentIndex) {
-          setGameConfig(prev => ({
-            ...prev,
-            currentIndex: response.currentIndex
-          }));
-        }
-
-        // Forzar re-renderizado
-        setForceTimerUpdate(prev => prev + 1);
-      }
-    });
-  }, 3000); // Verificar cada 3 segundos
-
-  return () => clearInterval(syncInterval);
-}, [socket, partidaId, gameConfig, timer.gameType, gameConfig?.currentIndex]);
+  
 
   useEffect(() => {
     if (!socket) return;
@@ -398,90 +352,56 @@ const formatTime = (seconds) => {
 
 // 2. Efecto para manejar actualizaciones del temporizador
 useEffect(() => {
-  if (!socket || !partidaId) return;
+  if (!socket || !partidaId || !gameConfig) return;
 
-  // Función para sincronizar con el backend
-  const syncWithBackend = () => {
-    if (isSyncing) return;
-    setIsSyncing(true);
-    
-    socket.emit('getGameState', partidaId, (response) => {
-      setIsSyncing(false);
-      
-      if (!response || !response.currentGame) return;
+  // Función para reiniciar completamente el temporizador
+  const resetTimerForCurrentGame = () => {
+    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
+    if (!currentGame) return;
 
-      // Calcular tiempo total del juego actual
-      const gameTime = calculateGameTime(
-        response.currentGame.tipo,
-        response.currentGame.dificultad,
-        response.currentGame.configEspecifica
-      );
+    const initialTime = calculateGameTime(
+      currentGame.tipo, 
+      currentGame.dificultad,
+      currentGame.configEspecifica
+    );
 
-      // Actualizar el temporizador si hay cambios
-      setTimer(prev => {
-        const shouldUpdate = 
-          prev.gameType !== response.currentGame.tipo ||
-          prev.difficulty !== response.currentGame.dificultad ||
-          Math.abs(prev.remaining - (response.remainingTime || gameTime)) > 1;
-        
-        if (shouldUpdate) {
-          return {
-            remaining: response.remainingTime || gameTime,
-            total: gameTime,
-            active: (response.remainingTime || gameTime) > 0,
-            gameType: response.currentGame.tipo,
-            difficulty: response.currentGame.dificultad
-          };
-        }
-        return prev;
-      });
-
-      // Actualizar el índice del juego si es necesario
-      if (gameConfig?.currentIndex !== response.currentIndex) {
-        setGameConfig(prev => ({
-          ...prev,
-          currentIndex: response.currentIndex
-        }));
-      }
-
-      setLastSync(Date.now());
+    setTimer({
+      remaining: initialTime,
+      total: initialTime,
+      active: true,
+      gameType: currentGame.tipo,
+      difficulty: currentGame.dificultad
     });
   };
 
-  // Sincronización inmediata al montar
-  syncWithBackend();
-
-  // Sincronizar cada 1 segundo exactamente
-  const syncInterval = setInterval(syncWithBackend, 1000);
-
-  // También sincronizar cuando la pestaña vuelve a estar activa
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      syncWithBackend();
-    }
+  // Escuchar cambios de juego
+  const handleGameChanged = (newGameIndex) => {
+    resetTimerForCurrentGame();
   };
 
-  document.addEventListener('visibilitychange', handleVisibilityChange);
+  // Escuchar actualizaciones del temporizador
+  const handleTimerUpdate = (data) => {
+    setTimer({
+      remaining: data.remaining,
+      total: data.total,
+      active: data.remaining > 0,
+      gameType: data.gameType,
+      difficulty: data.difficulty
+    });
+  };
+
+  // Configurar listeners
+  socket.on('gameChanged', handleGameChanged);
+  socket.on('timerUpdate', handleTimerUpdate);
+
+  // Reiniciar el temporizador al montar y cuando cambia gameConfig
+  resetTimerForCurrentGame();
 
   return () => {
-    clearInterval(syncInterval);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    socket.off('gameChanged', handleGameChanged);
+    socket.off('timerUpdate', handleTimerUpdate);
   };
-}, [socket, partidaId, gameConfig?.currentIndex]);
-
-useEffect(() => {
-  if (!timer.active) return;
-
-  const timerInterval = setInterval(() => {
-    setTimer(prev => ({
-      ...prev,
-      remaining: Math.max(prev.remaining - 1, 0),
-      active: prev.remaining > 1
-    }));
-  }, 1000);
-
-  return () => clearInterval(timerInterval);
-}, [timer.active]);
+}, [socket, partidaId, gameConfig, gameConfig?.currentIndex]); 
 
 useEffect(() => {
   if (!socket || !partidaId) return;

@@ -62,6 +62,7 @@
     display: grid;
     grid-template-rows: auto 1fr;
     border: 1px solid rgba(0, 0, 0, 0.03);
+    border-radius: 1em 1em 1em 1em;
   }
 
   .content__widget:hover {
@@ -76,6 +77,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
   }
   
   .widget__title h3 {

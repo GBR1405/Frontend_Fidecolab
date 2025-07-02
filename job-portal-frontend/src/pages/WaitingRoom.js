@@ -102,6 +102,7 @@ const WaitingRoom = () => {
   
   
         setUsers(usuariosUnicos);
+        console.log('USERS ACTUALIZADOS:', usuariosUnicos);
       });
   
       // Limpiar listeners al desmontar el componente
@@ -112,8 +113,16 @@ const WaitingRoom = () => {
     }
   }, [socket, partidaId, userId, userFullName, userRole]);
 
+  useEffect(() => {
+  console.log('GRUPOS:', teamGroups);
+}, [teamGroups]);
+
   const isUserConnected = (userId) => {
-  return users.some(u => `${u.userId}` === `${userId}`);
+  return users.some(u => {
+    const uId = `${u.userId}`.trim().toLowerCase();
+    const tId = `${userId}`.trim().toLowerCase();
+    return uId === tId;
+  });
 };
 
   const getUniqueUsers = (users) => {
@@ -366,7 +375,7 @@ const WaitingRoom = () => {
                               </span>
                               <i
                                 className={`fa-solid fa-circle ${isUserConnected(user.userId) ? 'connected' : 'not-connected'}`}
-                                title={isUserConnected(user.userId) ? 'Conectado' : 'Desconectado'}
+                                title={isUserConnected(user.userId) ? 'Conectado ✔️' : 'Desconectado ❌'}
                               ></i>
                             </>
                           ) : (

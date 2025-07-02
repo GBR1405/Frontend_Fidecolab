@@ -113,8 +113,8 @@ const WaitingRoom = () => {
   }, [socket, partidaId, userId, userFullName, userRole]);
 
   const isUserConnected = (userId) => {
-    return users.some(u => u.userId === userId);
-  };
+  return users.some(u => `${u.userId}` === `${userId}`);
+};
 
   const getUniqueUsers = (users) => {
     const uniqueUsers = [];

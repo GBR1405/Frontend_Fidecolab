@@ -13,6 +13,7 @@ const token = Cookies.get("authToken");
 
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
+  
 
   const navigate = useNavigate();
 
@@ -143,6 +144,7 @@ const SimulationProfessor = () => {
   const [demoActive, setDemoActive] = useState(false);
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
+  const [forceTimerUpdate, setForceTimerUpdate] = useState(0);
 
   const [demoState, setDemoState] = useState({
     active: false,
@@ -151,7 +153,50 @@ const SimulationProfessor = () => {
     teams: []
   });
 
-  
+  useEffect(() => {
+  if (!socket || !partidaId || !gameConfig) return;
+
+  const syncInterval = setInterval(() => {
+    socket.emit('RequestCurrentGame', partidaId, (response) => {
+      if (response.error) {
+        console.error('Error al sincronizar juego:', response.error);
+        return;
+      }
+
+      // Verificar si el juego actual ha cambiado
+      if (response.currentGame.tipo !== timer.gameType || 
+          response.currentIndex !== gameConfig.currentIndex) {
+        
+        const gameTime = calculateGameTime(
+          response.currentGame.tipo,
+          response.currentGame.dificultad,
+          response.currentGame.configEspecifica
+        );
+
+        setTimer({
+          remaining: gameTime,
+          total: gameTime,
+          active: true,
+          gameType: response.currentGame.tipo,
+          difficulty: response.currentGame.dificultad
+        });
+
+        // Actualizar el índice si es necesario
+        if (response.currentIndex !== gameConfig.currentIndex) {
+          setGameConfig(prev => ({
+            ...prev,
+            currentIndex: response.currentIndex
+          }));
+        }
+
+        // Forzar re-renderizado
+        setForceTimerUpdate(prev => prev + 1);
+      }
+    });
+  }, 3000); // Verificar cada 3 segundos
+
+  return () => clearInterval(syncInterval);
+}, [socket, partidaId, gameConfig, timer.gameType, gameConfig?.currentIndex]);
 
   useEffect(() => {
     if (!socket) return;
@@ -353,54 +398,44 @@ const formatTime = (seconds) => {
 useEffect(() => {
   if (!socket || !partidaId || !gameConfig) return;
 
-  // Función para reiniciar completamente el temporizador
-  const resetTimerForCurrentGame = () => {
-    const currentGame = gameConfig.juegos[gameConfig.currentIndex];
-    if (!currentGame) return;
-
-    const initialTime = calculateGameTime(
-      currentGame.tipo, 
-      currentGame.dificultad,
-      currentGame.configEspecifica
-    );
-
-    setTimer({
-      remaining: initialTime,
-      total: initialTime,
-      active: true,
-      gameType: currentGame.tipo,
-      difficulty: currentGame.dificultad
-    });
-  };
-
-  // Escuchar cambios de juego
-  const handleGameChanged = (newGameIndex) => {
-    resetTimerForCurrentGame();
-  };
-
-  // Escuchar actualizaciones del temporizador
   const handleTimerUpdate = (data) => {
-    setTimer({
-      remaining: data.remaining,
-      total: data.total,
-      active: data.remaining > 0,
-      gameType: data.gameType,
-      difficulty: data.difficulty
-    });
+    // Solo actualizar si coincide con el juego actual
+    if (data.gameType === gameConfig.juegos[gameConfig.currentIndex]?.tipo) {
+      setTimer({
+        remaining: data.remaining,
+        total: data.total,
+        active: data.remaining > 0,
+        gameType: data.gameType,
+        difficulty: data.difficulty
+      });
+    }
   };
 
-  // Configurar listeners
-  socket.on('gameChanged', handleGameChanged);
   socket.on('timerUpdate', handleTimerUpdate);
 
-  // Reiniciar el temporizador al montar y cuando cambia gameConfig
-  resetTimerForCurrentGame();
+  // Solicitar sincronización inicial
+  socket.emit('RequestCurrentGame', partidaId, (response) => {
+    if (!response.error) {
+      const gameTime = calculateGameTime(
+        response.currentGame.tipo,
+        response.currentGame.dificultad,
+        response.currentGame.configEspecifica
+      );
+
+      setTimer({
+        remaining: gameTime,
+        total: gameTime,
+        active: true,
+        gameType: response.currentGame.tipo,
+        difficulty: response.currentGame.dificultad
+      });
+    }
+  });
 
   return () => {
-    socket.off('gameChanged', handleGameChanged);
     socket.off('timerUpdate', handleTimerUpdate);
   };
-}, [socket, partidaId, gameConfig, gameConfig?.currentIndex]); 
+}, [socket, partidaId, gameConfig, forceTimerUpdate]); // Añadido forceTimerUpdate como dependencia
 
 useEffect(() => {
   if (!socket || !partidaId) return;

@@ -24,9 +24,9 @@ const PuzzleGame = ({ gameConfig }) => {
   const imageUrl = gameConfig.tema;
 
   const gridSize = {
-    fácil: 6,
+    facil: 6,
     normal: 7,
-    difícil: 8
+    dificil: 8
   }[difficulty] || 6;
 
   const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
@@ -72,6 +72,13 @@ const PuzzleGame = ({ gameConfig }) => {
     setImageCrop({ size: squareSize, xOffset, yOffset });
     setImageLoaded(true);
 
+    // Reset estado local para limpiar visualización anterior
+    setPieces([]);
+    setSelectedIds([]);
+    setSwapsLeft(0);
+    setProgress(0);
+    setInteractionLocked(false);
+
     socket.emit('initPuzzleGame', {
       partidaId,
       equipoNumero,
@@ -79,7 +86,13 @@ const PuzzleGame = ({ gameConfig }) => {
       imageUrl
     });
   };
-}, [imageUrl, socket]);
+}, [imageUrl, difficulty, socket]);
+
+useEffect(() => {
+  return () => {
+    setPieces([]);
+  };
+}, []);
   
 
   // 📥 Recibir estado inicial o tras reconexión

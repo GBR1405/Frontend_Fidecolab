@@ -124,19 +124,41 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
   const guardarConfiguracion = () => {
 
-      const missingImages = juegosSeleccionados.some(juego => 
-      juego.Juego === "Rompecabezas" && !juego.tema
-    );
-    
-    if (missingImages) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Imágenes faltantes',
-        text: 'Hay juegos de rompecabezas sin imagen seleccionada',
-        confirmButtonText: 'Entendido'
+      const rompecabezasJuegos = juegosSeleccionados.filter(j => j.Juego === "Rompecabezas");
+
+      const temasUsados = new Set();
+      let imagenDuplicada = false;
+      let imagenFaltante = false;
+
+      rompecabezasJuegos.forEach(juego => {
+        if (!juego.tema) {
+          imagenFaltante = true;
+        } else if (temasUsados.has(juego.tema)) {
+          imagenDuplicada = true;
+        } else {
+          temasUsados.add(juego.tema);
+        }
       });
-      return;
-    }
+
+      if (imagenFaltante) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Imágenes faltantes',
+          text: 'Hay juegos de rompecabezas sin imagen seleccionada',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+
+      if (imagenDuplicada) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Imágenes repetidas',
+          text: 'Cada juego de rompecabezas debe tener una imagen distinta',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
 
 
     if (tituloPersonalizacion.trim() === "") {
@@ -367,8 +389,8 @@ const CreatePersonalization = ({ personalizacionId }) => {
               className="styled-select"
             >
               <option value="0" disabled selected>Dificultad:</option>
-              <option value="1">Fácil (7 min)</option>
               <option value="2">Medio (5 min)</option>
+              <option value="1">Fácil (7 min)</option>
               <option value="3">Difícil (3 min)</option>
             </select>
           ) : (
@@ -378,8 +400,8 @@ const CreatePersonalization = ({ personalizacionId }) => {
               className="styled-select"
             >
               <option value="0" disabled selected>Dificultad:</option>
-              <option value="1">Fácil</option>
               <option value="2">Medio</option>
+              <option value="1">Fácil</option>
               <option value="3">Difícil</option>
             </select>
           )}
@@ -393,9 +415,9 @@ const CreatePersonalization = ({ personalizacionId }) => {
                   setCurrentImageIndex(index);
                   setShowImageModal(true);
                 }}
-                className="select-image-button"
+                className={`select-image-button ${juego.necesitaSeleccionarImagen ? 'pending' : ''}`}
                 style={{
-                  backgroundColor: juego.necesitaSeleccionarImagen ? '#5f5f5f' : '#0d24a1',
+                  backgroundColor: juego.necesitaSeleccionarImagen ? '#ff0000' : '#0d24a1',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -405,7 +427,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
                   transition: 'background-color 0.3s'
                 }}
               >
-                {juego.necesitaSeleccionarImagen ? 'Seleccionar Imagen' : 'Imagen Elegida'}
+                {juego.necesitaSeleccionarImagen ? '¡Falta imagen!' : 'Imagen Elegida'}
               </button>
             </>
           ) : (

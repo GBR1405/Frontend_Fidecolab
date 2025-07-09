@@ -2,6 +2,7 @@
   padding: 20px;
   color: #333;
   font-family: 'Segoe UI', sans-serif;
+  min-width: 900px; /* Prevent responsive shrinking */
 }
 
 /* Superior: título y progreso */
@@ -19,6 +20,7 @@
   font-weight: 600;
   color: #222;
   margin: 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 .progress-box {
@@ -42,11 +44,12 @@
   display: flex;
   justify-content: center;
   gap: 50px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Prevent wrapping on small screens */
 }
 
 .left-panel {
   text-align: center;
+  min-width: 220px; /* Fixed width for left panel */
 }
 
 .reference-image {
@@ -58,39 +61,83 @@
   height: auto;
   border: 1px solid #ccc;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.ref-img:hover {
+  transform: scale(1.02);
 }
 
 .ref-label {
   font-size: 0.95em;
   color: #555;
+  margin-top: 8px;
 }
 
 .swaps-box {
-  margin-top: 10px;
-  background: #f5f5f5;
-  padding: 10px 15px;
+  margin-top: 20px;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  padding: 15px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   display: inline-block;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  min-width: 180px;
 }
 
-/* Puzzle board (ya sin esquinas blancas) */
+.swaps-box p {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.swaps-box strong {
+  color: #444;
+}
+
+/* Puzzle board */
 .puzzle-container {
   position: relative;
   background-color: transparent;
   border: none;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 /* Piezas del puzzle */
 .puzzle-piece {
   background-repeat: no-repeat;
   background-color: transparent;
+  border: 2px solid rgba(0,0,0,0.1);
+  box-sizing: border-box; /* Ensure borders don't affect dimensions */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.puzzle-piece:hover {
+  transform: scale(1.02);
+  z-index: 10;
 }
 
 .puzzle-piece.correct {
   border: 2px solid limegreen !important;
+  animation: correctFlash 0.5s ease;
+}
+
+@keyframes correctFlash {
+  0% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
+  50% { box-shadow: 0 0 20px rgba(50, 205, 50, 0.7); }
+  100% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
 }
 
 .puzzle-piece.selected {
-  box-shadow: 0 0 10px gold;
+  box-shadow: 0 0 15px gold;
+  transform: scale(1.03);
+  z-index: 20;
+}
+
+/* Media query for very small screens (just in case) */
+@media (max-width: 950px) {
+  .puzzle-game {
+    transform: scale(0.9);
+    transform-origin: top left;
+  }
 }

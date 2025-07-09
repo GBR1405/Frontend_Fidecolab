@@ -19,8 +19,8 @@ const PuzzleGame = ({ gameConfig }) => {
     size: 1, xOffset: 0, yOffset: 0
   });
 
+  const difficulty = gameConfig.dificultad || 'fácil';
   const normalizedDifficulty = difficulty.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '');
-  const difficulty = gameConfig.dificultad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   console.log('Dificultad seleccionada:', difficulty);
   const imageUrl = gameConfig.tema;
 

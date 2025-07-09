@@ -113,28 +113,30 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🧩 Recibir actualizaciones tras swap
   useEffect(() => {
-    if (!socket) return;
+  if (!socket) return;
 
-    const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
-      setPieces(pieces);
-      setSelectedIds(selected);
-      setSwapsLeft(swapsLeft);
-      setProgress(progress);
-    };
+  const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
+    setPieces(pieces);
+    setSelectedIds(selected);
+    setSwapsLeft(swapsLeft);
+    setProgress(progress);
+  };
 
-    socket.on('puzzleUpdate', handleUpdate);
-    return () => socket.off('puzzleUpdate', handleUpdate);
-  }, [socket]);
+  socket.on('puzzleUpdate', handleUpdate);
+  return () => socket.off('puzzleUpdate', handleUpdate);
+}, [socket]);
 
   // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-    socket.emit('selectPuzzlePiece', {
-      partidaId,
-      equipoNumero,
-      pieceId,
-      userId
-    });
-  }, [socket, partidaId, equipoNumero, userId]);
+  if (interactionLocked) return;
+
+  socket.emit('selectPuzzlePiece', {
+    partidaId,
+    equipoNumero,
+    pieceId,
+    userId
+  });
+}, [socket, partidaId, equipoNumero, userId, interactionLocked]);
 
   // 📐 Estilo para cada pieza
   const renderPiece = (piece) => {

@@ -2236,6 +2236,7 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       >
         {letra}
         {votosLetra > 0 && <div className="voto-punto">{'•'.repeat(votosLetra)}</div>}
+
       </button>
     );
   });
@@ -2252,35 +2253,41 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
   }
 
   return (
-    <div className="hangman-container">
-      {votacionActiva && (
-        <div className="votacion-banner">
-          🗳️ ¡Votación activa! {tiempoRestante}s restantes...
+  <div className={`hangman-container ${votacionActiva ? 'votacion-activa-bg' : ''}`}>
+    {votacionActiva && (
+      <div className="votacion-flotante">
+        🗳️ Votación activa
+        <div className="voto-timer">
+          <div className="voto-timer-bar" style={{ width: `${(tiempoRestante / 5) * 100}%` }} />
+        </div>
+      </div>
+    )}
+
+    <div className="hangman-left">
+      <div className="robot-animation-container">
+        <canvas ref={canvasRef} style={{ width: '250px', height: '350px' }}></canvas>
+      </div>
+    </div>      
+
+    <div className="hangman-right">
+      <div className="hangman-word">
+        {renderPalabra()}
+      </div>
+      
+      <div className="hangman-keyboard">
+        {renderTeclado()}
+      </div>
+      
+      {gameState.juegoTerminado && (
+        <div className={`hangman-result ${gameState.ganado ? 'ganado' : 'perdido'}`}>
+          <h3>{gameState.ganado ? '¡Ganaron!' : '¡Perdieron!'}</h3>
+          <p>La palabra era: {gameState.palabra}</p>
         </div>
       )}
-      <div className="hangman-left">
-        <div className="robot-animation-container">
-          <canvas ref={canvasRef} style={{ width: '250px', height: '350px' }}></canvas>
-        </div>
-      </div>      
-      <div className="hangman-right">
-        <div className="hangman-word">
-          {renderPalabra()}
-        </div>
-        
-        <div className="hangman-keyboard">
-          {renderTeclado()}
-        </div>
-        
-        {gameState.juegoTerminado && (
-          <div className={`hangman-result ${gameState.ganado ? 'ganado' : 'perdido'}`}>
-            <h3>{gameState.ganado ? '¡Ganaron!' : '¡Perdieron!'}</h3>
-            <p>La palabra era: {gameState.palabra}</p>
-          </div>
-        )}
-      </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default HangmanGame;

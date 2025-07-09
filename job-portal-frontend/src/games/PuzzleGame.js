@@ -19,16 +19,15 @@ const PuzzleGame = ({ gameConfig }) => {
     size: 1, xOffset: 0, yOffset: 0
   });
 
-  const difficulty = gameConfig.dificultad || 'fácil';
-  const normalizedDifficulty = difficulty.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '');
+  const difficulty = gameConfig.dificultad.toLowerCase();
   console.log('Dificultad seleccionada:', difficulty);
   const imageUrl = gameConfig.tema;
 
-    const gridSize = {
-    'facil': 6,
-    'normal': 7,
-    'dificil': 8
-  }[normalizedDifficulty] || 6;
+  const gridSize = {
+    fácil: 6,
+    normal: 7,
+    difícil: 8
+  }[difficulty] || 6;
 
   const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
 
@@ -61,8 +60,6 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🔄 Iniciar juego al cargar imagen
   useEffect(() => {
-  if (!imageUrl || !difficulty || !socket) return;
-
   const img = new Image();
   img.src = imageUrl;
   img.onload = () => {
@@ -75,12 +72,6 @@ const PuzzleGame = ({ gameConfig }) => {
     setImageCrop({ size: squareSize, xOffset, yOffset });
     setImageLoaded(true);
 
-    setPieces([]);
-    setSelectedIds([]);
-    setSwapsLeft(0);
-    setProgress(0);
-    setInteractionLocked(false);
-
     socket.emit('initPuzzleGame', {
       partidaId,
       equipoNumero,
@@ -88,8 +79,7 @@ const PuzzleGame = ({ gameConfig }) => {
       imageUrl
     });
   };
-}, [imageUrl, difficulty, partidaId, equipoNumero, socket]);
-
+}, [imageUrl, socket]);
   
 
   // 📥 Recibir estado inicial o tras reconexión
@@ -113,59 +103,28 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🧩 Recibir actualizaciones tras swap
   useEffect(() => {
-  if (!socket) return;
+    if (!socket) return;
 
-  const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
-    setPieces(pieces);
-    setSelectedIds(selected);
-    setSwapsLeft(swapsLeft);
-    setProgress(progress);
-  };
+    const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
+      setPieces(pieces);
+      setSelectedIds(selected);
+      setSwapsLeft(swapsLeft);
+      setProgress(progress);
+    };
 
-  socket.on('puzzleUpdate', handleUpdate);
-  return () => socket.off('puzzleUpdate', handleUpdate);
-}, [socket]);
+    socket.on('puzzleUpdate', handleUpdate);
+    return () => socket.off('puzzleUpdate', handleUpdate);
+  }, [socket]);
 
   // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-  if (interactionLocked) return;
-
-  setSelectedIds(prev => {
-    // Si ya estaba seleccionado: deselecciona
-    if (prev.includes(pieceId)) {
-      return prev.filter(id => id !== pieceId);
-    }
-
-    // Si no había ninguno —> primer click
-    if (prev.length === 0) {
-      return [pieceId];
-    }
-
-    // Si había uno —> segundo click: swap
-    if (prev.length === 1) {
-      const newSelected = [prev[0], pieceId];
-      socket.emit('selectPuzzlePiece', { partidaId, equipoNumero, pieceId });
-      return newSelected;
-    }
-
-    // Si había dos (caso raro) —> reinicia selección
-    return [pieceId];
-  });
-}, [socket, partidaId, equipoNumero, interactionLocked]);
-
-const handleInit = useCallback(({ state, config }) => {
-  setPieces(state.pieces);
-  setSwapsLeft(config.swapsLeft);
-  setProgress(state.progress);
-  setSelectedIds([]);
-}, []);
-
-useEffect(() => {
-  if (!socket) return;
-  socket.emit('requestPuzzleState', { partidaId, equipoNumero });
-  socket.on('puzzleGameState', handleInit);
-  return () => socket.off('puzzleGameState', handleInit);
-}, [socket, partidaId, equipoNumero]);
+    socket.emit('selectPuzzlePiece', {
+      partidaId,
+      equipoNumero,
+      pieceId,
+      userId
+    });
+  }, [socket, partidaId, equipoNumero, userId]);
 
   // 📐 Estilo para cada pieza
   const renderPiece = (piece) => {
@@ -185,10 +144,8 @@ useEffect(() => {
           backgroundImage: `url(${imageUrl})`,
           backgroundSize: `${gridSize * 100}%`,
           backgroundPosition: `${(piece.correctCol / (gridSize - 1)) * 100}% ${(piece.correctRow / (gridSize - 1)) * 100}%`,
-          border: isSelected ? '3px solid gold' : isCorrect ? '2px solid limegreen' : 'none',
-          boxShadow: isCorrect ? '0 0 10px rgba(0,255,0,0.6)' : '0 0 3px rgba(0,0,0,0.3)',
+          border: isSelected ? '3px solid gold' : '1px solid #555',
           cursor: 'pointer',
-          borderRadius: '8px',
           transition: 'all 0.2s ease'
         }}
         onClick={() => handlePieceClick(piece.id)}

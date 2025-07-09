@@ -128,31 +128,44 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-    if (interactionLocked) return;
+  if (interactionLocked) return;
 
-    setSelectedIds((prev) => {
-      const alreadySelected = prev.includes(pieceId);
-      let newSelected;
+  setSelectedIds(prev => {
+    // Si ya estaba seleccionado: deselecciona
+    if (prev.includes(pieceId)) {
+      return prev.filter(id => id !== pieceId);
+    }
 
-      if (alreadySelected) {
-        newSelected = prev.filter(id => id !== pieceId);
-      } else if (prev.length >= 2) {
-        newSelected = [prev[1], pieceId];
-      } else {
-        newSelected = [...prev, pieceId];
-      }
+    // Si no había ninguno —> primer click
+    if (prev.length === 0) {
+      return [pieceId];
+    }
 
-      if (newSelected.length === 2) {
-        socket.emit('selectPuzzlePiece', {
-          partidaId,
-          equipoNumero,
-          pieceId
-        });
-      }
-
+    // Si había uno —> segundo click: swap
+    if (prev.length === 1) {
+      const newSelected = [prev[0], pieceId];
+      socket.emit('selectPuzzlePiece', { partidaId, equipoNumero, pieceId });
       return newSelected;
-    });
-  }, [socket, partidaId, equipoNumero, interactionLocked]);
+    }
+
+    // Si había dos (caso raro) —> reinicia selección
+    return [pieceId];
+  });
+}, [socket, partidaId, equipoNumero, interactionLocked]);
+
+const handleInit = useCallback(({ state, config }) => {
+  setPieces(state.pieces);
+  setSwapsLeft(config.swapsLeft);
+  setProgress(state.progress);
+  setSelectedIds([]);
+}, []);
+
+useEffect(() => {
+  if (!socket) return;
+  socket.emit('requestPuzzleState', { partidaId, equipoNumero });
+  socket.on('puzzleGameState', handleInit);
+  return () => socket.off('puzzleGameState', handleInit);
+}, [socket, partidaId, equipoNumero]);
 
   // 📐 Estilo para cada pieza
   const renderPiece = (piece) => {

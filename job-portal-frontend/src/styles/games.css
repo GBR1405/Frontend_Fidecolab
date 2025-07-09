@@ -1624,80 +1624,70 @@ h4 {
 
 /* Otros estilos existentes... */
 
-/* Estilos para el sistema de votación */
-.vote-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.vote-box {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  max-width: 300px;
-  width: 90%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.vote-timer {
+/* Estilos para la votación */
+.votacion-container {
   background-color: #f0f0f0;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.votacion-timer {
   height: 20px;
+  background-color: #e0e0e0;
   border-radius: 10px;
-  margin: 15px 0;
+  margin-bottom: 8px;
   overflow: hidden;
   position: relative;
 }
 
-.timer-bar {
+.timer-progress {
   height: 100%;
   background-color: #4CAF50;
-  transition: width 1s linear;
+  transition: width 0.1s linear;
 }
 
-.vote-timer span {
+.timer-text {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 12px;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  line-height: 20px;
   color: #333;
-}
-
-.vote-count {
-  margin: 10px 0;
-  font-size: 18px;
   font-weight: bold;
 }
 
-.vote-button {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
+.votacion-mensaje {
+  font-size: 14px;
+  color: #555;
 }
 
-.vote-button:hover:not(:disabled) {
-  background-color: #45a049;
+/* Estilos para los votos */
+.letra-container {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
 }
 
-.vote-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.voto-marcador {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 3px;
 }
 
-.vote-button.voted {
-  background-color: #2196F3;
+.voto-punto {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #4285F4;
 }
+
+.mi-voto {
+  box-shadow: 0 0 0 2px #4285F4;
+}
+
+/* Resto de estilos existentes... */

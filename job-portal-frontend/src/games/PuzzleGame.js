@@ -31,6 +31,8 @@ const PuzzleGame = ({ gameConfig }) => {
 
   const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
 
+  
+
   useEffect(() => {
   if (progress === 100) {
     // Bloquear clics o swaps
@@ -72,13 +74,14 @@ const PuzzleGame = ({ gameConfig }) => {
     setImageCrop({ size: squareSize, xOffset, yOffset });
     setImageLoaded(true);
 
-    // Reset estado local para limpiar visualización anterior
+    // Reset estado local completamente
     setPieces([]);
     setSelectedIds([]);
     setSwapsLeft(0);
     setProgress(0);
     setInteractionLocked(false);
 
+    // Forzar nueva generación con timestamp
     socket.emit('initPuzzleGame', {
       partidaId,
       equipoNumero,
@@ -86,13 +89,14 @@ const PuzzleGame = ({ gameConfig }) => {
       imageUrl
     });
   };
-}, [imageUrl, difficulty, socket]);
 
-useEffect(() => {
+  // Limpiar al desmontar o cambiar de juego
   return () => {
     setPieces([]);
+    setSelectedIds([]);
+    socket.emit('cleanPuzzleState', { partidaId, equipoNumero });
   };
-}, []);
+}, [imageUrl, difficulty, socket]);
   
 
   // 📥 Recibir estado inicial o tras reconexión

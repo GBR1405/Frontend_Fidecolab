@@ -24,13 +24,12 @@ const PuzzleGame = ({ gameConfig }) => {
   const imageUrl = gameConfig.tema;
 
   const gridSize = {
-    facil: 6,
+    fácil: 6,
     normal: 7,
-    dificil: 8
+    difícil: 8
   }[difficulty] || 6;
 
   const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
-  
 
   useEffect(() => {
   if (progress === 100) {
@@ -64,49 +63,32 @@ const PuzzleGame = ({ gameConfig }) => {
   const img = new Image();
   img.src = imageUrl;
   img.onload = () => {
+    const width = img.naturalWidth;
+    const height = img.naturalHeight;
+    const squareSize = Math.min(width, height);
+    const xOffset = (width - squareSize) / 2;
+    const yOffset = (height - squareSize) / 2;
+
+    setImageCrop({ size: squareSize, xOffset, yOffset });
     setImageLoaded(true);
-    
-    // Solicitar estado actual del puzzle (no inicializar uno nuevo)
-    socket.emit('requestPuzzleState', { 
-      partidaId, 
+
+    // Reset estado local para limpiar visualización anterior
+    setPieces([]);
+    setSelectedIds([]);
+    setSwapsLeft(0);
+    setProgress(0);
+    setInteractionLocked(false);
+
+    socket.emit('initPuzzleGame', {
+      partidaId,
       equipoNumero,
       difficulty,
       imageUrl
     });
   };
+}, [imageUrl, difficulty, socket]);
 
-  // Manejador para reconexiones
-  const handleReconnect = () => {
-    socket.emit('syncPuzzleGame', { partidaId, equipoNumero });
-  };
 
-  socket.on('reconnect', handleReconnect);
-  
-  return () => {
-    socket.off('reconnect', handleReconnect);
-  };
-}, [imageUrl, partidaId, equipoNumero, difficulty, socket]);
-
-useEffect(() => {
-  if (!socket) return;
-
-  const handleState = (game) => {
-    if (game) {
-      setPieces(game.state.pieces);
-      setSwapsLeft(game.config.swapsLeft);
-      setProgress(game.state.progress);
-      setSelectedIds(game.state.selected || []);
-    }
-  };
-
-  socket.on('puzzleGameState', handleState);
-  socket.on('puzzleUpdate', handleState); // Mismo manejador para actualizaciones
-  
-  return () => {
-    socket.off('puzzleGameState', handleState);
-    socket.off('puzzleUpdate', handleState);
-  };
-}, [socket]);
   
 
   // 📥 Recibir estado inicial o tras reconexión
@@ -145,15 +127,13 @@ useEffect(() => {
 
   // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-  if (interactionLocked) return;
-  
-  socket.emit('selectPuzzlePiece', {
-    partidaId,
-    equipoNumero,
-    pieceId,
-    userId
-  });
-}, [socket, partidaId, equipoNumero, userId, interactionLocked]);
+    socket.emit('selectPuzzlePiece', {
+      partidaId,
+      equipoNumero,
+      pieceId,
+      userId
+    });
+  }, [socket, partidaId, equipoNumero, userId]);
 
   // 📐 Estilo para cada pieza
   const renderPiece = (piece) => {

@@ -2151,6 +2151,12 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       setVotos({});
     };
 
+    const handleGuessLetter = ({ letra }) => {
+      adivinarLetra(letra);
+    };
+
+    socket.on('guessLetter', handleGuessLetter);
+
     socket.on('hangmanGameState', handleGameState);
     socket.on('hangmanGameError', handleGameError);
 
@@ -2170,6 +2176,7 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       socket.off('hangmanVoteUpdate', handleVoteUpdate);
       socket.off('hangmanVoteEnded', handleVoteEnded);
       socket.off('hangmanVoteCancelled', handleVoteCancelled);
+      socket.off('guessLetter', handleGuessLetter);
     };
   }, [socket, partidaId, equipoNumero, onGameComplete, gameState]);
 
@@ -2246,6 +2253,11 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
 
   return (
     <div className="hangman-container">
+      {votacionActiva && (
+        <div className="votacion-banner">
+          🗳️ ¡Votación activa! {tiempoRestante}s restantes...
+        </div>
+      )}
       <div className="hangman-left">
         <div className="robot-animation-container">
           <canvas ref={canvasRef} style={{ width: '250px', height: '350px' }}></canvas>

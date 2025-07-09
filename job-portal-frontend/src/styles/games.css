@@ -1697,3 +1697,13 @@ h4 {
   color: #007bff;
   margin-top: 2px;
 }
+
+.votacion-banner {
+  background-color: #ffe58f;
+  color: #333;
+  padding: 8px;
+  text-align: center;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}

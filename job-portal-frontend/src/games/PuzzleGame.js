@@ -19,17 +19,16 @@ const PuzzleGame = ({ gameConfig }) => {
     size: 1, xOffset: 0, yOffset: 0
   });
 
+  const normalizedDifficulty = difficulty.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '');
   const difficulty = gameConfig.dificultad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   console.log('Dificultad seleccionada:', difficulty);
   const imageUrl = gameConfig.tema;
 
-  const gridSize = {
-    facil: 6,
-    fácil: 6,
-    normal: 7,
-    dificil: 8,
-    difícil: 8
-  }[difficulty] || 6;
+    const gridSize = {
+    'facil': 6,
+    'normal': 7,
+    'dificil': 8
+  }[normalizedDifficulty] || 6;
 
   const pieceSize = 600 / gridSize; // Ajuste responsivo si lo deseas
 
@@ -62,6 +61,8 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🔄 Iniciar juego al cargar imagen
   useEffect(() => {
+  if (!imageUrl || !difficulty || !socket) return;
+
   const img = new Image();
   img.src = imageUrl;
   img.onload = () => {
@@ -87,8 +88,7 @@ const PuzzleGame = ({ gameConfig }) => {
       imageUrl
     });
   };
-}, [imageUrl, difficulty, socket, partidaId]);
-
+}, [imageUrl, difficulty, partidaId, equipoNumero, socket]);
 
   
 

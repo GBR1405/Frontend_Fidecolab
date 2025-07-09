@@ -2217,15 +2217,16 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
 
   const renderTeclado = () => {
   const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  return letras.map((letra) => {
-    const intentada = gameState.letrasIntentadas.includes(letra);
-    const esCorrecta = gameState.letrasAdivinadas.includes(letra);
-    const deshabilitada = gameState.juegoTerminado;
-    const votosLetra = votos[letra]?.length || 0;
 
-    return (
+  return letras.map((letra) => {
+  const intentada = gameState.letrasIntentadas.includes(letra);
+  const esCorrecta = gameState.letrasAdivinadas.includes(letra);
+  const deshabilitada = gameState.juegoTerminado;
+  const votosLetra = votos[letra]?.length || 0;
+
+  return (
+    <div key={letra} className="letra-container">
       <button
-        key={letra}
         className={`letra-btn 
           ${intentada ? 'intentada' : ''} 
           ${esCorrecta ? 'correcta' : ''}
@@ -2235,11 +2236,13 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
         disabled={deshabilitada}
       >
         {letra}
-        {votosLetra > 0 && <div className="voto-punto">{'•'.repeat(votosLetra)}</div>}
-
       </button>
-    );
-  });
+      {votosLetra > 0 && (
+        <div className="voto-punto">{'•'.repeat(votosLetra)}</div>
+      )}
+    </div>
+  );
+});
 };
 
 

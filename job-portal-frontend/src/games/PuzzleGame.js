@@ -24,8 +24,10 @@ const PuzzleGame = ({ gameConfig }) => {
   const imageUrl = gameConfig.tema;
 
   const gridSize = {
+    facil: 6,
     fácil: 6,
     normal: 7,
+    dificil: 8,
     difícil: 8
   }[difficulty] || 6;
 
@@ -72,7 +74,6 @@ const PuzzleGame = ({ gameConfig }) => {
     setImageCrop({ size: squareSize, xOffset, yOffset });
     setImageLoaded(true);
 
-    // Reset estado local para limpiar visualización anterior
     setPieces([]);
     setSelectedIds([]);
     setSwapsLeft(0);
@@ -86,7 +87,7 @@ const PuzzleGame = ({ gameConfig }) => {
       imageUrl
     });
   };
-}, [imageUrl, difficulty, socket]);
+}, [imageUrl, difficulty, socket, partidaId]);
 
 
   

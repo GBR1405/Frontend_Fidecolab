@@ -128,15 +128,31 @@ const PuzzleGame = ({ gameConfig }) => {
 
   // 🖱️ Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-  if (interactionLocked) return;
+    if (interactionLocked) return;
 
-  socket.emit('selectPuzzlePiece', {
-    partidaId,
-    equipoNumero,
-    pieceId,
-    userId
-  });
-}, [socket, partidaId, equipoNumero, userId, interactionLocked]);
+    setSelectedIds((prev) => {
+      const alreadySelected = prev.includes(pieceId);
+      let newSelected;
+
+      if (alreadySelected) {
+        newSelected = prev.filter(id => id !== pieceId);
+      } else if (prev.length >= 2) {
+        newSelected = [prev[1], pieceId];
+      } else {
+        newSelected = [...prev, pieceId];
+      }
+
+      if (newSelected.length === 2) {
+        socket.emit('selectPuzzlePiece', {
+          partidaId,
+          equipoNumero,
+          pieceId
+        });
+      }
+
+      return newSelected;
+    });
+  }, [socket, partidaId, equipoNumero, interactionLocked]);
 
   // 📐 Estilo para cada pieza
   const renderPiece = (piece) => {

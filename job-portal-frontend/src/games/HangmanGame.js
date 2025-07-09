@@ -17,6 +17,12 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
     ganado: false,
     loading: true
   });
+
+  const [votos, setVotos] = useState({});
+  const [votacionActiva, setVotacionActiva] = useState(false);
+  const [tiempoRestante, setTiempoRestante] = useState(0);
+  const [letraGanadora, setLetraGanadora] = useState(null);
+
  
   // Efecto para configurar el canvas y la animación del robot
   useEffect(() => {
@@ -2051,6 +2057,21 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
     }
   }, [gameState.juegoTerminado, gameState.ganado, gameState.intentosRestantes, gameState.loading]);
 
+  useEffect(() => {
+    if (!votacionActiva) return;
+    const interval = setInterval(() => {
+      setTiempoRestante((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [votacionActiva]);
+
+
   // Efecto para manejar el socket
   useEffect(() => {
     if (!socket) return;
@@ -2110,8 +2131,33 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       setGameState(prev => ({ ...prev, loading: false }));
     };
 
+    const handleVoteStarted = ({ tiempoRestante }) => {
+    setTiempoRestante(tiempoRestante / 1000);
+    setVotacionActiva(true);
+  };
+
+    const handleVoteUpdate = ({ votes }) => {
+      setVotos(votes);
+    };
+
+    const handleVoteEnded = ({ letraGanadora }) => {
+      setVotacionActiva(false);
+      setVotos({});
+      setLetraGanadora(letraGanadora);
+    };
+
+    const handleVoteCancelled = () => {
+      setVotacionActiva(false);
+      setVotos({});
+    };
+
     socket.on('hangmanGameState', handleGameState);
     socket.on('hangmanGameError', handleGameError);
+
+    socket.on('hangmanVoteStarted', handleVoteStarted);
+    socket.on('hangmanVoteUpdate', handleVoteUpdate);
+    socket.on('hangmanVoteEnded', handleVoteEnded);
+    socket.on('hangmanVoteCancelled', handleVoteCancelled);
 
     // Inicializar juego
     socket.emit('initHangmanGame', { partidaId, equipoNumero });
@@ -2119,6 +2165,11 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
     return () => {
       socket.off('hangmanGameState', handleGameState);
       socket.off('hangmanGameError', handleGameError);
+
+      socket.off('hangmanVoteStarted', handleVoteStarted);
+      socket.off('hangmanVoteUpdate', handleVoteUpdate);
+      socket.off('hangmanVoteEnded', handleVoteEnded);
+      socket.off('hangmanVoteCancelled', handleVoteCancelled);
     };
   }, [socket, partidaId, equipoNumero, onGameComplete, gameState]);
 
@@ -2136,30 +2187,53 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
     ));
   };
 
-  const renderTeclado = () => {
-    const letras = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
-    
-    return letras.map((letra) => {
-      const intentada = gameState.letrasIntentadas.includes(letra);
-      const esCorrecta = gameState.letrasAdivinadas.includes(letra);
-      const deshabilitada = intentada || gameState.juegoTerminado;
-      
-      return (
-        <button
-          key={letra}
-          className={`letra-btn 
-            ${intentada ? 'intentada' : ''} 
-            ${esCorrecta ? 'correcta' : ''}
-            ${deshabilitada ? 'deshabilitada' : ''}
-          `}
-          onClick={() => adivinarLetra(letra)}
-          disabled={deshabilitada}
-        >
-          {letra}
-        </button>
-      );
-    });
+  const votarLetra = (letra) => {
+    if (votacionActiva) {
+      socket.emit('startHangmanVote', {
+        partidaId,
+        equipoNumero,
+        letra,
+        userId: socket.id, // Asegúrate de tener acceso al userId o socket.id
+      });
+    } else {
+      // Inicia la votación con la primera letra
+      socket.emit('startHangmanVote', {
+        partidaId,
+        equipoNumero,
+        letra,
+        userId: socket.id,
+      });
+      setVotacionActiva(true);
+    }
   };
+
+
+  const renderTeclado = () => {
+  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  return letras.map((letra) => {
+    const intentada = gameState.letrasIntentadas.includes(letra);
+    const esCorrecta = gameState.letrasAdivinadas.includes(letra);
+    const deshabilitada = gameState.juegoTerminado;
+    const votosLetra = votos[letra]?.length || 0;
+
+    return (
+      <button
+        key={letra}
+        className={`letra-btn 
+          ${intentada ? 'intentada' : ''} 
+          ${esCorrecta ? 'correcta' : ''}
+          ${deshabilitada ? 'deshabilitada' : ''}
+        `}
+        onClick={() => votarLetra(letra)}
+        disabled={deshabilitada}
+      >
+        {letra}
+        {votosLetra > 0 && <div className="voto-punto">{'•'.repeat(votosLetra)}</div>}
+      </button>
+    );
+  });
+};
+
 
   if (gameState.loading) {
     return (

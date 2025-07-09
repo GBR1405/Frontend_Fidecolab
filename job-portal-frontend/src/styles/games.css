@@ -1691,3 +1691,9 @@ h4 {
 }
 
 /* Resto de estilos existentes... */
+
+.voto-punto {
+  font-size: 0.8em;
+  color: #007bff;
+  margin-top: 2px;
+}

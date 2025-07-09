@@ -22,7 +22,6 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
   const [votingState, setVotingState] = useState({
     active: false,
     tiempoRestante: 0,
-    currentLetter: '',
     votes: {},
     myVote: null
   });
@@ -2069,18 +2068,19 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
           tiempoRestante: prev.tiempoRestante - 100
         }));
       }, 100);
+    } else if (votingState.active && votingState.tiempoRestante <= 0) {
+      setVotingState(prev => ({ ...prev, active: false }));
     }
     return () => clearInterval(interval);
-  }, [votingState.active]);
+  }, [votingState.active, votingState.tiempoRestante]);
 
   // Manejadores de sockets para la votación
   useEffect(() => {
     if (!socket) return;
 
-    const handleVoteStarted = ({ letra, iniciador, tiempoRestante }) => {
+    const handleVoteStarted = ({ tiempoRestante }) => {
       setVotingState({
         active: true,
-        currentLetter: letra,
         tiempoRestante,
         votes: {},
         myVote: null
@@ -2088,10 +2088,18 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
     };
 
     const handleVoteUpdate = ({ votes }) => {
+      // Encontrar qué letra votó el usuario actual
+      let myVote = null;
+      Object.entries(votes).forEach(([letra, userIds]) => {
+        if (userIds.includes(userId)) {
+          myVote = letra;
+        }
+      });
+
       setVotingState(prev => ({
         ...prev,
         votes,
-        myVote: votes[userId] || null
+        myVote
       }));
     };
 
@@ -2108,7 +2116,6 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       setVotingState({
         active: false,
         tiempoRestante: 0,
-        currentLetter: '',
         votes: {},
         myVote: null
       });
@@ -2178,6 +2185,8 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       setGameState(newState);
     };
 
+    
+
     // Ejecutar handleGameStateChange cuando cambie el estado del juego
     handleGameStateChange();
 
@@ -2197,11 +2206,42 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       socket.off('hangmanGameError', handleGameError);
     };
   }, [socket, partidaId, equipoNumero, onGameComplete, gameState]);
+  useEffect(() => {
+    if (!socket) return;
 
-  // Resto del código se mantiene igual...
-   const adivinarLetra = (letra) => {
-    if (gameState.juegoTerminado || 
-        gameState.letrasIntentadas.includes(letra)) return;
+    const handleGameState = (data) => {
+      const newState = {
+        palabra: data.config.palabra,
+        letrasAdivinadas: data.state.letrasAdivinadas,
+        letrasIntentadas: data.state.letrasIntentadas,
+        intentosRestantes: data.state.intentosRestantes,
+        juegoTerminado: data.state.juegoTerminado,
+        ganado: data.state.ganado,
+        loading: false
+      };
+
+      setGameState(newState);
+    };
+
+    const handleGameError = (error) => {
+      console.error('Error en el juego del ahorcado:', error);
+      setGameState(prev => ({ ...prev, loading: false }));
+    };
+
+    socket.on('hangmanGameState', handleGameState);
+    socket.on('hangmanGameError', handleGameError);
+
+    // Inicializar juego
+    socket.emit('initHangmanGame', { partidaId, equipoNumero });
+
+    return () => {
+      socket.off('hangmanGameState', handleGameState);
+      socket.off('hangmanGameError', handleGameError);
+    };
+  }, [socket, partidaId, equipoNumero]);
+
+  const adivinarLetra = (letra) => {
+    if (gameState.juegoTerminado || gameState.letrasIntentadas.includes(letra)) return;
     
     // Iniciar votación
     socket.emit('startHangmanVote', { 
@@ -2241,7 +2281,7 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
       const deshabilitada = intentada || gameState.juegoTerminado;
       
       // Contar votos para esta letra
-      const votos = Object.values(votingState.votes).filter(v => v === letra).length;
+      const votos = votingState.votes[letra] ? votingState.votes[letra].length : 0;
       
       return (
         <div key={letra} className="letra-container">
@@ -2264,16 +2304,15 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
             {letra}
           </button>
           {votos > 0 && (
-            <div className="voto-marcador" style={{ '--count': votos }}>
-              {Array(votos).fill(0).map((_, i) => (
-                <span key={i} className="voto-punto"></span>
-              ))}
+            <div className="voto-marcador">
+              {votos}
             </div>
           )}
         </div>
       );
     });
   };
+
 
 
   if (gameState.loading) {
@@ -2287,35 +2326,26 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
 
   return (
     <div className="hangman-container">
-    {votingState.active && (
+      {votingState.active && (
         <div className="votacion-container">
           <div className="votacion-timer">
             <div 
               className="timer-progress" 
               style={{ width: `${(votingState.tiempoRestante / 5000) * 100}%` }}
-            ></div>
-            <div className="timer-text">
-              Votando: {(votingState.tiempoRestante / 1000).toFixed(1)}s
-            </div>
+            />
+            <span className="timer-text">
+              {(votingState.tiempoRestante / 1000).toFixed(1)}s
+            </span>
           </div>
           <div className="votacion-mensaje">
-            Vota por una letra. Actualmente votando: {votingState.currentLetter}
+            Vota por una letra
           </div>
         </div>
       )}
-      <div className="hangman-left">
-        <div className="robot-animation-container">
-          <canvas ref={canvasRef} style={{ width: '250px', height: '350px' }}></canvas>
-        </div>
-      </div>      
-      <div className="hangman-right">
-        <div className="hangman-word">
-          {renderPalabra()}
-        </div>
-        
-        <div className="hangman-keyboard">
-          {renderTeclado()}
-        </div>
+
+      <div className="hangman-game">
+        <div className="hangman-word">{renderPalabra()}</div>
+        <div className="hangman-keyboard">{renderTeclado()}</div>
         
         {gameState.juegoTerminado && (
           <div className={`hangman-result ${gameState.ganado ? 'ganado' : 'perdido'}`}>

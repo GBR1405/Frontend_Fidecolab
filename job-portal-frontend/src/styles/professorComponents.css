@@ -728,6 +728,37 @@
         gap: 3%;
     }
 
+    /* En tu archivo CSS */
+.image-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.image-item.disabled::after {
+  content: "EN USO";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.no-images {
+  text-align: center;
+  padding: 20px;
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.select-image-button.pending {
+  background-color: #ff0000 !important;
+  color: white !important;
+}
 
 }
 

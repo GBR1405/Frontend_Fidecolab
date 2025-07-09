@@ -50,6 +50,7 @@ const CreatePersonalization = ({ personalizacionId }) => {
   };
 
   const agregarJuego = async (juego) => {
+    // Verificación inmediata + estado local
     if (juegosSeleccionados.length >= 5) {
       Swal.fire({
         icon: 'warning',
@@ -59,6 +60,10 @@ const CreatePersonalization = ({ personalizacionId }) => {
       });
       return;
     }
+
+    // Deshabilitar botones temporalmente
+    const gameButtons = document.querySelectorAll('.game__shape');
+    gameButtons.forEach(btn => btn.disabled = true);
 
     const temas = await obtenerTemas(juego.Tipo_Juego_ID_PK);
     const dificultad = juego.Juego === "Dibujo" ? 1 : 1;
@@ -72,7 +77,16 @@ const CreatePersonalization = ({ personalizacionId }) => {
       necesitaSeleccionarImagen: juego.Juego === "Rompecabezas"
     };
 
-    setJuegosSeleccionados(prev => [...prev, nuevoJuego]);
+    setJuegosSeleccionados(prev => {
+      const updated = [...prev, nuevoJuego];
+      // Verificación adicional por si acaso
+      return updated.length <= 5 ? updated : updated.slice(0, 5);
+    });
+
+    // Rehabilitar botones después de 500ms
+    setTimeout(() => {
+      gameButtons.forEach(btn => btn.disabled = false);
+    }, 500);
 
     if (juego.Juego === "Rompecabezas") {
       const index = juegosSeleccionados.length;
@@ -109,6 +123,22 @@ const CreatePersonalization = ({ personalizacionId }) => {
   };
 
   const guardarConfiguracion = () => {
+
+      const missingImages = juegosSeleccionados.some(juego => 
+      juego.Juego === "Rompecabezas" && !juego.tema
+    );
+    
+    if (missingImages) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Imágenes faltantes',
+        text: 'Hay juegos de rompecabezas sin imagen seleccionada',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+
     if (tituloPersonalizacion.trim() === "") {
       Swal.fire("Error", "Por favor ingrese un título para la personalización", "error");
       return;
@@ -202,75 +232,100 @@ const CreatePersonalization = ({ personalizacionId }) => {
 
   const handleImageSelect = (temaId) => {
     if (temaId && currentImageIndex !== null) {
+      // Verificar si la imagen ya está en uso
+      const isAlreadyUsed = juegosSeleccionados.some((j, idx) => 
+        idx !== currentImageIndex && j.tema === temaId
+      );
+      
+      if (isAlreadyUsed) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Imagen en uso',
+          text: 'Esta imagen ya está seleccionada en otro juego',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
       actualizarJuego(currentImageIndex, "tema", temaId);
       setShowImageModal(false);
       setCurrentImagePage(1);
     }
   };
 
+
   const renderImageModal = () => {
-    if (!showImageModal || currentImageIndex === null) return null;
+  if (!showImageModal || currentImageIndex === null) return null;
 
-    const juego = juegosSeleccionados[currentImageIndex];
-    const imagesPerPage = 4;
-    const totalPages = Math.ceil(juego.temas.length / imagesPerPage);
-    const startIdx = (currentImagePage - 1) * imagesPerPage;
-    const endIdx = startIdx + imagesPerPage;
-    const currentImages = juego.temas.slice(startIdx, endIdx);
+  const juego = juegosSeleccionados[currentImageIndex];
+  
+  // Obtener imágenes ya usadas en otros juegos
+  const usedImages = juegosSeleccionados
+    .filter((j, idx) => idx !== currentImageIndex && j.tema)
+    .map(j => j.tema);
 
-    return (
-      <div className="image-modal-overlay">
-        <div className="image-modal">
-          <div className="modal-header">
-            <h3>Elegir Imagen</h3>
-            <button onClick={() => {
-              setShowImageModal(false);
-              setCurrentImagePage(1);
-            }} className="close-button">
-              &times;
-            </button>
-          </div>
-          
-          <div className="image-gallery">
-            {currentImages.length > 0 ? (
-              currentImages.map((tema) => (
-                <div 
-                  key={tema.Tema_Juego_ID_PK} 
-                  className={`image-item ${juego.tema === tema.Tema_Juego_ID_PK ? 'selected' : ''}`}
-                  onClick={() => handleImageSelect(tema.Tema_Juego_ID_PK)}
-                >
-                  <img 
-                    src={tema.Contenido} 
-                    alt={`Tema ${tema.Tema_Juego_ID_PK}`} 
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="no-images">No hay imágenes disponibles</div>
-            )}
-          </div>
+  const imagesPerPage = 4;
+  const availableImages = juego.temas.filter(tema => !usedImages.includes(tema.Tema_Juego_ID_PK));
+  const totalPages = Math.ceil(availableImages.length / imagesPerPage);
+  const startIdx = (currentImagePage - 1) * imagesPerPage;
+  const endIdx = startIdx + imagesPerPage;
+  const currentImages = availableImages.slice(startIdx, endIdx);
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button className='styled-select_Pagination'
-                onClick={() => setCurrentImagePage(p => Math.max(p - 1, 1))}
-                disabled={currentImagePage === 1}
+  return (
+    <div className="image-modal-overlay">
+      <div className="image-modal">
+        <div className="modal-header">
+          <h3>Elegir Imagen</h3>
+          <button onClick={() => {
+            setShowImageModal(false);
+            setCurrentImagePage(1);
+          }} className="close-button">
+            &times;
+          </button>
+        </div>
+        
+        <div className="image-gallery">
+          {currentImages.length > 0 ? (
+            currentImages.map((tema) => (
+              <div 
+                key={tema.Tema_Juego_ID_PK} 
+                className={`image-item ${juego.tema === tema.Tema_Juego_ID_PK ? 'selected' : ''}`}
+                onClick={() => handleImageSelect(tema.Tema_Juego_ID_PK)}
               >
-                Anterior
-              </button>
-              <span>Página {currentImagePage} de {totalPages}</span>
-              <button  className='styled-select_Pagination'
-                onClick={() => setCurrentImagePage(p => Math.min(p + 1, totalPages))}
-                disabled={currentImagePage === totalPages}
-              >
-                Siguiente
-              </button>
+                <img 
+                  src={tema.Contenido} 
+                  alt={`Tema ${tema.Tema_Juego_ID_PK}`} 
+                />
+              </div>
+            ))
+          ) : (
+            <div className="no-images">
+              No hay imágenes disponibles. Todas las imágenes están en uso en otros juegos.
             </div>
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button className='styled-select_Pagination'
+              onClick={() => setCurrentImagePage(p => Math.max(p - 1, 1))}
+              disabled={currentImagePage === 1}
+            >
+              Anterior
+            </button>
+            <span>Página {currentImagePage} de {totalPages}</span>
+            <button className='styled-select_Pagination'
+              onClick={() => setCurrentImagePage(p => Math.min(p + 1, totalPages))}
+              disabled={currentImagePage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+        )}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   const JuegoCard = ({ index, juego }) => {
     const [, ref] = useDrag({

@@ -19,7 +19,7 @@ const PuzzleGame = ({ gameConfig }) => {
     size: 1, xOffset: 0, yOffset: 0
   });
 
-  const difficulty = gameConfig.dificultad.toLowerCase();
+  const difficulty = gameConfig.dificultad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   console.log('Dificultad seleccionada:', difficulty);
   const imageUrl = gameConfig.tema;
 
@@ -144,8 +144,10 @@ const PuzzleGame = ({ gameConfig }) => {
           backgroundImage: `url(${imageUrl})`,
           backgroundSize: `${gridSize * 100}%`,
           backgroundPosition: `${(piece.correctCol / (gridSize - 1)) * 100}% ${(piece.correctRow / (gridSize - 1)) * 100}%`,
-          border: isSelected ? '3px solid gold' : '1px solid #555',
+          border: isSelected ? '3px solid gold' : isCorrect ? '2px solid limegreen' : 'none',
+          boxShadow: isCorrect ? '0 0 10px rgba(0,255,0,0.6)' : '0 0 3px rgba(0,0,0,0.3)',
           cursor: 'pointer',
+          borderRadius: '8px',
           transition: 'all 0.2s ease'
         }}
         onClick={() => handlePieceClick(piece.id)}

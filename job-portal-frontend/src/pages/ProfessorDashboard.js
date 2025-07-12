@@ -744,25 +744,7 @@ useEffect(() => {
   if (!socket || !partidaId) return;
 }, [socket, partidaId]);
 
-useEffect(() => {
-  if (!socket || !partidaId || !currentGame) return;
 
-  const tipoJuego = currentGame?.tipo?.toLowerCase?.();
-  if (tipoJuego !== 'dibujo') return;
-
-  const fetchDrawings = () => {
-    socket.emit('getAllDrawingsForProfessor', partidaId, (response) => {
-      if (response.success) {
-        setDrawingsByTeam(response.drawingsByTeam);
-      }
-    });
-  };
-
-  fetchDrawings();
-  const interval = setInterval(fetchDrawings, 2000); // cada 2s
-
-  return () => clearInterval(interval);
-}, [socket, partidaId, currentGame]);
 
   const nextGame = () => {
     if (!gameConfig) return;

@@ -363,12 +363,13 @@ useEffect(() => {
 
 const loadTeamDrawing = (equipoNumero) => {
   setSelectedTeam(equipoNumero);
+  setTeamDrawingLines(null); // Limpia antes de cargar
 
   socket.emit('getTeamDrawings', { partidaId, equipoNumero }, (response) => {
     if (response.success) {
       setTeamDrawingLines(response.linesByUser);
     } else {
-      setTeamDrawingLines(null); // Dibujará canvas en blanco
+      setTeamDrawingLines({}); // Para mostrar canvas blanco con texto
     }
   });
 };
@@ -1051,22 +1052,24 @@ const handleAutoNextGame = () => {
                 <div className="groups-list">
                   {currentGame.tipo.toLowerCase() === 'dibujo' ? (
                     <div className="drawing-viewer-container">
-                      <h3>Ver dibujo en vivo</h3>
                       <div className="team-selector">
-                        {groups.map((team, idx) => (
-                          <button key={team.numero} onClick={() => loadTeamDrawing(team.numero)}>
+                        <h3>Ver dibujo del equipo</h3>
+                        {groups.map((team) => (
+                          <button
+                            key={team.numero}
+                            className={team.numero === selectedTeam ? 'active' : ''}
+                            onClick={() => loadTeamDrawing(team.numero)}
+                          >
                             Equipo {team.numero}
                           </button>
                         ))}
                       </div>
 
                       <div className="canvas-preview">
-                        {teamDrawingLines ? (
+                        {selectedTeam ? (
                           <DrawingPreview linesByUser={teamDrawingLines} />
                         ) : (
-                          <div className="blank-canvas">
-                            <span className="no-drawing-text">Equipo no ha dibujado</span>
-                          </div>
+                          <div className="select-team-message">Selecciona un equipo</div>
                         )}
                       </div>
                     </div>

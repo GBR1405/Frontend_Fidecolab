@@ -744,7 +744,39 @@ useEffect(() => {
   if (!socket || !partidaId) return;
 }, [socket, partidaId]);
 
+useEffect(() => {
+  if (!socket || !partidaId) return;
 
+  let polling = null;
+
+  const startPolling = () => {
+    if (polling) return;
+
+    polling = setInterval(() => {
+      socket.emit('getGameConfig', partidaId, (response) => {
+        if (!response || !response.juegos || response.currentIndex == null) return;
+
+        const currentGame = response.juegos[response.currentIndex];
+
+        if (!currentGame || typeof currentGame.tipo !== 'string') return;
+
+        if (currentGame.tipo.toLowerCase() === 'dibujo') {
+          socket.emit('getAllDrawingsForProfessor', partidaId, (drawingsRes) => {
+            if (drawingsRes.success) {
+              setDrawingsByTeam(drawingsRes.drawingsByTeam);
+            }
+          });
+        }
+      });
+    }, 2000); // cada 2 segundos
+  };
+
+  startPolling();
+
+  return () => {
+    if (polling) clearInterval(polling);
+  };
+}, [socket, partidaId]);
 
   const nextGame = () => {
     if (!gameConfig) return;

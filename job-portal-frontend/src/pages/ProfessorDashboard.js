@@ -365,7 +365,7 @@ const loadTeamDrawing = (equipoNumero) => {
   setSelectedTeam(equipoNumero);
   setTeamDrawingLines(null); // Limpia antes de cargar
 
-  socket.emit('getTeamDrawings', { partidaId, equipoNumero }, (response) => {
+  socket.emit('getTeamDrawingForProfessor', { partidaId, equipoNumero }, (response) => {
     if (response.success && response.linesByUser) {
       setTeamDrawingLines(response.linesByUser);
     } else {

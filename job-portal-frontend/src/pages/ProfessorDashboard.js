@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
+import DrawingPreview from '../games/DrawingPreview';
 import Swal from 'sweetalert2';
 import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
@@ -199,6 +200,8 @@ const SimulationProfessor = () => {
   const [demoActive, setDemoActive] = useState(false);
   const [totalDemoTeams, setTotalDemoTeams] = useState(0);
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teamDrawingLines, setTeamDrawingLines] = useState(null);
   
 
   const [demoState, setDemoState] = useState({
@@ -358,7 +361,17 @@ useEffect(() => {
     });
   };
 
+const loadTeamDrawing = (equipoNumero) => {
+  setSelectedTeam(equipoNumero);
 
+  socket.emit('getTeamDrawings', { partidaId, equipoNumero }, (response) => {
+    if (response.success) {
+      setTeamDrawingLines(response.linesByUser);
+    } else {
+      setTeamDrawingLines(null); // Dibujará canvas en blanco
+    }
+  });
+};
 
   // Agrega esto cerca de los otros efectos
 useEffect(() => {
@@ -1036,20 +1049,43 @@ const handleAutoNextGame = () => {
                   <h3>Grupos Participantes</h3>
                 </div>
                 <div className="groups-list">
-                <div className="progress-section">
-                  <div className="content__box">
-                    <div className="box__title">
-                      <h3>Progreso de los Equipos</h3>
+                  {currentGame.tipo.toLowerCase() === 'dibujo' ? (
+                    <div className="drawing-viewer-container">
+                      <h3>Ver dibujo en vivo</h3>
+                      <div className="team-selector">
+                        {groups.map((team, idx) => (
+                          <button key={team.numero} onClick={() => loadTeamDrawing(team.numero)}>
+                            Equipo {team.numero}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="canvas-preview">
+                        {teamDrawingLines ? (
+                          <DrawingPreview linesByUser={teamDrawingLines} />
+                        ) : (
+                          <div className="blank-canvas">
+                            <span className="no-drawing-text">Equipo no ha dibujado</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="box__content">
-                      <TeamProgress 
-                        partidaId={partidaId} 
-                        currentGameType={currentGame.tipo} 
-                        socket={socket} 
-                      />
+                  ) : (
+                    <div className="progress-section">
+                      <div className="content__box">
+                        <div className="box__title">
+                          <h3>Progreso de los Equipos</h3>
+                        </div>
+                        <div className="box__content">
+                          <TeamProgress 
+                            partidaId={partidaId} 
+                            currentGameType={currentGame.tipo} 
+                            socket={socket} 
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
                 </div>
               </div>
             </div>

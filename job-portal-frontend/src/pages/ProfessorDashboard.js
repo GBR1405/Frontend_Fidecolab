@@ -343,23 +343,7 @@ useEffect(() => {
     });
   };
 
-  useEffect(() => {
-  if (!socket || currentGame.tipo.toLowerCase() !== 'dibujo') return;
-
-  const fetchDrawings = () => {
-    socket.emit('getAllDrawingsForProfessor', partidaId, (response) => {
-      if (response.success) {
-        setDrawingsByTeam(response.drawingsByTeam);
-      }
-    });
-  };
-
-  fetchDrawings();
-  const interval = setInterval(fetchDrawings, 2000); // actualiza cada 2 segundos
-
-  return () => clearInterval(interval);
-}, [socket, partidaId, currentGame.tipo]);
-
+ 
   const startDemo = () => {
     Swal.fire({
       title: '¿Iniciar demostración de dibujos?',
@@ -755,6 +739,24 @@ const handleAutoNextGame = () => {
 
   verificarEstadoPartida(); // ✅ ahora sí: toda la lógica está controlada
 }, [socket, partidaId]);
+
+ useEffect(() => {
+  if (!socket || currentGame.tipo.toLowerCase() !== 'dibujo') return;
+
+  const fetchDrawings = () => {
+    socket.emit('getAllDrawingsForProfessor', partidaId, (response) => {
+      if (response.success) {
+        setDrawingsByTeam(response.drawingsByTeam);
+      }
+    });
+  };
+
+  fetchDrawings();
+  const interval = setInterval(fetchDrawings, 2000); // actualiza cada 2 segundos
+
+  return () => clearInterval(interval);
+}, [socket, partidaId, currentGame.tipo]);
+
 
   const nextGame = () => {
     if (!gameConfig) return;

@@ -202,6 +202,7 @@ const SimulationProfessor = () => {
   const [drawingDemonstration, setDrawingDemonstration] = useState({});
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teamDrawingLines, setTeamDrawingLines] = useState(null);
+  const [drawingsByTeam, setDrawingsByTeam] = useState({});
   
 
   const [demoState, setDemoState] = useState({
@@ -341,6 +342,23 @@ useEffect(() => {
       }));
     });
   };
+
+  useEffect(() => {
+  if (!socket || currentGame.tipo.toLowerCase() !== 'dibujo') return;
+
+  const fetchDrawings = () => {
+    socket.emit('getAllDrawingsForProfessor', partidaId, (response) => {
+      if (response.success) {
+        setDrawingsByTeam(response.drawingsByTeam);
+      }
+    });
+  };
+
+  fetchDrawings();
+  const interval = setInterval(fetchDrawings, 2000); // actualiza cada 2 segundos
+
+  return () => clearInterval(interval);
+}, [socket, partidaId, currentGame.tipo]);
 
   const startDemo = () => {
     Swal.fire({
@@ -1055,13 +1073,13 @@ const handleAutoNextGame = () => {
                       <div className="team-selector">
                         <h3>Ver dibujo en vivo</h3>
                         {groups.length > 0 ? (
-                          groups.map((team) => (
+                          groups.map((numero) => (
                             <button
-                              key={team.numero}
-                              className={team.numero === selectedTeam ? 'active' : ''}
-                              onClick={() => loadTeamDrawing(team.numero)}
+                              key={numero}
+                              className={numero === selectedTeam ? 'active' : ''}
+                              onClick={() => setSelectedTeam(numero)}
                             >
-                              Equipo {team.numero}
+                              Equipo {numero}
                             </button>
                           ))
                         ) : (
@@ -1071,7 +1089,7 @@ const handleAutoNextGame = () => {
 
                       <div className="canvas-preview">
                         {selectedTeam ? (
-                          <DrawingPreview linesByUser={teamDrawingLines} />
+                          <DrawingPreview linesByUser={drawingsByTeam[selectedTeam] || {}} />
                         ) : (
                           <p style={{ textAlign: 'center', marginTop: '20px' }}>Selecciona un equipo</p>
                         )}

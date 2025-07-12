@@ -366,10 +366,10 @@ const loadTeamDrawing = (equipoNumero) => {
   setTeamDrawingLines(null); // Limpia antes de cargar
 
   socket.emit('getTeamDrawings', { partidaId, equipoNumero }, (response) => {
-    if (response.success) {
+    if (response.success && response.linesByUser) {
       setTeamDrawingLines(response.linesByUser);
     } else {
-      setTeamDrawingLines({}); // Para mostrar canvas blanco con texto
+      setTeamDrawingLines({}); // vacío, sin trazos
     }
   });
 };
@@ -1053,23 +1053,27 @@ const handleAutoNextGame = () => {
                   {currentGame.tipo.toLowerCase() === 'dibujo' ? (
                     <div className="drawing-viewer-container">
                       <div className="team-selector">
-                        <h3>Ver dibujo del equipo</h3>
-                        {groups.map((team) => (
-                          <button
-                            key={team.numero}
-                            className={team.numero === selectedTeam ? 'active' : ''}
-                            onClick={() => loadTeamDrawing(team.numero)}
-                          >
-                            Equipo {team.numero}
-                          </button>
-                        ))}
+                        <h3>Ver dibujo en vivo</h3>
+                        {groups.length > 0 ? (
+                          groups.map((team) => (
+                            <button
+                              key={team.numero}
+                              className={team.numero === selectedTeam ? 'active' : ''}
+                              onClick={() => loadTeamDrawing(team.numero)}
+                            >
+                              Equipo {team.numero}
+                            </button>
+                          ))
+                        ) : (
+                          <p>No hay equipos disponibles.</p>
+                        )}
                       </div>
 
                       <div className="canvas-preview">
                         {selectedTeam ? (
                           <DrawingPreview linesByUser={teamDrawingLines} />
                         ) : (
-                          <div className="select-team-message">Selecciona un equipo</div>
+                          <p style={{ textAlign: 'center', marginTop: '20px' }}>Selecciona un equipo</p>
                         )}
                       </div>
                     </div>

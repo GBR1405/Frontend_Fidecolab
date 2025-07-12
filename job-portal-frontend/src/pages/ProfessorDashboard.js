@@ -740,10 +740,15 @@ const handleAutoNextGame = () => {
   verificarEstadoPartida(); // ✅ ahora sí: toda la lógica está controlada
 }, [socket, partidaId]);
 
- useEffect(() => {
-  if (!socket || !currentGame || typeof currentGame.tipo !== 'string') return;
+useEffect(() => {
+  if (!socket || !partidaId) return;
+}, [socket, partidaId]);
 
-  if (currentGame.tipo.toLowerCase() !== 'dibujo') return;
+useEffect(() => {
+  if (!socket || !partidaId || !currentGame) return;
+
+  const tipoJuego = currentGame?.tipo?.toLowerCase?.();
+  if (tipoJuego !== 'dibujo') return;
 
   const fetchDrawings = () => {
     socket.emit('getAllDrawingsForProfessor', partidaId, (response) => {
@@ -754,11 +759,10 @@ const handleAutoNextGame = () => {
   };
 
   fetchDrawings();
-  const interval = setInterval(fetchDrawings, 2000); // actualiza cada 2s
+  const interval = setInterval(fetchDrawings, 2000); // cada 2s
 
   return () => clearInterval(interval);
-}, [socket, partidaId, currentGame?.tipo]);
-
+}, [socket, partidaId, currentGame]);
 
   const nextGame = () => {
     if (!gameConfig) return;

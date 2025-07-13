@@ -88,53 +88,50 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
 
   // Dibujar en el canvas
   const drawCanvas = (drawingData) => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      console.log('[Professor] Canvas no disponible para dibujar');
-      return;
-    }
-    
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (!drawingData) {
-      console.log('[Professor] Sin datos de dibujo');
-      return;
-    }
-    
-    console.log(`[Professor] Dibujando ${Object.keys(drawingData).length} usuarios...`);
-    
-    // Configurar canvas
-    canvas.width = 800;
-    canvas.height = 600;
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    // Dibujar todos los trazos
-    Object.values(drawingData).forEach((userPaths) => {
-      userPaths.forEach((path) => {
-        if (!path.points || path.points.length === 0) return;
-        
-        ctx.beginPath();
-        ctx.strokeStyle = path.color || '#000000';
-        ctx.lineWidth = path.strokeWidth || 2;
-        
-        path.points.forEach((point, pointIndex) => {
-          if (pointIndex === 0) {
-            ctx.moveTo(point.x, point.y);
-          } else {
-            ctx.lineTo(point.x, point.y);
-          }
-        });
-        
-        ctx.stroke();
+  const canvas = canvasRef.current;
+  if (!canvas) {
+    console.log('[Professor] Canvas no disponible para dibujar');
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!drawingData) {
+    console.log('[Professor] Sin datos de dibujo');
+    return;
+  }
+
+  console.log(`[Professor] Dibujando ${Object.keys(drawingData).length} usuarios...`);
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  Object.values(drawingData).forEach((userPaths, userIndex) => {
+    userPaths.forEach((path, pathIndex) => {
+      if (!path.points || path.points.length === 0) return;
+
+      console.log(`[DEBUG] Usuario ${userIndex}, Path ${pathIndex}:`, path);
+
+      ctx.beginPath();
+      ctx.strokeStyle = path.color || '#000000';
+      ctx.lineWidth = path.strokeWidth || 2;
+
+      path.points.forEach((point, pointIndex) => {
+        if (pointIndex === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
       });
+
+      ctx.stroke();
     });
-    
-    console.log('[Professor] Dibujo completado');
-  };
+  });
+
+  console.log('[Professor] Dibujo completado');
+};
+
 
   // Limpiar canvas
   const clearCanvas = () => {

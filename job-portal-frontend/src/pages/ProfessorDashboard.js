@@ -72,7 +72,7 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
     updateProgress();
     
     // Configurar intervalo para actualizaciones periódicas
-    const interval = setInterval(updateProgress, 2000); // Actualizar cada 2 segundos
+    const interval = setInterval(updateProgress, 1000); // Actualizar cada 2 segundos
     
     // Escuchar actualizaciones específicas
     const handleProgressUpdate = (data) => {

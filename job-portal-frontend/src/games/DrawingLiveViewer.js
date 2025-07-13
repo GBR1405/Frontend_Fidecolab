@@ -136,50 +136,55 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   }, [selectedTeam]);
 
   return (
-    <div className="professor-drawing-viewer">
-      <div className="team-selector">
-        <h3>Vista de Dibujo en Vivo</h3>
-
-        <div className="status-info">
-          {loading && <span className="loading-indicator">Cargando...</span>}
-          {lastUpdate && (
-            <span className="last-update">
-              Última actualización: {lastUpdate.toLocaleTimeString()}
-            </span>
-          )}
-          {error && <span className="error-message" style={{ color: 'red' }}>{error}</span>}
-        </div>
-
-        <div className="team-buttons">
-          {teams.map((team) => (
-            <button
-              key={team}
-              className={team === selectedTeam ? 'active' : ''}
-              onClick={() => setSelectedTeam(team)}
-            >
-              Equipo {team}
-            </button>
-          ))}
-        </div>
+    <div className="live-view-container">
+      {/* Título centrado */}
+      <div className="live-view-header">
+        <h3 className="live-view-title">Vista en vivo</h3>
       </div>
 
-      <div className="canvas-container" style={{ marginTop: '1rem' }}>
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          style={{
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: '8px'
-          }}
-        />
-      </div>
+      {/* Contenido principal - dos columnas */}
+      <div className="live-view-content">
+        {/* Columna izquierda - Lista de equipos */}
+        <div className="teams-column">
+          <div className="teams-header">
+            <h4>Equipos</h4>
+          </div>
+          <div className="teams-list-container">
+            <div className="teams-list-scroll">
+              {teams.map((team) => (
+                <button
+                  key={team}
+                  className={`team-button ${team === selectedTeam ? 'active' : ''}`}
+                  onClick={() => setSelectedTeam(team)}
+                >
+                  <span className="team-button-text">Equipo {team}</span>
+                  {team === selectedTeam && (
+                    <span className="team-button-indicator">
+                      <i className="fas fa-circle"></i>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      <div className="debug-info">
-        <p>Partida: {numericPartidaId}</p>
-        <p>Equipo seleccionado: {selectedTeam || 'Ninguno'}</p>
-        <p>Total equipos: {teams.length}</p>
+        {/* Columna derecha - Canvas */}
+        <div className="canvas-column">
+          <div className="canvas-wrapper">
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={600}
+              className="live-view-canvas"
+            />
+          </div>
+          {/* Estado y mensajes */}
+          <div className="canvas-status">
+            {loading && <span className="status-loading">Cargando...</span>}
+            {error && <span className="status-error">{error}</span>}
+          </div>
+        </div>
       </div>
     </div>
   );

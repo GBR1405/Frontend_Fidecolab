@@ -1,178 +1,209 @@
 /* Contenedor principal */
-.professor-drawing-viewer {
-  display: flex;
-  flex-direction: column;
+.live-view-container {
   width: 100%;
   height: 100%;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
   background-color: var(--white-smoke-clr);
   box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
   border-radius: 1em;
   overflow: hidden;
+  padding: 1.5vw;
+  box-sizing: border-box;
 }
 
-/* Título centrado */
-.team-selector h3 {
-  text-align: center;
+/* Encabezado con título centrado */
+.live-view-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5vw;
+}
+
+.live-view-title {
   color: var(--blue-royal-clr);
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.5vw;
   font-weight: 600;
+  margin: 0;
+  text-align: center;
+  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 0.5vw 2vw;
+  border-radius: 0.5em;
 }
 
-/* Contenedor de contenido principal */
-.drawing-viewer-content {
+/* Contenido principal - dos columnas */
+.live-view-content {
   display: flex;
   flex: 1;
-  gap: 20px;
-  height: calc(100% - 60px); /* Restamos el espacio del título */
+  gap: 1.5vw;
+  height: calc(100% - 4vw);
 }
 
-/* Contenedor de equipos (izquierda) */
-.team-list-container {
-  width: 250px;
+/* Columna izquierda - Equipos */
+.teams-column {
+  width: 20%;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
   background-color: var(--white-clr);
   border-radius: 1em;
   box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
-.team-list-title {
-  font-size: 1.1rem;
-  color: var(--blue-royal-clr);
-  font-weight: 500;
-  margin-bottom: 15px;
+.teams-header {
+  padding: 1vw;
+  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
+  border-radius: 1em 1em 0 0;
+}
+
+.teams-header h4 {
+  color: var(--white-clr);
+  font-size: 1.1vw;
+  margin: 0;
   text-align: center;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-weight: 500;
 }
 
-.team-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
+.teams-list-container {
   flex: 1;
-  padding-right: 5px;
+  padding: 1vw;
+  overflow: hidden;
 }
 
-/* Estilo del scroll para equipos */
-.team-buttons::-webkit-scrollbar {
+.teams-list-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.5vw;
+}
+
+/* Estilo del scroll para la lista de equipos */
+.teams-list-scroll::-webkit-scrollbar {
   width: 6px;
 }
 
-.team-buttons::-webkit-scrollbar-track {
+.teams-list-scroll::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 3px;
 }
 
-.team-buttons::-webkit-scrollbar-thumb {
+.teams-list-scroll::-webkit-scrollbar-thumb {
   background: var(--blue-royal-clr);
   border-radius: 3px;
 }
 
-.team-buttons button {
-  padding: 10px 15px;
-  background-color: var(--white-smoke-clr);
+/* Botones de equipo */
+.team-button {
+  width: 100%;
+  padding: 0.8vw 1vw;
+  margin-bottom: 0.5vw;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.95rem;
-  text-align: left;
+  border-radius: 0.5em;
+  background-color: var(--white-smoke-clr);
   color: var(--primary-text-clr);
-}
-
-.team-buttons button:hover {
-  background-color: #e0e0e0;
-}
-
-.team-buttons button.active {
-  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
-  color: white;
+  font-size: 0.9vw;
   font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Contenedor del canvas (derecha) */
-.canvas-main-container {
+.team-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.team-button.active {
+  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
+  color: var(--white-clr);
+  box-shadow: 0 4px 8px rgba(42, 64, 191, 0.3);
+}
+
+.team-button-text {
+  flex-grow: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-button-indicator {
+  margin-left: 0.5vw;
+  color: var(--white-clr);
+  font-size: 0.7vw;
+}
+
+/* Columna derecha - Canvas */
+.canvas-column {
   flex: 1;
   display: flex;
   flex-direction: column;
   background-color: var(--white-clr);
   border-radius: 1em;
   box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.05);
-  padding: 15px;
+  padding: 1.5vw;
   overflow: hidden;
 }
 
-.canvas-container {
+.canvas-wrapper {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #f5f5f5;
-  border-radius: 8px;
+  border-radius: 0.8em;
   overflow: hidden;
 }
 
-canvas {
-  background-color: white;
+.live-view-canvas {
+  background-color: var(--white-clr);
   border: 1px solid #ddd;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  max-height: 100%;
 }
 
-/* Información de estado */
-.status-info {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-  color: var(--primary-text-clr);
+/* Estado y mensajes */
+.canvas-status {
+  margin-top: 1vw;
+  text-align: center;
+  font-size: 0.9vw;
 }
 
-.loading-indicator {
+.status-loading {
   color: var(--blue-royal-clr);
   font-weight: 500;
 }
 
-.error-message {
+.status-error {
   color: #e74c3c;
   font-weight: 500;
 }
 
-/* Ocultamos la información de debug */
-.debug-info {
-  display: none;
-}
-
-/* Efectos para el canvas cuando está activo */
-.canvas-container--active {
-  box-shadow: 0 0 0 2px var(--blue-royal-clr);
-}
-
-/* Estilos responsivos */
+/* Responsive design */
 @media (max-width: 1024px) {
-  .drawing-viewer-content {
+  .live-view-content {
     flex-direction: column;
   }
   
-  .team-list-container {
+  .teams-column {
     width: 100%;
-    max-height: 150px;
+    min-width: auto;
   }
   
-  .team-buttons {
-    flex-direction: row;
+  .teams-list-scroll {
+    display: flex;
     flex-wrap: wrap;
+    gap: 0.5vw;
   }
   
-  .team-buttons button {
+  .team-button {
+    width: auto;
     flex: 1;
     min-width: 120px;
-    text-align: center;
   }
 }

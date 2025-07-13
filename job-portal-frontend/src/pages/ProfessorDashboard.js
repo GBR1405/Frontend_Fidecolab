@@ -15,7 +15,7 @@ const token = Cookies.get("authToken");
 const DrawingLiveViewer = ({ partidaId, socket }) => {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const [drawingData, setDrawingData] = useState(null);
+  const [drawingData, setDrawingData] = useState({});
   const canvasRef = useRef(null);
   const [ctx, setCtx] = useState(null);
 
@@ -38,9 +38,11 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
     if (!socket || !selectedTeam) return;
 
     const loadDrawing = () => {
-      socket.emit('getTeamDrawings', { partidaId, equipoNumero: selectedTeam }, (response) => {
+      socket.emit('getTeamDrawingsForProfessor', { partidaId, equipoNumero: selectedTeam }, (response) => {
         if (response.success) {
-          setDrawingData(response.linesByUser);
+          setDrawingData(response.linesByUser || {});
+        } else {
+          setDrawingData({});
         }
       });
     };
@@ -58,7 +60,12 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
             case 'pathStart':
             case 'pathUpdate':
             case 'pathComplete':
-              newData[data.userId].push(data.action.path);
+              const existingIndex = newData[data.userId].findIndex(p => p.id === data.action.path.id);
+              if (existingIndex >= 0) {
+                newData[data.userId][existingIndex] = data.action.path;
+              } else {
+                newData[data.userId].push(data.action.path);
+              }
               break;
             case 'clear':
               delete newData[data.userId];
@@ -74,7 +81,7 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
     return () => socket.off('drawingUpdate', handleDrawingUpdate);
   }, [socket, partidaId, selectedTeam]);
 
-  // Dibujar en el canvas cuando cambian los datos
+  // Dibujar en el canvas
   useEffect(() => {
     if (!ctx || !drawingData) return;
 
@@ -82,8 +89,8 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     
     // Dibujar todos los trazos
-    Object.entries(drawingData).forEach(([userId, paths]) => {
-      paths.forEach(path => {
+    Object.values(drawingData).forEach(userPaths => {
+      userPaths.forEach(path => {
         if (!path.points || path.points.length === 0) return;
         
         ctx.beginPath();
@@ -112,7 +119,7 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
       const context = canvas.getContext('2d');
       setCtx(context);
       
-      // Ajustar tamaño del canvas para alta resolución
+      // Ajustar tamaño para alta resolución
       const scale = window.devicePixelRatio || 1;
       canvas.width = canvas.offsetWidth * scale;
       canvas.height = canvas.offsetHeight * scale;
@@ -137,7 +144,7 @@ const DrawingLiveViewer = ({ partidaId, socket }) => {
             ))}
           </div>
         ) : (
-          <p>No hay equipos disponibles.</p>
+          <p>No hay equipos disponibles</p>
         )}
       </div>
 

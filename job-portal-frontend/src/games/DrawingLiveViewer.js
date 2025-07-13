@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from '../context/SocketContext';
+import React, { useEffect, useRef, useState } from 'react';
 
-const DrawingLiveViewer = ({ partidaId }) => {
-  const [teams, setTeams] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+const ProfessorDrawingViewer = ({ partidaId, socket }) => {
+  const [selectedTeam, setSelectedTeam] = useState(1);
   const canvasRef = useRef(null);
-  const socket = useSocket();
+  const [teams, setTeams] = useState([]);
 
   // Obtener lista de equipos
   useEffect(() => {
@@ -14,16 +12,13 @@ const DrawingLiveViewer = ({ partidaId }) => {
     socket.emit('getTeamsForPartida', partidaId, (response) => {
       if (response.success) {
         setTeams(response.equipos);
-        if (response.equipos.length > 0) {
-          setSelectedTeam(response.equipos[0]);
-        }
       }
     });
   }, [socket, partidaId]);
 
-  // Cargar y actualizar dibujo cuando cambia el equipo seleccionado
+  // Configurar canvas y listeners
   useEffect(() => {
-    if (!socket || !selectedTeam || !canvasRef.current) return;
+    if (!socket || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -43,7 +38,7 @@ const DrawingLiveViewer = ({ partidaId }) => {
     setupCanvas();
 
     // Función para dibujar en el canvas
-    const drawPaths = (paths) => {
+    const drawOnCanvas = (paths) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       Object.values(paths).forEach(userPaths => {
@@ -67,61 +62,60 @@ const DrawingLiveViewer = ({ partidaId }) => {
       });
     };
 
-    // Solicitar dibujo inicial
-    socket.emit('getTeamDrawingLive', { 
-      partidaId, 
-      equipoNumero: selectedTeam 
-    }, (response) => {
-      if (response.success) {
-        drawPaths(response.drawing);
-      }
-    });
+    // Solicitar dibujo inicial al cambiar de equipo
+    const loadTeamDrawing = () => {
+      socket.emit('professorGetTeamDrawing', { 
+        partidaId, 
+        equipoNumero: selectedTeam 
+      }, (response) => {
+        if (response.success) {
+          drawOnCanvas(response.drawing);
+        }
+      });
+    };
 
     // Escuchar actualizaciones en tiempo real
-    const handleLiveUpdate = (data) => {
+    const handleProfessorDrawingUpdate = (data) => {
       if (data.equipoNumero === selectedTeam) {
-        drawPaths(data.drawing);
+        drawOnCanvas(data.drawing);
       }
     };
 
-    socket.on('teamDrawingLiveUpdate', handleLiveUpdate);
+    socket.on('professorDrawingUpdate', handleProfessorDrawingUpdate);
+    loadTeamDrawing();
 
     return () => {
-      socket.off('teamDrawingLiveUpdate', handleLiveUpdate);
+      socket.off('professorDrawingUpdate', handleProfessorDrawingUpdate);
     };
   }, [socket, partidaId, selectedTeam]);
 
   return (
-    <div className="drawing-viewer-container">
+    <div className="professor-drawing-viewer">
       <div className="team-selector">
-        <h3>Ver dibujo en vivo</h3>
-        {teams.length > 0 ? (
-          <div className="team-buttons">
-            {teams.map(team => (
-              <button
-                key={team}
-                className={team === selectedTeam ? 'active' : ''}
-                onClick={() => setSelectedTeam(team)}
-              >
-                Equipo {team}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p>No hay equipos disponibles</p>
-        )}
+        <h3>Vista de Dibujo en Vivo</h3>
+        <div className="team-buttons">
+          {teams.map(team => (
+            <button
+              key={team}
+              className={team === selectedTeam ? 'active' : ''}
+              onClick={() => setSelectedTeam(team)}
+            >
+              Equipo {team}
+            </button>
+          ))}
+        </div>
       </div>
-
+      
       <div className="canvas-container">
         <canvas 
           ref={canvasRef}
-          className="drawing-canvas"
           width="800"
           height="600"
+          style={{ backgroundColor: '#fff', borderRadius: '8px' }}
         />
       </div>
     </div>
   );
 };
 
-export default DrawingLiveViewer;
+export default ProfessorDrawingViewer;

@@ -60,75 +60,55 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
 
   // Dibujo real
   const drawCanvas = (drawingData) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!drawingData) return;
+  if (!drawingData) return;
 
-    // Obtener dimensiones reales del dibujo
-    let minX = Infinity, maxX = 0;
-    let minY = Infinity, maxY = 0;
+  // 📐 Tamaño original de los canvas de Konva en el frontend
+  const sourceWidth = 1280;
+  const sourceHeight = 720;
+  const canvasWidth = canvas.width;   // 800
+  const canvasHeight = canvas.height; // 600
 
-    Object.values(drawingData).forEach((paths) => {
-      paths.forEach((path) => {
-        const pts = path.points || [];
-        for (let i = 0; i < pts.length; i += 2) {
-          const x = pts[i];
-          const y = pts[i + 1];
-          if (typeof x === 'number' && typeof y === 'number') {
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-          }
+  const scaleX = canvasWidth / sourceWidth;
+  const scaleY = canvasHeight / sourceHeight;
+
+  Object.values(drawingData).forEach((userPaths) => {
+    userPaths.forEach((path) => {
+      if (!Array.isArray(path.points) || path.points.length < 4) return;
+
+      ctx.beginPath();
+      ctx.strokeStyle = path.color || '#000000';
+      ctx.lineWidth = path.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 0; i < path.points.length; i += 2) {
+        const rawX = path.points[i];
+        const rawY = path.points[i + 1];
+        if (typeof rawX !== 'number' || typeof rawY !== 'number') continue;
+
+        const x = rawX * scaleX;
+        const y = rawY * scaleY;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
         }
-      });
+      }
+
+      ctx.stroke();
     });
+  });
 
-    const drawingWidth = maxX - minX || 1;
-    const drawingHeight = maxY - minY || 1;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const scaleX = canvasWidth / drawingWidth;
-    const scaleY = canvasHeight / drawingHeight;
-    const scale = Math.min(scaleX, scaleY);
-    const offsetX = (canvasWidth - drawingWidth * scale) / 2;
-    const offsetY = (canvasHeight - drawingHeight * scale) / 2;
+  console.log('[Professor] Dibujo escalado fijo 1280→800 completado');
+};
 
-    Object.values(drawingData).forEach((userPaths) => {
-      userPaths.forEach((path) => {
-        if (!Array.isArray(path.points) || path.points.length < 4) return;
-
-        ctx.beginPath();
-        ctx.strokeStyle = path.color || '#000000';
-        ctx.lineWidth = path.strokeWidth || 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        for (let i = 0; i < path.points.length; i += 2) {
-          const rawX = path.points[i];
-          const rawY = path.points[i + 1];
-          if (typeof rawX !== 'number' || typeof rawY !== 'number') continue;
-
-          const x = (rawX - minX) * scale + offsetX;
-          const y = (rawY - minY) * scale + offsetY;
-
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-
-        ctx.stroke();
-      });
-    });
-
-    console.log('[Professor] Dibujo escalado completado');
-  };
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;

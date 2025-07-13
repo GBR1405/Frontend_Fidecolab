@@ -367,40 +367,28 @@ const AdminProfessorCourses = () => {
     Swal.fire({
         title: 'Agregar Curso',
         html: `
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">Código del curso:</label>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <select 
-                        id="coursePrefix" 
-                        class="swal2-input" 
-                        style="width: 60px; padding: 8px;"
-                    >
-                        ${nomenclaturas.map(nom => `<option value="${nom}">${nom}</option>`).join('')}
-                        <option value="_other">Otro</option>
-                    </select>
-                    <span>-</span>
-                    <input 
-                        type="text" 
-                        id="courseCode" 
-                        class="swal2-input" 
-                        placeholder="702" 
-                        maxlength="3"
-                        style="width: 80px;"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    />
-                    <div id="customPrefixContainer" style="display: none; margin-left: 5px;">
-                        <input 
-                            type="text" 
-                            id="customPrefix" 
-                            class="swal2-input" 
-                            placeholder="Nueva nom." 
-                            style="width: 80px;"
-                            oninput="this.value = this.value.replace(/[^A-Za-z]/g, '')"
-                        />
-                    </div>
-                </div>
-            </div>
             <div>
+                <label for="coursePrefix">Prefijo/Nomenclatura:</label>
+                <input 
+                    list="nomenclaturas"
+                    id="coursePrefix" 
+                    class="swal2-input" 
+                    placeholder="Ej: SC, II, AL"
+                />
+                <datalist id="nomenclaturas">
+                    ${nomenclaturas.map(nom => `<option value="${nom}">`).join('')}
+                </datalist>
+                
+                <label for="courseCode">Código numérico:</label>
+                <input 
+                    type="text" 
+                    id="courseCode" 
+                    class="swal2-input" 
+                    placeholder="Ej: 702" 
+                    maxlength="10"
+                    pattern="[0-9]+"
+                />
+                
                 <label for="courseName">Nombre del curso:</label>
                 <input 
                     type="text" 
@@ -413,35 +401,13 @@ const AdminProfessorCourses = () => {
         confirmButtonText: 'Agregar',
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
-        didOpen: () => {
-            const prefixSelect = document.getElementById('coursePrefix');
-            const customContainer = document.getElementById('customPrefixContainer');
-            
-            prefixSelect.addEventListener('change', function() {
-                customContainer.style.display = this.value === '_other' ? 'inline-block' : 'none';
-            });
-        },
         preConfirm: async () => {
-            const prefixSelect = document.getElementById('coursePrefix');
-            const prefix = prefixSelect.value === '_other' 
-                ? document.getElementById('customPrefix').value.trim().toUpperCase()
-                : prefixSelect.value;
-                
+            const prefix = document.getElementById('coursePrefix').value.trim();
             const codeNumber = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
             
             if (!prefix || !codeNumber || !name) {
                 Swal.showValidationMessage("Por favor completa todos los campos.");
-                return false;
-            }
-
-            if (prefixSelect.value === '_other' && !/^[A-Za-z]{2,3}$/.test(prefix)) {
-                Swal.showValidationMessage("La nomenclatura debe tener 2-3 letras.");
-                return false;
-            }
-
-            if (!/^\d{3}$/.test(codeNumber)) {
-                Swal.showValidationMessage("El código debe ser de 3 dígitos numéricos.");
                 return false;
             }
 

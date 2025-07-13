@@ -12,6 +12,147 @@ import Cookies from "js-cookie";
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
+const DrawingLiveViewer = ({ partidaId, socket }) => {
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [drawingData, setDrawingData] = useState(null);
+  const canvasRef = useRef(null);
+  const [ctx, setCtx] = useState(null);
+
+  // Obtener lista de equipos
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit('getTeamsForPartida', partidaId, (response) => {
+      if (response.success) {
+        setTeams(response.equipos);
+        if (response.equipos.length > 0) {
+          setSelectedTeam(response.equipos[0]);
+        }
+      }
+    });
+  }, [socket, partidaId]);
+
+  // Cargar dibujos cuando cambia el equipo seleccionado
+  useEffect(() => {
+    if (!socket || !selectedTeam) return;
+
+    const loadDrawing = () => {
+      socket.emit('getTeamDrawings', { partidaId, equipoNumero: selectedTeam }, (response) => {
+        if (response.success) {
+          setDrawingData(response.linesByUser);
+        }
+      });
+    };
+
+    loadDrawing();
+
+    // Escuchar actualizaciones en tiempo real
+    const handleDrawingUpdate = (data) => {
+      if (data.equipoNumero === selectedTeam) {
+        setDrawingData(prev => {
+          const newData = { ...prev };
+          if (!newData[data.userId]) newData[data.userId] = [];
+          
+          switch (data.action.type) {
+            case 'pathStart':
+            case 'pathUpdate':
+            case 'pathComplete':
+              newData[data.userId].push(data.action.path);
+              break;
+            case 'clear':
+              delete newData[data.userId];
+              break;
+          }
+          
+          return newData;
+        });
+      }
+    };
+
+    socket.on('drawingUpdate', handleDrawingUpdate);
+    return () => socket.off('drawingUpdate', handleDrawingUpdate);
+  }, [socket, partidaId, selectedTeam]);
+
+  // Dibujar en el canvas cuando cambian los datos
+  useEffect(() => {
+    if (!ctx || !drawingData) return;
+
+    // Limpiar canvas
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Dibujar todos los trazos
+    Object.entries(drawingData).forEach(([userId, paths]) => {
+      paths.forEach(path => {
+        if (!path.points || path.points.length === 0) return;
+        
+        ctx.beginPath();
+        ctx.strokeStyle = path.color || '#000000';
+        ctx.lineWidth = path.strokeWidth || 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        path.points.forEach((point, i) => {
+          if (i === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        
+        ctx.stroke();
+      });
+    });
+  }, [ctx, drawingData]);
+
+  // Inicializar contexto del canvas
+  useEffect(() => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      setCtx(context);
+      
+      // Ajustar tamaño del canvas para alta resolución
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * scale;
+      canvas.height = canvas.offsetHeight * scale;
+      context.scale(scale, scale);
+    }
+  }, []);
+
+  return (
+    <div className="drawing-viewer-container">
+      <div className="team-selector">
+        <h3>Ver dibujo en vivo</h3>
+        {teams.length > 0 ? (
+          <div className="team-buttons">
+            {teams.map(team => (
+              <button
+                key={team}
+                className={team === selectedTeam ? 'active' : ''}
+                onClick={() => setSelectedTeam(team)}
+              >
+                Equipo {team}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p>No hay equipos disponibles.</p>
+        )}
+      </div>
+
+      <div className="canvas-container">
+        <canvas 
+          ref={canvasRef}
+          className="drawing-canvas"
+          width="800"
+          height="600"
+        />
+      </div>
+    </div>
+  );
+};
+
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
   const [allTeams, setAllTeams] = useState([]);
@@ -1091,32 +1232,7 @@ useEffect(() => {
                 </div>
                 <div className="groups-list">
                   {currentGame.tipo.toLowerCase() === 'dibujo' ? (
-                    <div className="drawing-viewer-container">
-                      <div className="team-selector">
-                        <h3>Ver dibujo en vivo</h3>
-                        {groups.length > 0 ? (
-                          groups.map((numero) => (
-                            <button
-                              key={numero}
-                              className={numero === selectedTeam ? 'active' : ''}
-                              onClick={() => setSelectedTeam(numero)}
-                            >
-                              Equipo {numero}
-                            </button>
-                          ))
-                        ) : (
-                          <p>No hay equipos disponibles.</p>
-                        )}
-                      </div>
-
-                      <div className="canvas-preview">
-                        {selectedTeam ? (
-                          <DrawingPreview linesByUser={drawingsByTeam[selectedTeam] || {}} />
-                        ) : (
-                          <p style={{ textAlign: 'center', marginTop: '20px' }}>Selecciona un equipo</p>
-                        )}
-                      </div>
-                    </div>
+                    <DrawingLiveViewer partidaId={partidaId} socket={socket} />
                   ) : (
                     <div className="progress-section">
                       <div className="content__box">

@@ -8,19 +8,23 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
 
+  // Convertir partidaId a número y validar
+  const numericPartidaId = Number(partidaId);
+  if (isNaN(numericPartidaId)) {
+    // El error se manejará en los efectos
+  }
+
   // Obtener lista de equipos al montar
   useEffect(() => {
+    if (isNaN(numericPartidaId)) {
+      setError('ID de partida inválido');
+      return;
+    }
+
     console.log('[Professor] Montando componente, obteniendo equipos...');
     if (!socket) {
       console.log('[Professor] Socket no disponible');
       setError('Socket no disponible');
-      return;
-    }
-
-    // Asegurarse que partidaId es número
-    const numericPartidaId = Number(partidaId);
-    if (isNaN(numericPartidaId)) {
-      setError('ID de partida inválido');
       return;
     }
 
@@ -38,19 +42,17 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
         setError(`Error obteniendo equipos: ${response.error || 'Desconocido'}`);
       }
     });
-  }, [socket, partidaId]);
+  }, [socket, numericPartidaId]);
 
   // Función para obtener y dibujar los trazos del equipo
   const fetchAndDrawTeamDrawing = async () => {
-    if (!socket || !selectedTeam) {
-      console.log('[Professor] Socket o equipo no disponible para obtener dibujo');
+    if (isNaN(numericPartidaId)) {
+      setError('ID de partida inválido');
       return;
     }
 
-    // Asegurar que partidaId es número
-    const numericPartidaId = Number(partidaId);
-    if (isNaN(numericPartidaId)) {
-      setError('ID de partida inválido');
+    if (!socket || !selectedTeam) {
+      console.log('[Professor] Socket o equipo no disponible para obtener dibujo');
       return;
     }
 
@@ -84,7 +86,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     }
   };
 
-  // Función para dibujar en el canvas
+  // Dibujar en el canvas
   const drawCanvas = (drawingData) => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -95,25 +97,25 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    console.log(`[Professor] Dibujando ${Object.keys(drawingData).length} usuarios...`);
-    
-    // Configurar canvas si es necesario
-    if (canvas.width !== 800 || canvas.height !== 600) {
-      canvas.width = 800;
-      canvas.height = 600;
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+    if (!drawingData) {
+      console.log('[Professor] Sin datos de dibujo');
+      return;
     }
     
+    console.log(`[Professor] Dibujando ${Object.keys(drawingData).length} usuarios...`);
+    
+    // Configurar canvas
+    canvas.width = 800;
+    canvas.height = 600;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
     // Dibujar todos los trazos
-    Object.values(drawingData).forEach((userPaths, userIndex) => {
-      userPaths.forEach((path, pathIndex) => {
-        if (!path.points || path.points.length === 0) {
-          console.log(`[Professor] Path vacío para usuario ${userIndex}, path ${pathIndex}`);
-          return;
-        }
+    Object.values(drawingData).forEach((userPaths) => {
+      userPaths.forEach((path) => {
+        if (!path.points || path.points.length === 0) return;
         
         ctx.beginPath();
         ctx.strokeStyle = path.color || '#000000';
@@ -134,7 +136,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     console.log('[Professor] Dibujo completado');
   };
 
-  // Función para limpiar el canvas
+  // Limpiar canvas
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -144,16 +146,15 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     console.log('[Professor] Canvas limpiado');
   };
 
-  // Al cambiar de equipo o montar
+  // Cargar dibujo cuando cambia el equipo seleccionado
   useEffect(() => {
-    console.log('[Professor] Equipo seleccionado cambiado:', selectedTeam);
     if (selectedTeam !== null) {
       fetchAndDrawTeamDrawing();
     }
   }, [selectedTeam]);
 
   // Actualización periódica cada 2 segundos
- useEffect(() => {
+  useEffect(() => {
     if (!selectedTeam) return;
     
     const intervalId = setInterval(() => {
@@ -206,7 +207,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
       </div>
       
       <div className="debug-info">
-        <p>Partida: {partidaId} (Tipo: {typeof partidaId})</p>
+        <p>Partida: {numericPartidaId} (Tipo: {typeof numericPartidaId})</p>
         <p>Equipo seleccionado: {selectedTeam || 'Ninguno'}</p>
         <p>Total equipos: {teams.length}</p>
       </div>

@@ -356,10 +356,10 @@ const AdminProfessorCourses = () => {
     };
 
     const handleAddCourse = () => {
-    // Extraer nomenclaturas únicas de los cursos existentes
+    // Extraer nomenclaturas únicas de los cursos existentes (ej: SC, II, AL)
     const nomenclaturas = [...new Set(
         courses.map(course => {
-            const match = course.codigo?.match(/^([A-Za-z]+)-?/);
+            const match = course.codigo?.match(/^([A-Za-z]+)-/);
             return match ? match[1] : null;
         }).filter(Boolean)
     )];
@@ -367,47 +367,71 @@ const AdminProfessorCourses = () => {
     Swal.fire({
         title: 'Agregar Curso',
         html: `
-            <div>
-                <label for="coursePrefix">Prefijo/Nomenclatura:</label>
-                <input 
-                    list="nomenclaturas"
-                    id="coursePrefix" 
-                    class="swal2-input" 
-                    placeholder="Ej: SC, II, AL"
-                />
-                <datalist id="nomenclaturas">
-                    ${nomenclaturas.map(nom => `<option value="${nom}">`).join('')}
-                </datalist>
-                
-                <label for="courseCode">Código numérico:</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <select id="coursePrefix" class="swal2-input" style="flex: 1;">
+                    ${nomenclaturas.map(nom => `<option value="${nom}">${nom}</option>`).join('')}
+                    <option value="_other">Otro</option>
+                </select>
+                <span>-</span>
                 <input 
                     type="text" 
                     id="courseCode" 
                     class="swal2-input" 
-                    placeholder="Ej: 702" 
-                    maxlength="10"
-                    pattern="[0-9]+"
+                    placeholder="702" 
+                    maxlength="3"
+                    style="flex: 1;"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                 />
-                
-                <label for="courseName">Nombre del curso:</label>
+            </div>
+            <input 
+                type="text" 
+                id="courseName" 
+                class="swal2-input" 
+                placeholder="Nombre del curso"
+                style="margin-top: 10px;"
+            />
+            <div id="customPrefixContainer" style="display: none; margin-top: 10px;">
                 <input 
                     type="text" 
-                    id="courseName" 
+                    id="customPrefix" 
                     class="swal2-input" 
-                    placeholder="Nombre completo del curso"
+                    placeholder="Escribe tu nomenclatura (ej: SC, II)"
+                    oninput="this.value = this.value.replace(/[^A-Za-z]/g, '')"
                 />
             </div>
         `,
         confirmButtonText: 'Agregar',
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
+        didOpen: () => {
+            const prefixSelect = document.getElementById('coursePrefix');
+            const customContainer = document.getElementById('customPrefixContainer');
+            
+            prefixSelect.addEventListener('change', function() {
+                customContainer.style.display = this.value === '_other' ? 'block' : 'none';
+            });
+        },
         preConfirm: async () => {
-            const prefix = document.getElementById('coursePrefix').value.trim();
+            const prefixSelect = document.getElementById('coursePrefix');
+            const prefix = prefixSelect.value === '_other' 
+                ? document.getElementById('customPrefix').value.trim().toUpperCase()
+                : prefixSelect.value;
+                
             const codeNumber = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
             
             if (!prefix || !codeNumber || !name) {
                 Swal.showValidationMessage("Por favor completa todos los campos.");
+                return false;
+            }
+
+            if (prefixSelect.value === '_other' && !/^[A-Za-z]{2,3}$/.test(prefix)) {
+                Swal.showValidationMessage("La nomenclatura debe tener 2-3 letras.");
+                return false;
+            }
+
+            if (!/^\d{3}$/.test(codeNumber)) {
+                Swal.showValidationMessage("El código debe ser de 3 dígitos numéricos.");
                 return false;
             }
 

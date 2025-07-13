@@ -2,90 +2,102 @@ import React, { useEffect, useRef, useState } from 'react';
 
 const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   const [selectedTeam, setSelectedTeam] = useState(1);
-  const canvasRef = useRef(null);
   const [teams, setTeams] = useState([]);
+  const canvasRef = useRef(null);
+  const requestRef = useRef(null);
+  const lastUpdateRef = useRef(0);
 
   // Obtener lista de equipos
   useEffect(() => {
     if (!socket) return;
 
     socket.emit('getTeamsForPartida', partidaId, (response) => {
-      if (response.success) {
+      if (response.success && response.equipos.length > 0) {
         setTeams(response.equipos);
+        setSelectedTeam(response.equipos[0]);
       }
     });
   }, [socket, partidaId]);
 
-  // Configurar canvas y listeners
-  useEffect(() => {
-    if (!socket || !canvasRef.current) return;
-
+  // Función para dibujar en el canvas
+  const drawCanvas = (drawingData) => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return;
     
-    // Configuración inicial del canvas
-    const setupCanvas = () => {
-      const scale = window.devicePixelRatio || 1;
-      canvas.width = canvas.offsetWidth * scale;
-      canvas.height = canvas.offsetHeight * scale;
-      ctx.scale(scale, scale);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Configurar canvas si es necesario
+    if (canvas.width !== 800 || canvas.height !== 600) {
+      canvas.width = 800;
+      canvas.height = 600;
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-    };
-
-    setupCanvas();
-
-    // Función para dibujar en el canvas
-    const drawOnCanvas = (paths) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      Object.values(paths).forEach(userPaths => {
-        userPaths.forEach(path => {
-          if (!path.points || path.points.length === 0) return;
-          
-          ctx.beginPath();
-          ctx.strokeStyle = path.color || '#000000';
-          ctx.lineWidth = path.strokeWidth || 2;
-          
-          path.points.forEach((point, i) => {
-            if (i === 0) {
-              ctx.moveTo(point.x, point.y);
-            } else {
-              ctx.lineTo(point.x, point.y);
-            }
-          });
-          
-          ctx.stroke();
+    }
+    
+    // Dibujar todos los trazos
+    Object.values(drawingData).forEach(userPaths => {
+      userPaths.forEach(path => {
+        if (!path.points || path.points.length === 0) return;
+        
+        ctx.beginPath();
+        ctx.strokeStyle = path.color || '#000000';
+        ctx.lineWidth = path.strokeWidth || 2;
+        
+        path.points.forEach((point, i) => {
+          if (i === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
         });
+        
+        ctx.stroke();
       });
-    };
+    });
+  };
 
-    // Solicitar dibujo inicial al cambiar de equipo
-    const loadTeamDrawing = () => {
-      socket.emit('professorGetTeamDrawing', { 
-        partidaId, 
-        equipoNumero: selectedTeam 
-      }, (response) => {
-        if (response.success) {
-          drawOnCanvas(response.drawing);
+  // Solicitar dibujos del equipo seleccionado
+  const fetchTeamDrawing = () => {
+    if (!socket || !selectedTeam) return;
+    
+    socket.emit('professorGetTeamDrawing', { 
+      partidaId, 
+      equipoNumero: selectedTeam 
+    }, (response) => {
+      if (response.success) {
+        drawCanvas(response.drawing);
+      } else {
+        // Canvas vacío si no hay dibujo
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-      });
-    };
-
-    // Escuchar actualizaciones en tiempo real
-    const handleProfessorDrawingUpdate = (data) => {
-      if (data.equipoNumero === selectedTeam) {
-        drawOnCanvas(data.drawing);
       }
+    });
+  };
+
+  // Loop de actualización (cada segundo)
+  useEffect(() => {
+    const updateInterval = 1000; // 1 segundo
+    
+    const updateDrawing = (time) => {
+      if (time - lastUpdateRef.current > updateInterval) {
+        lastUpdateRef.current = time;
+        fetchTeamDrawing();
+      }
+      requestRef.current = requestAnimationFrame(updateDrawing);
     };
-
-    socket.on('professorDrawingUpdate', handleProfessorDrawingUpdate);
-    loadTeamDrawing();
-
+    
+    requestRef.current = requestAnimationFrame(updateDrawing);
+    
     return () => {
-      socket.off('professorDrawingUpdate', handleProfessorDrawingUpdate);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
     };
   }, [socket, partidaId, selectedTeam]);
 
@@ -98,7 +110,11 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
             <button
               key={team}
               className={team === selectedTeam ? 'active' : ''}
-              onClick={() => setSelectedTeam(team)}
+              onClick={() => {
+                setSelectedTeam(team);
+                // Actualizar inmediatamente al cambiar de equipo
+                fetchTeamDrawing();
+              }}
             >
               Equipo {team}
             </button>
@@ -111,7 +127,11 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
           ref={canvasRef}
           width="800"
           height="600"
-          style={{ backgroundColor: '#fff', borderRadius: '8px' }}
+          style={{ 
+            backgroundColor: '#fff', 
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}
         />
       </div>
     </div>

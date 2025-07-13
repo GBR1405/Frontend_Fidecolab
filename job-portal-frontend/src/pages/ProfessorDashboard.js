@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import DrawingLiveViewer from '../games/DrawingLiveViewer';
+import ProfessorDrawingViewer from '../games/DrawingLiveViewer';
 import Swal from 'sweetalert2';
 import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
@@ -1084,7 +1084,7 @@ useEffect(() => {
                 </div>
                 <div className="groups-list">
                   {currentGame.tipo.toLowerCase() === 'dibujo' ? (
-                    <DrawingLiveViewer partidaId={partidaId} />
+                    <ProfessorDrawingViewer partidaId={partidaId} socket={socket} />
                   ) : (
                     <div className="progress-section">
                       <div className="content__box">

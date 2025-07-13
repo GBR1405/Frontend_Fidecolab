@@ -356,70 +356,93 @@ const AdminProfessorCourses = () => {
     };
 
     const handleAddCourse = () => {
-        Swal.fire({
-            title: 'Agregar Curso',
-            html: `
-                <input type="text" id="courseCode" class="swal2-input" placeholder="Código del curso" value="SC-" maxlength="10">
-                <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
-            `,
-            confirmButtonText: 'Agregar',
-            cancelButtonText: 'Cancelar',
-            showCancelButton: true,
-            didOpen: () => {
-                const courseCodeInput = document.getElementById("courseCode");
+    // Extraer nomenclaturas únicas de los cursos existentes
+    const nomenclaturas = [...new Set(
+        courses.map(course => {
+            const match = course.codigo?.match(/^([A-Za-z]+)-?/);
+            return match ? match[1] : null;
+        }).filter(Boolean)
+    )];
 
-                // Evita que se borre el prefijo "SC-"
-                courseCodeInput.addEventListener("input", (e) => {
-                    if (!e.target.value.startsWith("SC-")) {
-                        e.target.value = "SC-";
-                    }
-                    e.target.value = e.target.value.replace(/[^0-9SC-]/g, ""); // Solo permite números después de "SC-"
-                });
-            },
-            confirmButtonText: 'Agregar',
-            cancelButtonText: 'Cancelar',
-            showCancelButton: true,
-            preConfirm: async () => {
-                const code = document.getElementById('courseCode').value.trim();
-                const name = document.getElementById('courseName').value.trim();
-    
-                if (!code || !name) {
-                    Swal.showValidationMessage("Por favor ingresa todos los campos.");
-                    return false;
-                }
-    
-                try {
-    
-                    const response = await fetch(`${apiUrl}/add-course`, {
-                        method: "POST",
-                        credentials: "include", 
-                        headers: {
-                            "Authorization": `Bearer ${token}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            codigoCurso: code,
-                            nombreCurso: name
-                        })
-                    });
-    
-                    const data = await response.json();
-    
-                    if (!response.ok) {
-                        throw new Error(data.error || "Error desconocido");
-                    }
-    
-                    Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
-                        .then(() => {
-                            // Recargar la página después de que el usuario cierre la alerta
-                            window.location.reload();
-                        });
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
-                }
+    Swal.fire({
+        title: 'Agregar Curso',
+        html: `
+            <div>
+                <label for="coursePrefix">Prefijo/Nomenclatura:</label>
+                <input 
+                    list="nomenclaturas"
+                    id="coursePrefix" 
+                    class="swal2-input" 
+                    placeholder="Ej: SC, II, AL"
+                />
+                <datalist id="nomenclaturas">
+                    ${nomenclaturas.map(nom => `<option value="${nom}">`).join('')}
+                </datalist>
+                
+                <label for="courseCode">Código numérico:</label>
+                <input 
+                    type="text" 
+                    id="courseCode" 
+                    class="swal2-input" 
+                    placeholder="Ej: 702" 
+                    maxlength="10"
+                    pattern="[0-9]+"
+                />
+                
+                <label for="courseName">Nombre del curso:</label>
+                <input 
+                    type="text" 
+                    id="courseName" 
+                    class="swal2-input" 
+                    placeholder="Nombre completo del curso"
+                />
+            </div>
+        `,
+        confirmButtonText: 'Agregar',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        preConfirm: async () => {
+            const prefix = document.getElementById('coursePrefix').value.trim();
+            const codeNumber = document.getElementById('courseCode').value.trim();
+            const name = document.getElementById('courseName').value.trim();
+            
+            if (!prefix || !codeNumber || !name) {
+                Swal.showValidationMessage("Por favor completa todos los campos.");
+                return false;
             }
-        });
-    };
+
+            const code = `${prefix}-${codeNumber}`;
+
+            try {
+                const response = await fetch(`${apiUrl}/add-course`, {
+                    method: "POST",
+                    credentials: "include", 
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        codigoCurso: code,
+                        nombreCurso: name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Error desconocido");
+                }
+
+                Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
+                    .then(() => {
+                        window.location.reload();
+                    });
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+    });
+};
     
     
 

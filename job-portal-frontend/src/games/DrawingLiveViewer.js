@@ -8,210 +8,169 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
 
-  // Convertir partidaId a número y validar
   const numericPartidaId = Number(partidaId);
-  if (isNaN(numericPartidaId)) {
-    // El error se manejará en los efectos
-  }
 
-  // Obtener lista de equipos al montar
+  // Obtener lista de equipos
   useEffect(() => {
     if (isNaN(numericPartidaId)) {
       setError('ID de partida inválido');
       return;
     }
 
-    console.log('[Professor] Montando componente, obteniendo equipos...');
     if (!socket) {
-      console.log('[Professor] Socket no disponible');
       setError('Socket no disponible');
       return;
     }
 
     socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
-      console.log('[Professor] Respuesta de equipos:', response);
-      
       if (response.success) {
         setTeams(response.equipos);
         if (response.equipos.length > 0) {
           setSelectedTeam(response.equipos[0]);
-          console.log('[Professor] Equipo inicial seleccionado:', response.equipos[0]);
         }
       } else {
-        console.error('[Professor] Error obteniendo equipos:', response.error);
         setError(`Error obteniendo equipos: ${response.error || 'Desconocido'}`);
       }
     });
   }, [socket, numericPartidaId]);
 
-  // Función para obtener y dibujar los trazos del equipo
-  const fetchAndDrawTeamDrawing = async () => {
-    if (isNaN(numericPartidaId)) {
-      setError('ID de partida inválido');
-      return;
-    }
+  // Solicitar dibujo
+  const fetchAndDrawTeamDrawing = () => {
+    if (!socket || !selectedTeam) return;
 
-    if (!socket || !selectedTeam) {
-      console.log('[Professor] Socket o equipo no disponible para obtener dibujo');
-      return;
-    }
-
-    console.log(`[Professor] Solicitando dibujo para equipo ${selectedTeam}...`);
     setLoading(true);
     setError(null);
-    
-    try {
-      socket.emit('professorGetTeamDrawing', { 
-        partidaId: numericPartidaId, 
-        equipoNumero: selectedTeam 
-      }, (response) => {
-        console.log(`[Professor] Respuesta dibujo equipo ${selectedTeam}:`, response);
+
+    socket.emit(
+      'professorGetTeamDrawing',
+      { partidaId: numericPartidaId, equipoNumero: selectedTeam },
+      (response) => {
         setLoading(false);
-        
+
         if (response.success) {
           drawCanvas(response.drawing);
           setLastUpdate(new Date());
         } else {
-          const errorMsg = response.error || 'Error desconocido al obtener dibujo';
-          console.error(`[Professor] Error obteniendo dibujo: ${errorMsg}`);
-          setError(errorMsg);
+          setError(response.error || 'Error desconocido al obtener dibujo');
           clearCanvas();
         }
-      });
-    } catch (error) {
-      console.error('[Professor] Error en solicitud:', error);
-      setLoading(false);
-      setError('Excepción al solicitar dibujo');
-      clearCanvas();
-    }
+      }
+    );
   };
 
-  // Dibujar en el canvas
+  // Dibujo real
   const drawCanvas = (drawingData) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!drawingData) return;
+    if (!drawingData) return;
 
-  // 💡 Paso 1: Obtener valores máximos reales del dibujo
-  let maxX = 1, maxY = 1;
-  let minX = Infinity, minY = Infinity;
+    // Obtener dimensiones reales del dibujo
+    let minX = Infinity, maxX = 0;
+    let minY = Infinity, maxY = 0;
 
-  Object.values(drawingData).forEach((paths) => {
-    paths.forEach((path) => {
-      path.points.forEach((p) => {
-        if (typeof p.x === 'number' && typeof p.y === 'number') {
-          if (p.x > maxX) maxX = p.x;
-          if (p.y > maxY) maxY = p.y;
-          if (p.x < minX) minX = p.x;
-          if (p.y < minY) minY = p.y;
+    Object.values(drawingData).forEach((paths) => {
+      paths.forEach((path) => {
+        const pts = path.points || [];
+        for (let i = 0; i < pts.length; i += 2) {
+          const x = pts[i];
+          const y = pts[i + 1];
+          if (typeof x === 'number' && typeof y === 'number') {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
         }
       });
     });
-  });
 
-  const canvasWidth = canvas.width;
-  const canvasHeight = canvas.height;
+    const drawingWidth = maxX - minX || 1;
+    const drawingHeight = maxY - minY || 1;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const scaleX = canvasWidth / drawingWidth;
+    const scaleY = canvasHeight / drawingHeight;
+    const scale = Math.min(scaleX, scaleY);
+    const offsetX = (canvasWidth - drawingWidth * scale) / 2;
+    const offsetY = (canvasHeight - drawingHeight * scale) / 2;
 
-  const drawingWidth = maxX - minX || 1;
-  const drawingHeight = maxY - minY || 1;
+    Object.values(drawingData).forEach((userPaths) => {
+      userPaths.forEach((path) => {
+        if (!Array.isArray(path.points) || path.points.length < 4) return;
 
-  const scaleX = canvasWidth / drawingWidth;
-  const scaleY = canvasHeight / drawingHeight;
-  const scale = Math.min(scaleX, scaleY); // Mantener proporción
+        ctx.beginPath();
+        ctx.strokeStyle = path.color || '#000000';
+        ctx.lineWidth = path.strokeWidth || 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-  const offsetX = (canvasWidth - drawingWidth * scale) / 2;
-  const offsetY = (canvasHeight - drawingHeight * scale) / 2;
+        for (let i = 0; i < path.points.length; i += 2) {
+          const rawX = path.points[i];
+          const rawY = path.points[i + 1];
+          if (typeof rawX !== 'number' || typeof rawY !== 'number') continue;
 
-  console.log(`[Scale] X: ${scaleX}, Y: ${scaleY}, final: ${scale}`);
+          const x = (rawX - minX) * scale + offsetX;
+          const y = (rawY - minY) * scale + offsetY;
 
-  // 💡 Paso 2: Dibujar paths escalados
-  Object.values(drawingData).forEach((userPaths) => {
-    userPaths.forEach((path, pathIndex) => {
-      if (!path.points || path.points.length < 2) return;
-
-      ctx.beginPath();
-      ctx.strokeStyle = path.color || '#000000';
-      ctx.lineWidth = path.strokeWidth || 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      path.points.forEach((point, i) => {
-        const x = (point.x - minX) * scale + offsetX;
-        const y = (point.y - minY) * scale + offsetY;
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
         }
+
+        ctx.stroke();
       });
-
-      ctx.stroke();
     });
-  });
 
-  // 💡 Paso 3: Línea de prueba
-  ctx.beginPath();
-  ctx.strokeStyle = 'red';
-  ctx.moveTo(10, 10);
-  ctx.lineTo(790, 10);
-  ctx.stroke();
+    console.log('[Professor] Dibujo escalado completado');
+  };
 
-  console.log('[Professor] Dibujo escalado completado');
-};
-
-
-
-  // Limpiar canvas
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    console.log('[Professor] Canvas limpiado');
   };
 
-  // Cargar dibujo cuando cambia el equipo seleccionado
+  // Cuando cambia de equipo
   useEffect(() => {
     if (selectedTeam !== null) {
       fetchAndDrawTeamDrawing();
     }
   }, [selectedTeam]);
 
-  // Actualización periódica cada 2 segundos
+  // Actualización periódica
   useEffect(() => {
     if (!selectedTeam) return;
-    
     const intervalId = setInterval(() => {
       fetchAndDrawTeamDrawing();
     }, 2000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
+
+    return () => clearInterval(intervalId);
   }, [selectedTeam]);
 
   return (
     <div className="professor-drawing-viewer">
       <div className="team-selector">
         <h3>Vista de Dibujo en Vivo</h3>
+
         <div className="status-info">
           {loading && <span className="loading-indicator">Cargando...</span>}
           {lastUpdate && (
             <span className="last-update">
-              Actualizado: {lastUpdate.toLocaleTimeString()}
+              Última actualización: {lastUpdate.toLocaleTimeString()}
             </span>
           )}
-          {error && <span className="error-message" style={{color: 'red'}}>{error}</span>}
+          {error && <span className="error-message" style={{ color: 'red' }}>{error}</span>}
         </div>
-        
+
         <div className="team-buttons">
-          {teams.map(team => (
+          {teams.map((team) => (
             <button
               key={team}
               className={team === selectedTeam ? 'active' : ''}
@@ -222,22 +181,22 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
           ))}
         </div>
       </div>
-      
-      <div className="canvas-container">
-        <canvas 
+
+      <div className="canvas-container" style={{ marginTop: '1rem' }}>
+        <canvas
           ref={canvasRef}
-          width="800"
-          height="600"
-          style={{ 
-            backgroundColor: '#fff', 
-            borderRadius: '8px',
-            border: '1px solid #ddd'
+          width={800}
+          height={600}
+          style={{
+            backgroundColor: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: '8px'
           }}
         />
       </div>
-      
+
       <div className="debug-info">
-        <p>Partida: {numericPartidaId} (Tipo: {typeof numericPartidaId})</p>
+        <p>Partida: {numericPartidaId}</p>
         <p>Equipo seleccionado: {selectedTeam || 'Ninguno'}</p>
         <p>Total equipos: {teams.length}</p>
       </div>

@@ -89,39 +89,64 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   // Dibujar en el canvas
   const drawCanvas = (drawingData) => {
   const canvas = canvasRef.current;
-  if (!canvas) {
-    console.log('[Professor] Canvas no disponible para dibujar');
-    return;
-  }
+  if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!drawingData) {
-    console.log('[Professor] Sin datos de dibujo');
-    return;
-  }
+  if (!drawingData) return;
 
-  console.log(`[Professor] Dibujando ${Object.keys(drawingData).length} usuarios...`);
+  // 💡 Paso 1: Obtener valores máximos reales del dibujo
+  let maxX = 1, maxY = 1;
+  let minX = Infinity, minY = Infinity;
 
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  Object.values(drawingData).forEach((paths) => {
+    paths.forEach((path) => {
+      path.points.forEach((p) => {
+        if (typeof p.x === 'number' && typeof p.y === 'number') {
+          if (p.x > maxX) maxX = p.x;
+          if (p.y > maxY) maxY = p.y;
+          if (p.x < minX) minX = p.x;
+          if (p.y < minY) minY = p.y;
+        }
+      });
+    });
+  });
 
-  Object.values(drawingData).forEach((userPaths, userIndex) => {
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+
+  const drawingWidth = maxX - minX || 1;
+  const drawingHeight = maxY - minY || 1;
+
+  const scaleX = canvasWidth / drawingWidth;
+  const scaleY = canvasHeight / drawingHeight;
+  const scale = Math.min(scaleX, scaleY); // Mantener proporción
+
+  const offsetX = (canvasWidth - drawingWidth * scale) / 2;
+  const offsetY = (canvasHeight - drawingHeight * scale) / 2;
+
+  console.log(`[Scale] X: ${scaleX}, Y: ${scaleY}, final: ${scale}`);
+
+  // 💡 Paso 2: Dibujar paths escalados
+  Object.values(drawingData).forEach((userPaths) => {
     userPaths.forEach((path, pathIndex) => {
-      if (!path.points || path.points.length === 0) return;
-
-      console.log(`[DEBUG] Usuario ${userIndex}, Path ${pathIndex}:`, path);
+      if (!path.points || path.points.length < 2) return;
 
       ctx.beginPath();
       ctx.strokeStyle = path.color || '#000000';
       ctx.lineWidth = path.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-      path.points.forEach((point, pointIndex) => {
-        if (pointIndex === 0) {
-          ctx.moveTo(point.x, point.y);
+      path.points.forEach((point, i) => {
+        const x = (point.x - minX) * scale + offsetX;
+        const y = (point.y - minY) * scale + offsetY;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
         } else {
-          ctx.lineTo(point.x, point.y);
+          ctx.lineTo(x, y);
         }
       });
 
@@ -129,8 +154,16 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     });
   });
 
-  console.log('[Professor] Dibujo completado');
+  // 💡 Paso 3: Línea de prueba
+  ctx.beginPath();
+  ctx.strokeStyle = 'red';
+  ctx.moveTo(10, 10);
+  ctx.lineTo(790, 10);
+  ctx.stroke();
+
+  console.log('[Professor] Dibujo escalado completado');
 };
+
 
 
   // Limpiar canvas

@@ -744,6 +744,13 @@ useEffect(() => {
 }, [socket, partidaId]);
 
 useEffect(() => {
+  if (socket && gameConfig) {
+    // Inicializar estructura de dibujos para el profesor
+    socket.emit('initProfessorDrawing', { partidaId });
+  }
+}, [socket, gameConfig, partidaId]);
+
+useEffect(() => {
   if (!socket || !partidaId) return;
 
   let polling = null;
@@ -1084,7 +1091,10 @@ useEffect(() => {
                 </div>
                 <div className="groups-list">
                   {currentGame.tipo.toLowerCase() === 'dibujo' ? (
-                    <ProfessorDrawingViewer partidaId={partidaId} socket={socket} />
+                    <ProfessorDrawingViewer 
+                      partidaId={partidaId} 
+                      socket={socket} 
+                    />
                   ) : (
                     <div className="progress-section">
                       <div className="content__box">

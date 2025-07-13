@@ -6,17 +6,27 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [error, setError] = useState(null);
 
   // Obtener lista de equipos al montar
   useEffect(() => {
     console.log('[Professor] Montando componente, obteniendo equipos...');
     if (!socket) {
       console.log('[Professor] Socket no disponible');
+      setError('Socket no disponible');
       return;
     }
 
-    socket.emit('getTeamsForPartida', partidaId, (response) => {
+    // Asegurarse que partidaId es número
+    const numericPartidaId = Number(partidaId);
+    if (isNaN(numericPartidaId)) {
+      setError('ID de partida inválido');
+      return;
+    }
+
+    socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
       console.log('[Professor] Respuesta de equipos:', response);
+      
       if (response.success) {
         setTeams(response.equipos);
         if (response.equipos.length > 0) {
@@ -25,6 +35,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
         }
       } else {
         console.error('[Professor] Error obteniendo equipos:', response.error);
+        setError(`Error obteniendo equipos: ${response.error || 'Desconocido'}`);
       }
     });
   }, [socket, partidaId]);
@@ -36,12 +47,20 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
       return;
     }
 
+    // Asegurar que partidaId es número
+    const numericPartidaId = Number(partidaId);
+    if (isNaN(numericPartidaId)) {
+      setError('ID de partida inválido');
+      return;
+    }
+
     console.log(`[Professor] Solicitando dibujo para equipo ${selectedTeam}...`);
     setLoading(true);
+    setError(null);
     
     try {
       socket.emit('professorGetTeamDrawing', { 
-        partidaId, 
+        partidaId: numericPartidaId, 
         equipoNumero: selectedTeam 
       }, (response) => {
         console.log(`[Professor] Respuesta dibujo equipo ${selectedTeam}:`, response);
@@ -51,13 +70,16 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
           drawCanvas(response.drawing);
           setLastUpdate(new Date());
         } else {
-          console.error(`[Professor] Error obteniendo dibujo: ${response.error}`);
+          const errorMsg = response.error || 'Error desconocido al obtener dibujo';
+          console.error(`[Professor] Error obteniendo dibujo: ${errorMsg}`);
+          setError(errorMsg);
           clearCanvas();
         }
       });
     } catch (error) {
       console.error('[Professor] Error en solicitud:', error);
       setLoading(false);
+      setError('Excepción al solicitar dibujo');
       clearCanvas();
     }
   };
@@ -131,17 +153,14 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   }, [selectedTeam]);
 
   // Actualización periódica cada 2 segundos
-  useEffect(() => {
+ useEffect(() => {
     if (!selectedTeam) return;
     
-    console.log('[Professor] Iniciando actualización periódica...');
     const intervalId = setInterval(() => {
-      console.log('[Professor] Actualización periódica solicitada');
       fetchAndDrawTeamDrawing();
     }, 2000);
     
     return () => {
-      console.log('[Professor] Limpiando intervalo');
       clearInterval(intervalId);
     };
   }, [selectedTeam]);
@@ -157,6 +176,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
               Actualizado: {lastUpdate.toLocaleTimeString()}
             </span>
           )}
+          {error && <span className="error-message" style={{color: 'red'}}>{error}</span>}
         </div>
         
         <div className="team-buttons">
@@ -164,10 +184,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
             <button
               key={team}
               className={team === selectedTeam ? 'active' : ''}
-              onClick={() => {
-                console.log(`[Professor] Cambiando a equipo ${team}`);
-                setSelectedTeam(team);
-              }}
+              onClick={() => setSelectedTeam(team)}
             >
               Equipo {team}
             </button>
@@ -189,7 +206,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
       </div>
       
       <div className="debug-info">
-        <p>Partida: {partidaId}</p>
+        <p>Partida: {partidaId} (Tipo: {typeof partidaId})</p>
         <p>Equipo seleccionado: {selectedTeam || 'Ninguno'}</p>
         <p>Total equipos: {teams.length}</p>
       </div>

@@ -148,6 +148,7 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
         <div className="teams-column">
           <div className="teams-header">
             <h4>Equipos</h4>
+            <span className="teams-count">{teams.length} equipos</span>
           </div>
           <div className="teams-list-container">
             <div className="teams-list-scroll">
@@ -178,11 +179,6 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
               height={600}
               className="live-view-canvas"
             />
-          </div>
-          {/* Estado y mensajes */}
-          <div className="canvas-status">
-            {loading && <span className="status-loading">Cargando...</span>}
-            {error && <span className="status-error">{error}</span>}
           </div>
         </div>
       </div>

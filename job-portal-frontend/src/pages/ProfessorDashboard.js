@@ -362,22 +362,35 @@ useEffect(() => {
     });
   };
 
-const loadTeamDrawing = (equipoNumero) => {
-  setSelectedTeam(equipoNumero);
-  setTeamDrawingLines(null); // Limpia antes de cargar
+useEffect(() => {
+  if (!socket || !partidaId || !selectedTeam) return;
 
-  socket.emit('getTeamDrawingForProfessor', { partidaId, equipoNumero }, (response) => {
-    if (response.success && response.linesByUser) {
-      setTeamDrawingLines(response.linesByUser);
-    } else {
-      setTeamDrawingLines({}); // vacío, sin trazos
-    }
-  });
-};
+  const interval = setInterval(() => {
+    socket.emit(
+      'getTeamDrawingForProfessor',
+      { partidaId, equipoNumero: selectedTeam },
+      (response) => {
+        if (response.success && response.linesByUser) {
+          setTeamDrawingLines(response.linesByUser);
+        } else {
+          setTeamDrawingLines({});
+        }
+      }
+    );
+  }, 500); // actualiza cada 0.5 segundos
+
+  return () => clearInterval(interval); // detiene polling al cambiar de equipo
+}, [socket, partidaId, selectedTeam]);
 
   // Agrega esto cerca de los otros efectos
 useEffect(() => {
   if (!socket) return;
+
+  const handleTeamSelection = (e) => {
+    const equipo = parseInt(e.target.value);
+    setSelectedTeam(equipo);
+    setTeamDrawingLines(null); // limpia antes de cargar nuevo
+  };
 
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
@@ -1090,11 +1103,8 @@ useEffect(() => {
                   <h3>Grupos Participantes</h3>
                 </div>
                 <div className="groups-list">
-                  {currentGame.tipo.toLowerCase() === 'dibujo' ? (
-                    <ProfessorDrawingViewer 
-                      partidaId={partidaId} 
-                      socket={socket} 
-                    />
+                  {socket && partidaId && currentGame?.tipo?.toLowerCase() === 'dibujo' ? (
+                    <ProfessorDrawingViewer partidaId={partidaId} socket={socket} />
                   ) : (
                     <div className="progress-section">
                       <div className="content__box">

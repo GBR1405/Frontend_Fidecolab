@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import "../styles/LiveViewDrawings.css";
 
 const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   const [selectedTeam, setSelectedTeam] = useState(null);

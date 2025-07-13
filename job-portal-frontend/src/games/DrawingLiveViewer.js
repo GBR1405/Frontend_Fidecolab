@@ -139,47 +139,48 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
     <div className="live-view-container">
       {/* Título centrado */}
       <div className="live-view-header">
-        <h3>Vista en vivo</h3>
+        <h3 className="live-view-title">Vista en vivo</h3>
       </div>
 
-      {/* Contenido principal */}
-      <div className="live-view-main">
-        {/* Columna de equipos */}
-        <div className="teams-section">
+      {/* Contenido principal - dos columnas */}
+      <div className="live-view-content">
+        {/* Columna izquierda - Lista de equipos */}
+        <div className="teams-column">
           <div className="teams-header">
             <h4>Equipos</h4>
             <span className="teams-count">{teams.length} equipos</span>
           </div>
-          <div className="teams-list">
-            {teams.map((team) => (
-              <button
-                key={team}
-                className={`team-btn ${team === selectedTeam ? 'active' : ''}`}
-                onClick={() => setSelectedTeam(team)}
-              >
-                <span>Equipo {team}</span>
-                {team === selectedTeam && <i className="fas fa-circle"></i>}
-              </button>
-            ))}
+          <div className="teams-list-container">
+            <div className="teams-list-scroll">
+              {teams.map((team) => (
+                <button
+                  key={team}
+                  className={`team-button ${team === selectedTeam ? 'active' : ''}`}
+                  onClick={() => setSelectedTeam(team)}
+                >
+                  <span className="team-button-text">Equipo {team}</span>
+                  {team === selectedTeam && (
+                    <span className="team-button-indicator">
+                      <i className="fas fa-circle"></i>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Área del canvas */}
-        <div className="canvas-section">
-          <div className="canvas-container">
+        {/* Columna derecha - Canvas */}
+        <div className="canvas-column">
+          <div className="canvas-wrapper">
             <canvas
               ref={canvasRef}
               width={800}
               height={600}
+              className="live-view-canvas"
             />
           </div>
         </div>
-      </div>
-
-      {/* Barra de estado minimalista */}
-      <div className="status-bar">
-        {loading && <span className="loading">Cargando...</span>}
-        {error && <span className="error">{error}</span>}
       </div>
     </div>
   );

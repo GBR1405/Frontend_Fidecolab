@@ -1,100 +1,114 @@
-/* Variables de color */
-:root {
-  --blue-royal: #1935ca;
-  --blue-dark: #0d24a1;
-  --white: #ffffff;
-  --gray-light: #f5f5f5;
-  --gray-medium: #e0e0e0;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-}
-
-/* Reset básico */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* Contenedor principal */
+/* Contenedor principal - sin scroll */
 .live-view-container {
+  width: 100%;
+  height: 100vh; /* Ocupa toda la altura visible */
+  max-height: 100vh; /* Máximo altura de viewport */
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 15px;
-  background-color: var(--gray-light);
+  background-color: var(--white-smoke-clr);
+  box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 1em;
   overflow: hidden;
+  padding: 15px;
+  box-sizing: border-box;
 }
 
-/* Encabezado */
+/* Encabezado compacto */
 .live-view-header {
-  text-align: center;
-  margin-bottom: 15px;
-  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  height: 40px; /* Altura fija */
 }
 
-.live-view-header h3 {
-  color: var(--blue-royal);
+.live-view-title {
+  color: var(--blue-royal-clr);
   font-size: 1.5rem;
   font-weight: 600;
+  margin: 0;
+  text-align: center;
 }
 
-/* Contenido principal */
-.live-view-main {
+/* Contenido principal - ocupa el espacio restante */
+.live-view-content {
   display: flex;
   flex: 1;
   gap: 15px;
-  min-height: 0; /* Importante para el scroll interno */
+  min-height: 0; /* Permite que los hijos hagan scroll */
 }
 
-/* Sección de equipos */
-.teams-section {
-  width: 220px;
+/* Columna izquierda - Equipos con altura fija y scroll interno */
+.teams-column {
+  width: 220px; /* Ancho fijo */
   display: flex;
   flex-direction: column;
-  background-color: var(--white);
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--white-clr);
+  border-radius: 1em;
+  box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
 .teams-header {
-  padding: 12px 15px;
-  background: linear-gradient(135deg, var(--blue-royal), var(--blue-dark));
-  color: var(--white);
+  padding: 10px 15px;
+  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .teams-header h4 {
+  color: var(--white-clr);
   font-size: 1rem;
+  margin: 0;
   font-weight: 500;
 }
 
 .teams-count {
+  color: var(--white-clr);
   font-size: 0.8rem;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
-.teams-list {
+.teams-list-container {
   flex: 1;
   padding: 10px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  overflow: hidden; /* Contiene el scroll interno */
 }
 
-/* Botones de equipo */
-.team-btn {
-  padding: 10px 12px;
+.teams-list-scroll {
+  height: 100%;
+  overflow-y: auto; /* Scroll vertical solo aquí */
+  padding-right: 5px;
+  max-height: calc(100vh - 180px); /* Ajusta según tu header y footer */
+}
+
+/* Estilo del scroll para la lista de equipos */
+.teams-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.teams-list-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.teams-list-scroll::-webkit-scrollbar-thumb {
+  background: var(--blue-royal-clr);
+  border-radius: 3px;
+}
+
+/* Botones de equipo compactos */
+.team-button {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
   border: none;
   border-radius: 6px;
-  background-color: var(--gray-light);
-  color: var(--text-primary);
+  background-color: var(--white-smoke-clr);
+  color: var(--primary-text-clr);
   font-size: 0.9rem;
-  text-align: left;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -102,99 +116,102 @@
   transition: all 0.2s ease;
 }
 
-.team-btn:hover {
-  background-color: var(--gray-medium);
+.team-button:hover {
+  background-color: #e0e0e0;
 }
 
-.team-btn.active {
-  background: linear-gradient(135deg, var(--blue-royal), var(--blue-dark));
-  color: var(--white);
-  box-shadow: 0 2px 5px rgba(25, 53, 202, 0.3);
+.team-button.active {
+  background: linear-gradient(135deg, var(--blue-royal-clr), #3a7bd5);
+  color: var(--white-clr);
 }
 
-.team-btn i {
+.team-button-text {
+  flex-grow: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-button-indicator {
+  margin-left: 5px;
+  color: var(--white-clr);
   font-size: 0.6rem;
 }
 
-/* Sección del canvas */
-.canvas-section {
+/* Columna derecha - Canvas con altura ajustada */
+.canvas-column {
   flex: 1;
   display: flex;
-  background-color: var(--white);
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  background-color: var(--white-clr);
+  border-radius: 1em;
+  box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.05);
   padding: 15px;
-  min-height: 0; /* Importante */
+  overflow: hidden;
 }
 
-.canvas-container {
+.canvas-wrapper {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--gray-light);
-  border-radius: 8px;
+  background-color: #f5f5f5;
+  border-radius: 0.8em;
   overflow: hidden;
+  min-height: 0; /* Permite que el canvas se ajuste */
 }
 
-.canvas-container canvas {
+.live-view-canvas {
+  background-color: var(--white-clr);
+  border: 1px solid #ddd;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
-/* Barra de estado */
+/* Barra de estado fija */
 .status-bar {
   height: 30px;
   margin-top: 10px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   font-size: 0.9rem;
-  color: var(--text-secondary);
 }
 
-.status-bar .loading {
-  color: var(--blue-royal);
+.status-loading {
+  color: var(--blue-royal-clr);
+  font-weight: 500;
 }
 
-.status-bar .error {
+.status-error {
   color: #e74c3c;
+  font-weight: 500;
 }
 
-/* Scrollbar personalizada */
-.teams-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.teams-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.teams-list::-webkit-scrollbar-thumb {
-  background: var(--blue-royal);
-  border-radius: 3px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .live-view-main {
+/* Responsive design */
+@media (max-width: 1024px) {
+  .live-view-content {
     flex-direction: column;
   }
   
-  .teams-section {
+  .teams-column {
     width: 100%;
     height: 150px;
   }
   
-  .teams-list {
-    flex-direction: row;
+  .teams-list-scroll {
+    display: flex;
     flex-wrap: wrap;
+    gap: 5px;
   }
   
-  .team-btn {
+  .team-button {
+    width: auto;
     flex: 1;
     min-width: 120px;
+    margin-bottom: 0;
   }
 }

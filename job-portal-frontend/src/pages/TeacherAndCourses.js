@@ -356,10 +356,10 @@ const AdminProfessorCourses = () => {
     };
 
     const handleAddCourse = () => {
-    // Extraer nomenclaturas únicas de los cursos existentes (ej: SC, II, AL)
+    // Extraer nomenclaturas únicas de los cursos existentes
     const nomenclaturas = [...new Set(
         courses.map(course => {
-            const match = course.codigo?.match(/^([A-Za-z]+)-/);
+            const match = course.codigo?.match(/^([A-Za-z]+)-?/);
             return match ? match[1] : null;
         }).filter(Boolean)
     )];
@@ -367,36 +367,46 @@ const AdminProfessorCourses = () => {
     Swal.fire({
         title: 'Agregar Curso',
         html: `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <select id="coursePrefix" class="swal2-input" style="flex: 1;">
-                    ${nomenclaturas.map(nom => `<option value="${nom}">${nom}</option>`).join('')}
-                    <option value="_other">Otro</option>
-                </select>
-                <span>-</span>
-                <input 
-                    type="text" 
-                    id="courseCode" 
-                    class="swal2-input" 
-                    placeholder="702" 
-                    maxlength="3"
-                    style="flex: 1;"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                />
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Código del curso:</label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <select 
+                        id="coursePrefix" 
+                        class="swal2-input" 
+                        style="width: 60px; padding: 8px;"
+                    >
+                        ${nomenclaturas.map(nom => `<option value="${nom}">${nom}</option>`).join('')}
+                        <option value="_other">Otro</option>
+                    </select>
+                    <span>-</span>
+                    <input 
+                        type="text" 
+                        id="courseCode" 
+                        class="swal2-input" 
+                        placeholder="702" 
+                        maxlength="3"
+                        style="width: 80px;"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    />
+                    <div id="customPrefixContainer" style="display: none; margin-left: 5px;">
+                        <input 
+                            type="text" 
+                            id="customPrefix" 
+                            class="swal2-input" 
+                            placeholder="Nueva nom." 
+                            style="width: 80px;"
+                            oninput="this.value = this.value.replace(/[^A-Za-z]/g, '')"
+                        />
+                    </div>
+                </div>
             </div>
-            <input 
-                type="text" 
-                id="courseName" 
-                class="swal2-input" 
-                placeholder="Nombre del curso"
-                style="margin-top: 10px;"
-            />
-            <div id="customPrefixContainer" style="display: none; margin-top: 10px;">
+            <div>
+                <label for="courseName">Nombre del curso:</label>
                 <input 
                     type="text" 
-                    id="customPrefix" 
+                    id="courseName" 
                     class="swal2-input" 
-                    placeholder="Escribe tu nomenclatura (ej: SC, II)"
-                    oninput="this.value = this.value.replace(/[^A-Za-z]/g, '')"
+                    placeholder="Nombre completo del curso"
                 />
             </div>
         `,
@@ -408,7 +418,7 @@ const AdminProfessorCourses = () => {
             const customContainer = document.getElementById('customPrefixContainer');
             
             prefixSelect.addEventListener('change', function() {
-                customContainer.style.display = this.value === '_other' ? 'block' : 'none';
+                customContainer.style.display = this.value === '_other' ? 'inline-block' : 'none';
             });
         },
         preConfirm: async () => {

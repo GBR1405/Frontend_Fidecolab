@@ -69,8 +69,8 @@ const ProfessorDrawingViewer = ({ partidaId, socket }) => {
   if (!drawingData) return;
 
   // 📐 Tamaño original de los canvas de Konva en el frontend
-  const sourceWidth = 1280;
-  const sourceHeight = 720;
+  const sourceWidth = 800;
+  const sourceHeight = 600;
   const canvasWidth = canvas.width;   // 800
   const canvasHeight = canvas.height; // 600
 

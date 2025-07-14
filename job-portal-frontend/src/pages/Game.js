@@ -6,7 +6,7 @@ import "../styles/simulationComponents.css";
 import { games } from '../games/GameConfiguration';
 import "../styles/TeamRoom.css";
 import Swal from 'sweetalert2';
-import GameTransition from './GameTransition';
+import "../styles/TransicionesSimulacion.css";
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
@@ -399,6 +399,7 @@ useEffect(() => {
 
   // Transición entre juegos
   const handleGameChangeWithTransition = (data) => {
+  // Configurar el nuevo juego
   const nextGame = {
     ...games[data.currentGame.tipo.toLowerCase()],
     name: data.currentGame.tipo,
@@ -407,29 +408,29 @@ useEffect(() => {
     tema: data.currentGame.tema
   };
 
-  // 1. Iniciar transición
-  setTransitionPhase('line');
+  // Iniciar transición
+  setTransitionPhase('blurring');
   setTransitionGame(nextGame);
 
-  // 2. Mostrar texto después de 0.5s
+  // Pre-cargar el juego durante la transición
   setTimeout(() => {
-    setTransitionPhase('text');
-    
-    // 3. Pre-cargar juego y mostrar instrucciones después de 2s
+    setCurrentGameInfo(nextGame);
+    setGameProgress({
+      current: data.currentIndex + 1,
+      total: data.total
+    });
+    setTransitionPhase('next-game');
+
+    // Transición a instrucciones después de 4 segundos
     setTimeout(() => {
-      setCurrentGameInfo(nextGame);
-      setGameProgress({
-        current: data.currentIndex + 1,
-        total: data.total
-      });
       setTransitionPhase('instructions');
       
-      // 4. Mostrar botón después de 1s más
+      // Mostrar botón después de 1.5 segundos
       setTimeout(() => {
         setTransitionPhase('ready');
-      }, 1000);
-    }, 2000);
-  }, 500);
+      }, 1500);
+    }, 4000);
+  }, 300);
 };
 
 
@@ -571,14 +572,51 @@ useEffect(() => {
     <LayoutSimulation>
       <div className="team-room-container">
         {/* Overlay de transición */}
+        <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
+    {/* Línea horizontal */}
+    {transitionPhase === 'next-game' && <div className="_est_line"></div>}
+    
+    {/* Texto que emerge */}
+    {transitionPhase === 'next-game' && (
+      <div className="_est_text-emerge">
+        <div className="_est_next-text">Siguiente Juego</div>
+        <div className="_est_game-name">{transitionGame?.name}</div>
+      </div>
+    )}
 
-        <GameTransition 
-          transitionPhase={transitionPhase}
-          transitionGame={transitionGame}
-          currentGameInfo={currentGameInfo}
-          onStart={() => setTransitionPhase('idle')}
-        />
+    {/* Instrucciones y botón */}
+    {(transitionPhase === 'instructions' || transitionPhase === 'ready') && (
+      <div className="_est_instructions">
+        <h2 className="_est_instruction-title">Instrucciones</h2>
         
+        {transitionGame?.name.toLowerCase().includes('memoria') && (
+          <>
+            <div className="_est_instruction-item">
+              <i className="fas fa-clone _est_icon"></i>
+              <span>Encuentra las parejas iguales</span>
+            </div>
+            <div className="_est_instruction-item">
+              <i className="fas fa-stopwatch _est_icon"></i>
+              <span>Tiempo: {currentGameInfo?.config?.time || 60}s</span>
+            </div>
+            <div className="_est_instruction-item">
+              <i className="fas fa-users _est_icon"></i>
+              <span>Trabaja en equipo</span>
+            </div>
+          </>
+        )}
+
+        {transitionPhase === 'ready' && (
+          <button 
+            className="_est_start-btn"
+            onClick={() => setTransitionPhase('idle')}
+          >
+            <i className="fas fa-play"></i> Comenzar
+          </button>
+        )}
+      </div>
+    )}
+  </div>
 
         {/* Área del juego */}
         <div ref={cursorContainerRef} className="game-container">

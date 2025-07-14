@@ -61,30 +61,28 @@ const TeamRoom = () => {
   
   document.body.appendChild(overlay);
   
-  // Forzar renderizado antes de la animación
-  void overlay.offsetWidth;
+  // Activar animación
+  setTimeout(() => overlay.classList.add('active'), 10);
   
-  // Activar animaciones
-  overlay.classList.add('active');
-  
-  // Temporizador mejorado
+  // Temporizador con mejor feedback visual
   let count = 8;
   const countElement = overlay.querySelector('.finish-count');
   const interval = setInterval(() => {
     count--;
+    
     if (countElement) {
       countElement.textContent = count;
-      // Animación adicional en el último segundo
+      
+      // Destacar los últimos 3 segundos
       if (count <= 3) {
+        countElement.style.color = '#ff6b6b';
         countElement.style.animation = 'pulse 0.5s infinite alternate';
       }
     }
     
     if (count <= 0) {
       clearInterval(interval);
-      overlay.style.transition = 'opacity 0.5s ease-out';
       overlay.style.opacity = '0';
-      
       setTimeout(() => {
         overlay.remove();
         window.location.href = `/resultados/${partidaId}`;
@@ -92,14 +90,23 @@ const TeamRoom = () => {
     }
   }, 1000);
 
-  // Añadir animación de pulso para los últimos segundos
+  // Añadir estilo para el pulso
   const style = document.createElement('style');
   style.textContent = `
     @keyframes pulse {
-      to { transform: scale(1.2); opacity: 0.8; }
+      to { transform: scale(1.3); opacity: 0.8; }
     }
   `;
   document.head.appendChild(style);
+  
+  // Limpiar al desmontar
+  return () => {
+    clearInterval(interval);
+    if (document.body.contains(overlay)) {
+      document.body.removeChild(overlay);
+    }
+    document.head.removeChild(style);
+  };
 };
 
   socket.on('gameFinished', onGameFinished);

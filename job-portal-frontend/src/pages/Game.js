@@ -48,25 +48,38 @@ const TeamRoom = () => {
   if (!socket) return;
 
   const onGameFinished = ({ partidaId }) => {
-    // Overlay oscuro con cuenta atrás
-    let count = 8;
+    // Crear overlay
     const overlay = document.createElement('div');
     overlay.className = 'finish-overlay';
     overlay.innerHTML = `
       <div class="finish-content">
-        <h1>Partida finalizada</h1>
-        <p>Redirigiendo a resultados en <span id="finish-count">${count}</span> segundos...</p>
+        <h1 class="finish-title">Partida Finalizada</h1>
+        <div class="finish-line"></div>
+        <p class="finish-countdown">Redirigiendo en <span class="finish-count">8</span> segundos...</p>
       </div>
     `;
+    
     document.body.appendChild(overlay);
-
+    
+    // Activar animaciones
+    setTimeout(() => {
+      overlay.classList.add('active');
+    }, 50);
+    
+    // Temporizador
+    let count = 8;
+    const countElement = overlay.querySelector('.finish-count');
     const interval = setInterval(() => {
       count--;
-      const el = document.getElementById('finish-count');
-      if (el) el.textContent = count;
+      if (countElement) countElement.textContent = count;
+      
       if (count <= 0) {
         clearInterval(interval);
-        window.location.href = `/resultados/${partidaId}`;
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          overlay.remove();
+          window.location.href = `/resultados/${partidaId}`;
+        }, 800);
       }
     }, 1000);
   };

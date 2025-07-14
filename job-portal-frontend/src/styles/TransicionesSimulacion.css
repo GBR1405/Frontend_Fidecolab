@@ -186,11 +186,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: white;
   opacity: 0;
-  z-index: 999;
+  z-index: 9999;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.15s ease-in-out;
 }
 
 ._est_blackout.active {

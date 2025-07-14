@@ -399,7 +399,6 @@ useEffect(() => {
 
   // Transición entre juegos
   const handleGameChangeWithTransition = (data) => {
-  // Configurar el nuevo juego
   const nextGame = {
     ...games[data.currentGame.tipo.toLowerCase()],
     name: data.currentGame.tipo,
@@ -408,30 +407,37 @@ useEffect(() => {
     tema: data.currentGame.tema
   };
 
-  // Iniciar transición
+  // Etapa 1: mostrar blur
   setTransitionPhase('blurring');
   setTransitionGame(nextGame);
 
-  // Pre-cargar el juego durante la transición
+  // Esperar breve para aplicar el blur (300ms)
   setTimeout(() => {
-    setCurrentGameInfo(nextGame);
-    setGameProgress({
-      current: data.currentIndex + 1,
-      total: data.total
-    });
+    // Etapa 2: mostrar "Siguiente Juego"
     setTransitionPhase('next-game');
 
-    // Transición a instrucciones después de 4 segundos
+    // Etapa 3: después de 2.5s, cambiar fondo (juego) y preparar instrucciones
     setTimeout(() => {
-      setTransitionPhase('instructions');
-      
-      // Mostrar botón después de 1.5 segundos
+      // Cambiar juego en background (sin quitar overlay)
+      setCurrentGameInfo(nextGame);
+      setGameProgress({
+        current: data.currentIndex + 1,
+        total: data.total
+      });
+
+      // Etapa 4: mostrar instrucciones casi de inmediato
       setTimeout(() => {
-        setTransitionPhase('ready');
-      }, 1500);
-    }, 4000);
+        setTransitionPhase('instructions');
+
+        // Etapa 5: después de 0.6s, mostrar botón
+        setTimeout(() => {
+          setTransitionPhase('ready');
+        }, 600);
+      }, 100); // solo 100ms entre cambio de juego y aparición de instrucciones
+    }, 2500); // más corto, antes era 4000ms
   }, 300);
 };
+
 
 
   // Pantalla de bienvenida

@@ -6,7 +6,7 @@
   max-width: 100vw;
   height: 100%;
   background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -186,11 +186,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: white;
+  background-color: rgb(112, 112, 112);
   opacity: 0;
   z-index: 9999;
   pointer-events: none;
-  transition: opacity 0.15s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
 }
 
 ._est_blackout.active {

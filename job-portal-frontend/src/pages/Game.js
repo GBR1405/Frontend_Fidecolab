@@ -6,7 +6,7 @@ import "../styles/simulationComponents.css";
 import { games } from '../games/GameConfiguration';
 import "../styles/TeamRoom.css";
 import Swal from 'sweetalert2';
-import "../styles/TransicionesSimulacion.css";
+import GameTransition from './GameTransition';
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
@@ -408,27 +408,27 @@ useEffect(() => {
   };
 
   // 1. Iniciar transición
-  setTransitionPhase('line-appearing');
+  setTransitionPhase('line');
   setTransitionGame(nextGame);
 
-  // 2. Mostrar línea (0.5s)
+  // 2. Mostrar texto después de 0.5s
   setTimeout(() => {
-    setTransitionPhase('text-appearing');
+    setTransitionPhase('text');
     
-    // 3. Pre-cargar juego con fondo semitransparente (0.8s)
+    // 3. Pre-cargar juego y mostrar instrucciones después de 2s
     setTimeout(() => {
       setCurrentGameInfo(nextGame);
       setGameProgress({
         current: data.currentIndex + 1,
         total: data.total
       });
-      setTransitionPhase('instructions-appearing');
+      setTransitionPhase('instructions');
       
-      // 4. Mostrar botón (0.5s después)
+      // 4. Mostrar botón después de 1s más
       setTimeout(() => {
         setTransitionPhase('ready');
-      }, 500);
-    }, 800);
+      }, 1000);
+    }, 2000);
   }, 500);
 };
 
@@ -571,122 +571,14 @@ useEffect(() => {
     <LayoutSimulation>
       <div className="team-room-container">
         {/* Overlay de transición */}
-        <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
-  {/* Previsualización del juego de fondo */}
-  <div className={`_est_game-preview ${transitionPhase === 'instructions-appearing' || transitionPhase === 'ready' ? '_est_visible' : ''}`}>
-    {currentGameInfo && (
-      <>
-        {currentGameInfo.name.toLowerCase().includes('memoria') && <MemoryGame gameConfig={currentGameInfo} />}
-        {currentGameInfo.name.toLowerCase().includes('dibujo') && <DrawingGame gameConfig={currentGameInfo} />}
-        {/* Otros juegos */}
-      </>
-    )}
-  </div>
 
-  {/* Línea central */}
-  {(transitionPhase === 'line-appearing' || transitionPhase === 'text-appearing') && (
-    <div className="_est_center-line"></div>
-  )}
-
-  {/* Texto emergente */}
-  {transitionPhase === 'text-appearing' && (
-    <div className="_est_text-emerge">
-      <div className="_est_next-text">Siguiente Juego</div>
-      <div className="_est_game-name">{transitionGame?.name}</div>
-    </div>
-  )}
-
-  {/* Instrucciones en grid */}
-  {(transitionPhase === 'instructions-appearing' || transitionPhase === 'ready') && (
-  <div className="_est_instructions-container">
-    <div className="_est_instructions-grid">
-      
-      {/* Memoria */}
-      {transitionGame?.name.toLowerCase().includes('memoria') && (
-        <>
-          <div className="_est_instruction-card">
-            <i className="fas fa-users _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Trabajen en equipo para decidir cual mover</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-brain _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Recuerden donde están las parejas</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-flag-checkered _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Encuentren todos para ganar</p>
-          </div>
-        </>
-      )}
-
-      {/* Dibujo */}
-      {transitionGame?.name.toLowerCase().includes('dibujo') && (
-        <>
-          <div className="_est_instruction-card">
-            <i className="fas fa-paint-brush _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Dibujen el tema especifico</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-tint _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Tienen tanque de tinta limitado</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-eraser _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Si borran, pierden todos los trazos</p>
-          </div>
-        </>
-      )}
-
-      {/* Ahorcado */}
-      {transitionGame?.name.toLowerCase().includes('ahorcado') && (
-        <>
-          <div className="_est_instruction-card">
-            <i className="fas fa-vote-yea _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Voten por la letra ganadora</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-heart _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Eviten llegar a 0 intentos</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-comments _est_instruction-icon"></i>
-            <p className="_est_instruction-text">La comunicación es importante</p>
-          </div>
-        </>
-      )}
-
-      {/* Rompecabezas */}
-      {transitionGame?.name.toLowerCase().includes('rompecabezas') && (
-        <>
-          <div className="_est_instruction-card">
-            <i className="fas fa-search _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Revisen las referencias</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-arrows-alt _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Tienen límite de movimientos</p>
-          </div>
-          <div className="_est_instruction-card">
-            <i className="fas fa-hand-paper _est_instruction-icon"></i>
-            <p className="_est_instruction-text">Tengan cuidado con lo que mueven</p>
-          </div>
-        </>
-      )}
-
-    </div>
-
-    {transitionPhase === 'ready' && (
-      <button 
-        className="_est_start-btn"
-        onClick={() => setTransitionPhase('idle')}
-      >
-        <i className="fas fa-play"></i> Comenzar
-      </button>
-    )}
-  </div>
-
-  )}
-</div>
+        <GameTransition 
+          transitionPhase={transitionPhase}
+          transitionGame={transitionGame}
+          currentGameInfo={currentGameInfo}
+          onStart={() => setTransitionPhase('idle')}
+        />
+        
 
         {/* Área del juego */}
         <div ref={cursorContainerRef} className="game-container">

@@ -3,8 +3,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
   z-index: 1000;
@@ -12,10 +12,8 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.5s ease;
   pointer-events: none;
+  transition: backdrop-filter 0.5s ease, background 0.5s ease;
 }
 
 ._est_overlay._est_active {
@@ -24,6 +22,31 @@
 
 ._est_overlay._est_active {
   opacity: 1;
+}
+
+._est_center-line {
+  position: absolute;
+  width: 0;
+  height: 5px;
+  background: white;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+  animation: _est_lineGrow 0.5s forwards;
+}
+
+@keyframes _est_lineGrow {
+  to { width: 80%; }
+}
+
+/* Texto que emerge */
+._est_text-emerge {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Línea central mejorada */
@@ -78,28 +101,81 @@
   font-size: 1.8rem;
   color: white;
   margin-bottom: 0.5rem;
-  transform: translateY(100%);
-  animation: 
-    _est_textRise 0.8s 0.8s cubic-bezier(0.2, 0.8, 0.4, 1) forwards,
-    _est_textFadeOut 0.5s 3.5s forwards;
+  opacity: 0;
+  animation: _est_textAppear 0.5s 0.5s forwards;
 }
 
 ._est_game-name {
-  font-size: 3rem;
+  font-size: 3.5rem;
   color: white;
   font-weight: bold;
-  transform: translateY(100%);
-  animation: 
-    _est_textRise 0.8s 1s cubic-bezier(0.2, 0.8, 0.4, 1) forwards,
-    _est_textFadeOut 0.5s 3.5s forwards;
+  opacity: 0;
+  animation: _est_textAppear 0.5s 0.8s forwards;
 }
 
-@keyframes _est_textRise {
-  to { transform: translateY(0); }
+@keyframes _est_textAppear {
+  to { opacity: 1; }
 }
 
 @keyframes _est_textFadeOut {
   to { opacity: 0; }
+}
+
+._est_instructions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  width: 80%;
+  margin: 0 auto;
+  opacity: 0;
+  animation: _est_fadeIn 0.5s 2s forwards;
+}
+
+._est_instruction-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  text-align: center;
+  backdrop-filter: blur(5px);
+}
+
+._est_instruction-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+._est_instruction-text {
+  font-size: 1.1rem;
+  color: white;
+}
+
+/* Botón */
+._est_start-btn {
+  margin-top: 3rem;
+  padding: 1rem 2.5rem;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  border-radius: 50px;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  animation: _est_fadeIn 0.5s 2.5s forwards;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Transición de fondo del juego */
+._est_game-preview {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+._est_game-preview._est_visible {
+  opacity: 0.3;
 }
 
 /* Instrucciones (aparecen después del fade out) */

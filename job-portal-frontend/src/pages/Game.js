@@ -438,8 +438,8 @@ useEffect(() => {
           setTimeout(() => {
             setTransitionPhase('ready');
           }, 500);
-        }, 100);
-      }, 300); // tiempo del blackout
+        }, 400);
+      }, 700); // tiempo del blackout
     }, 2200); // esperar a que pase casi todo el texto
   }, 300);
 };
@@ -585,9 +585,9 @@ useEffect(() => {
     <LayoutSimulation>
       <div className="team-room-container">
         {/* Overlay de transición */}
-        {showBlackout && <div className="_est_blackout active"></div>}
+        
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
-          
+          {showBlackout && <div className="_est_blackout active"></div>}
           {transitionPhase === 'next-game' && (
             <>
               <div className="_est_next-game">

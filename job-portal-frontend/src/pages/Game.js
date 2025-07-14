@@ -40,6 +40,7 @@ const TeamRoom = () => {
   const [initialTimerSet, setInitialTimerSet] = useState(false);
   const [firstGameConfig, setFirstGameConfig] = useState(null);
   const [transitionPhase, setTransitionPhase] = useState('idle');
+  const [showBlackout, setShowBlackout] = useState(false);
 
   const navigate = useNavigate();
 
@@ -407,36 +408,42 @@ useEffect(() => {
     tema: data.currentGame.tema
   };
 
-  // Etapa 1: mostrar blur
   setTransitionPhase('blurring');
   setTransitionGame(nextGame);
 
-  // Esperar breve para aplicar el blur (300ms)
+  // Fase 1: Mostrar "Siguiente juego"
   setTimeout(() => {
-    // Etapa 2: mostrar "Siguiente Juego"
     setTransitionPhase('next-game');
 
-    // Etapa 3: después de 2.5s, cambiar fondo (juego) y preparar instrucciones
+    // Fase 2: 2.2s después, ocultar fondo con blackout
     setTimeout(() => {
-      // Cambiar juego en background (sin quitar overlay)
-      setCurrentGameInfo(nextGame);
-      setGameProgress({
-        current: data.currentIndex + 1,
-        total: data.total
-      });
+      setShowBlackout(true);
 
-      // Etapa 4: mostrar instrucciones casi de inmediato
+      // Esperar 300ms con pantalla oscura
       setTimeout(() => {
-        setTransitionPhase('instructions');
+        // Fase 3: cambiar juego mientras pantalla está oculta
+        setCurrentGameInfo(nextGame);
+        setGameProgress({
+          current: data.currentIndex + 1,
+          total: data.total
+        });
 
-        // Etapa 5: después de 0.6s, mostrar botón
+        setShowBlackout(false); // Quitar blackout
+
+        // Fase 4: Instrucciones casi de inmediato
         setTimeout(() => {
-          setTransitionPhase('ready');
-        }, 600);
-      }, 100); // solo 100ms entre cambio de juego y aparición de instrucciones
-    }, 2500); // más corto, antes era 4000ms
+          setTransitionPhase('instructions');
+
+          // Fase 5: mostrar botón
+          setTimeout(() => {
+            setTransitionPhase('ready');
+          }, 500);
+        }, 100);
+      }, 300); // tiempo del blackout
+    }, 2200); // esperar a que pase casi todo el texto
   }, 300);
 };
+
 
 
 
@@ -578,7 +585,9 @@ useEffect(() => {
     <LayoutSimulation>
       <div className="team-room-container">
         {/* Overlay de transición */}
+        {showBlackout && <div className="_est_blackout active"></div>}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
+          
           {transitionPhase === 'next-game' && (
             <>
               <div className="_est_next-game">

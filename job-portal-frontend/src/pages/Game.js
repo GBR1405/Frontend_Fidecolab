@@ -577,7 +577,15 @@ useEffect(() => {
             <>
               <div className="_est_next-game">
                 <div className="_est_next-text">Siguiente Juego:</div>
-                <div className="_est_game-name">{transitionGame?.name}</div>
+                <div className="_est_game-name">
+                  {transitionGame?.name}
+                  <span className="_est_game-icon">
+                    {transitionGame?.name.toLowerCase().includes('memoria') && '🧠'}
+                    {transitionGame?.name.toLowerCase().includes('dibujo') && '🎨'}
+                    {transitionGame?.name.toLowerCase().includes('ahorcado') && '🎯'}
+                    {transitionGame?.name.toLowerCase().includes('rompecabezas') && '🧩'}
+                  </span>
+                </div>
               </div>
               <div className="_est_line-horizontal"></div>
             </>

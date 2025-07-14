@@ -593,36 +593,73 @@ useEffect(() => {
               <h2 className="_est_instruction-title">Instrucciones</h2>
 
               {transitionGame?.name.toLowerCase().includes('memoria') && (
-                <>
-                  <div className="_est_instruction-item"><i className="fas fa-users _est_icon"></i> Trabajen en equipo</div>
-                  <div className="_est_instruction-item"><i className="fas fa-brain _est_icon"></i> Recuerden donde están las parejas</div>
-                  <div className="_est_instruction-item"><i className="fas fa-check-double _est_icon"></i> Encuentren todos para ganar</div>
-                </>
-              )}
+                  <div className="_est_instruction-row">
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-users _est_icon"></i>
+                      <span>Trabajen en equipo</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-brain _est_icon"></i>
+                      <span>Recuerden donde están las parejas</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-check-double _est_icon"></i>
+                      <span>Encuentren todos para ganar</span>
+                    </div>
+                  </div>
+                )}
 
-              {transitionGame?.name.toLowerCase().includes('dibujo') && (
-                <>
-                  <div className="_est_instruction-item"><i className="fas fa-paint-brush _est_icon"></i> Dibujen el tema específico</div>
-                  <div className="_est_instruction-item"><i className="fas fa-tint _est_icon"></i> ¡Tienen tanque de tinta!</div>
-                  <div className="_est_instruction-item"><i className="fas fa-eraser _est_icon"></i> Si borran, se borra todo</div>
-                </>
-              )}
+                {transitionGame?.name.toLowerCase().includes('dibujo') && (
+                  <div className="_est_instruction-row">
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-paint-brush _est_icon"></i>
+                      <span>Dibujen el tema específico</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-tint _est_icon"></i>
+                      <span>¡Tienen tanque de tinta!</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-eraser _est_icon"></i>
+                      <span>Si borran, se borra todo</span>
+                    </div>
+                  </div>
+                )}
 
-              {transitionGame?.name.toLowerCase().includes('ahorcado') && (
-                <>
-                  <div className="_est_instruction-item"><i className="fas fa-vote-yea _est_icon"></i> Voten por la letra ganadora</div>
-                  <div className="_est_instruction-item"><i className="fas fa-skull-crossbones _est_icon"></i> Eviten llegar a 0</div>
-                  <div className="_est_instruction-item"><i className="fas fa-comments _est_icon"></i> La comunicación es importante</div>
-                </>
-              )}
+                {transitionGame?.name.toLowerCase().includes('ahorcado') && (
+                  <div className="_est_instruction-row">
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-vote-yea _est_icon"></i>
+                      <span>Voten por la letra ganadora</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-skull-crossbones _est_icon"></i>
+                      <span>Eviten llegar a 0</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-comments _est_icon"></i>
+                      <span>La comunicación es importante</span>
+                    </div>
+                  </div>
+                )}
 
-              {transitionGame?.name.toLowerCase().includes('rompecabezas') && (
-                <>
-                  <div className="_est_instruction-item"><i className="fas fa-image _est_icon"></i> Revisen las referencias</div>
-                  <div className="_est_instruction-item"><i className="fas fa-shoe-prints _est_icon"></i> Límite de movimientos</div>
-                  <div className="_est_instruction-item"><i className="fas fa-exclamation-triangle _est_icon"></i> Tengan cuidado con lo que mueven</div>
-                </>
-              )}
+                {transitionGame?.name.toLowerCase().includes('rompecabezas') && (
+                  <div className="_est_instruction-row">
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-image _est_icon"></i>
+                      <span>Revisen las referencias</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-shoe-prints _est_icon"></i>
+                      <span>Límite de movimientos</span>
+                    </div>
+                    <div className="_est_instruction-item">
+                      <i className="fas fa-exclamation-triangle _est_icon"></i>
+                      <span>Tengan cuidado con lo que mueven</span>
+                    </div>
+                  </div>
+                )}
+
 
               {transitionPhase === 'ready' && (
                 <button 

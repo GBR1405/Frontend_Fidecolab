@@ -400,7 +400,7 @@ useEffect(() => {
   // Transición entre juegos
   // Manejar el cambio de juego con animación
   const handleGameChangeWithTransition = (data) => {
-  // 1. Configurar el juego que viene ANTES de la transición
+  // 1. Configurar el nuevo juego con todos los datos necesarios
   const nextGame = {
     ...games[data.currentGame.tipo.toLowerCase()],
     name: data.currentGame.tipo,
@@ -409,30 +409,31 @@ useEffect(() => {
     tema: data.currentGame.tema
   };
 
-  // 2. Iniciar transición
+  // 2. Iniciar transición y pre-cargar datos
   setTransitionPhase('blurring');
   setTransitionGame(nextGame);
-
-  // 3. Pre-cargar el juego durante la transición
+  
+  // 3. Timeout para animación y carga
   setTimeout(() => {
-    // IMPORTANTE: Cargar el juego en segundo plano aquí
+    // Cargar el juego REAL en segundo plano (pero oculto por el blur)
     setCurrentGameInfo(nextGame);
     setGameProgress({
       current: data.currentIndex + 1,
       total: data.total
     });
 
+    // Mostrar "Siguiente Juego" (4 segundos de duración)
     setTransitionPhase('next-game');
 
-    // 4. Mostrar instrucciones después de 2 segundos
+    // Transición a instrucciones después de 4 segundos
     setTimeout(() => {
       setTransitionPhase('instructions');
-
-      // 5. Mostrar botón después de 1.5 segundos más
+      
+      // Mostrar botón "Empezar" después de 1.5 segundos más
       setTimeout(() => {
         setTransitionPhase('ready');
       }, 1500);
-    }, 2000);
+    }, 4000); // Duración extendida a 4 segundos para "Siguiente Juego"
   }, 300);
 };
 
@@ -575,47 +576,52 @@ useEffect(() => {
     <LayoutSimulation>
       <div className="team-room-container">
         {/* Overlay de transición */}
-        <div className={`game-transition_overlay ${transitionPhase !== 'idle' ? '_showing' : ''}`}>
-          {transitionPhase === 'blurring' && <div className="transition-line"></div>}
-          
-          {transitionPhase === 'next-game' && (
-            <div className="next-game-container">
-              <div className="transition-line"></div>
-              <div className="next-game-text">Siguiente Juego</div>
-              <div className="game-name-text">{transitionGame?.name}</div>
+        <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
+  {transitionPhase !== 'idle' && <div className="_est_line"></div>}
+  
+  <div className="_est_main-container">
+    {transitionPhase === 'next-game' && (
+      <div className="_est_next-game">
+        <div className="_est_next-text">Siguiente Juego</div>
+        <div className="_est_game-name">{transitionGame?.name}</div>
+      </div>
+    )}
+
+    {(transitionPhase === 'instructions' || transitionPhase === 'ready') && (
+      <div className="_est_instructions">
+        <h2 className="_est_instruction-title">Instrucciones</h2>
+        
+        {transitionGame?.name.toLowerCase().includes('memoria') && (
+          <>
+            <div className="_est_instruction-item">
+              <i className="fas fa-clone _est_icon"></i>
+              <span>Encuentra todas las parejas de cartas</span>
             </div>
-          )}
-          
-          {transitionPhase === 'instructions' && (
-            <div className="instructions-container">
-              <h2 className="instruction-title">Instrucciones</h2>
-              {transitionGame?.name.toLowerCase().includes('memoria') && (
-                <>
-                  <p className="instruction-item">Memoria 1: Encuentra las parejas</p>
-                  <p className="instruction-item">Memoria 2: Tienes tiempo limitado</p>
-                  <p className="instruction-item">Memoria 3: Trabaja en equipo</p>
-                </>
-              )}
-              {/* Agregar condiciones para otros juegos */}
+            <div className="_est_instruction-item">
+              <i className="fas fa-clock _est_icon"></i>
+              <span>Tienes tiempo limitado para completarlo</span>
             </div>
-          )}
-          
-          {transitionPhase === 'ready' && (
-            <div className="instructions-container">
-              <h2 className="instruction-title">Instrucciones</h2>
-              {/* ...instrucciones... */}
-              <button 
-                className="start-game-btn"
-                onClick={() => {
-                  setTransitionPhase('idle');
-                  resetTimer();
-                }}
-              >
-                Empezar
-              </button>
+            <div className="_est_instruction-item">
+              <i className="fas fa-users _est_icon"></i>
+              <span>Trabaja en equipo para ganar</span>
             </div>
-          )}
-        </div> 
+          </>
+        )}
+        
+        {/* Añadir condiciones para otros juegos */}
+        
+        {transitionPhase === 'ready' && (
+          <button 
+            className="_est_start-btn"
+            onClick={() => setTransitionPhase('idle')}
+          >
+            Empezar
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Área del juego */}
         <div ref={cursorContainerRef} className="game-container">

@@ -1,0 +1,131 @@
+/* TransicionesSimulacion.css */
+.game-transition_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.game-transition_overlay._showing {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Línea central animada */
+.transition-line {
+  position: absolute;
+  width: 2px;
+  height: 0;
+  background: white;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: lineGrow 0.5s forwards;
+}
+
+@keyframes lineGrow {
+  to { height: 70vh; }
+}
+
+/* Texto del siguiente juego */
+.next-game-container {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  animation: textFlyIn 0.8s 0.5s forwards;
+}
+
+.next-game-text {
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 1rem;
+  transform: translateY(20px);
+}
+
+.game-name-text {
+  font-size: 3rem;
+  color: white;
+  font-weight: bold;
+  transform: translateY(20px);
+}
+
+@keyframes textFlyIn {
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animación de salida */
+.next-game-exit {
+  animation: textFlyOut 0.8s forwards;
+}
+
+@keyframes textFlyOut {
+  to { 
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Instrucciones */
+.instructions-container {
+  opacity: 0;
+  text-align: center;
+  animation: fadeIn 0.5s 1s forwards;
+}
+
+.instruction-title {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.instruction-item {
+  font-size: 1.2rem;
+  color: white;
+  margin: 0.5rem 0;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: itemFlyIn 0.5s forwards;
+}
+
+.instruction-item:nth-child(1) { animation-delay: 1.2s; }
+.instruction-item:nth-child(2) { animation-delay: 1.4s; }
+.instruction-item:nth-child(3) { animation-delay: 1.6s; }
+
+@keyframes itemFlyIn {
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Botón empezar */
+.start-game-btn {
+  margin-top: 2rem;
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  animation: fadeIn 0.5s 2s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}

@@ -37,6 +37,7 @@ const PanelProfesor = lazy(() => import("./pages/ProfessorDashboard.js"));
 const Ejemplo = lazy(() => import("./pages/Signup.js"));
 const Canvas = lazy(() => import("./pages/Canvas.js"));
 const PaginSimulacion = lazy(() => import("./pages/FilterPersonalization.js"));
+const Resultados = lazy(() => import("./pages/ResultsTeacher.js"));
 
 // Rutas de administración
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.js"));
@@ -94,6 +95,7 @@ const App = () => {
         <Route path="/waiting-room/:partidaId" element={<PrivateRoute element={<SalaEspera />} allowedRoles={['Estudiante', 'Profesor']} />} />
         <Route path="/team-room/:partidaId/:equipoNumero" element={<PrivateRoute element={<SalasDeGrupo />} allowedRoles={['Estudiante', 'Profesor']} />} />
         <Route path="/professor-dashboard/:partidaId" element={<PrivateRoute element={<PanelProfesor />} allowedRoles={['Estudiante', 'Profesor']} />} />
+        <Route path="/resultados/:partidaId" element={<PrivateRoute element={<Resultados />} allowedRoles={['Estudiante', 'Profesor']} />} />
 
         {/* Rutas para Profesor */}
         <Route path="/simulations" element={<PrivateRoute element={<PaginSimulacion />} allowedRoles={['Profesor']} />} />

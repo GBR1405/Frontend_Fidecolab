@@ -228,7 +228,20 @@ const FilterPersonalization = () => {
 
       if (confirm.isConfirmed) {
         // Obtener configuración antes de finalizar
-        await handleFinishGame(existingGameId || partidaId, 'La partida fue cerrada correctamente.', 'success');
+        await handleFinishGame(
+            existingGameId || partidaId, 
+            `
+            <div style="text-align: center;">
+                <h3 style="color: #28a745; margin-bottom: 10px;">¡Cambio realizado!</h3>
+                <p style="margin-bottom: 5px;">✅ Partida anterior <strong>cerrada</strong></p>
+                <p style="margin-bottom: 15px;">🎮 Nueva partida <strong>iniciada</strong> con diferente equipo</p>
+                <p style="font-size: 14px; color: #6c757d;">
+                La simulación está lista para comenzar
+                </p>
+            </div>
+            `,
+            'success'
+            );
         await startNewGame(personalization, grupoID);
       } else {
         Swal.fire('Información', 'La partida existente no fue cancelada.', 'info');
@@ -252,7 +265,7 @@ const FilterPersonalization = () => {
 const handleFinishGame = (partidaId, message, icon) => {
   return new Promise((resolve) => {
     Swal.fire({
-      title: 'Finalizando partida...',
+      title: 'Procesando cambio...',
       didOpen: () => Swal.showLoading(),
       allowOutsideClick: false
     });

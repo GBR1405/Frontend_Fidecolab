@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom';
 import "../styles/resultsTeacher.css";
 import { useNavigate, Link } from 'react-router-dom';
+import Cookies from "js-cookie";
+
+const token = Cookies.get("authToken");
+const apiUrl = process.env.REACT_APP_API_URL;
 
 function ResultsTeacher() {
 
@@ -23,11 +27,11 @@ function ResultsTeacher() {
   useEffect(() => {
         const fetchResults = async () => {
             try {
-                const response = await fetch(`/api/resultados/${partidaId}`, {
+                const response = await fetch(`${apiUrl}/resultados/${partidaId}`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
                 });

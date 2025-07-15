@@ -25,38 +25,36 @@ function ResultsTeacher() {
   ];
 
   useEffect(() => {
-        const fetchResults = async () => {
-            try {
-                const response = await fetch(`https://backend-fidecolab.onrender.com/api/resultados/${partidaId}`, {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    });
+    const fetchResults = async () => {
+        const token = Cookies.get("authToken"); // Aquí dentro
+        try {
+            const response = await fetch(`${apiUrl}/resultados/${partidaId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
-                if (!response.ok) {
-                    throw new Error('Error al obtener resultados');
-                }
-
-                const data = await response.json();
-                setResults(data);
-                console.log('Datos recibidos:', data);
-                
-                // Aquí puedes procesar los datos para adaptarlos a tu UI
-                // Por ejemplo, mapear miembros, resultados, etc.
-
-            } catch (err) {
-                setError(err.message);
-                console.error('Error:', err);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                throw new Error('Error al obtener resultados');
             }
-        };
 
-        fetchResults();
-    }, [partidaId]);
+            const data = await response.json();
+            setResults(data);
+            console.log('Datos recibidos:', data);
+
+        } catch (err) {
+            setError(err.message);
+            console.error('Error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchResults();
+}, [partidaId]);
 
   const handleNextClick = React.useCallback(() => {
     setActive((prev) => (prev + 1 <= images.length - 1 ? prev + 1 : 0));

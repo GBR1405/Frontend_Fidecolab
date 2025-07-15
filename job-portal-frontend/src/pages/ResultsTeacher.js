@@ -1,11 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 import "../styles/resultsTeacher.css";
-import { useParams, useNavigate, Link  } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function ResultsTeacher() {
 
   const [active, setActive] = React.useState(0);
   const [refreshInterval, setRefreshInterval] = React.useState(null);
+  const { partidaId } = useParams();
+    const [results, setResults] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
   const images = [
     'Fidelitas1.jpg',
@@ -14,6 +19,40 @@ function ResultsTeacher() {
     'Ejemplo2.jpg',
     'Ejemplo1.jpg'
   ];
+
+  useEffect(() => {
+        const fetchResults = async () => {
+            try {
+                const response = await fetch(`/api/resultados/${partidaId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al obtener resultados');
+                }
+
+                const data = await response.json();
+                setResults(data);
+                console.log('Datos recibidos:', data);
+                
+                // Aquí puedes procesar los datos para adaptarlos a tu UI
+                // Por ejemplo, mapear miembros, resultados, etc.
+
+            } catch (err) {
+                setError(err.message);
+                console.error('Error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchResults();
+    }, [partidaId]);
 
   const handleNextClick = React.useCallback(() => {
     setActive((prev) => (prev + 1 <= images.length - 1 ? prev + 1 : 0));
@@ -29,6 +68,10 @@ function ResultsTeacher() {
 
     return () => clearInterval(interval);
   }, [active, handleNextClick]);
+
+  if (loading) return <div>Cargando resultados...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!results) return <div>No se encontraron resultados</div>;
 
   return (
     <div className="results__body">    

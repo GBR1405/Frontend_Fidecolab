@@ -27,14 +27,14 @@ function ResultsTeacher() {
   useEffect(() => {
         const fetchResults = async () => {
             try {
-                const response = await fetch(`${apiUrl}/resultados/${partidaId}`, {
+                const response = await fetch(`https://backend-fidecolab.onrender.com/api/resultados/${partidaId}`, {
                     method: 'GET',
-                    credentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                });
+                    credentials: 'include',
+                    });
 
                 if (!response.ok) {
                     throw new Error('Error al obtener resultados');

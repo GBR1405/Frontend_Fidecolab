@@ -208,13 +208,13 @@ const FilterPersonalization = () => {
 
     const status = data.status;
     const partidaId = data.partidaId;
-    const existingGameId = data.existingGameId; // Nueva propiedad para manejar partidas existentes
+    const existingGameId = data.existingGameId;
 
     console.log('Respuesta del servidor:', data);
 
     if (status === 1) { // Partida vencida
       await handleFinishGame(partidaId, 'La partida anterior estaba vencida y fue cerrada automáticamente.', 'info');
-      await startNewGame(personalization, grupoID); // Intentar iniciar de nuevo
+      await startNewGame(personalization, grupoID);
       
     } else if (status === 2) { // Partida activa
       const confirm = await Swal.fire({
@@ -227,15 +227,15 @@ const FilterPersonalization = () => {
       });
 
       if (confirm.isConfirmed) {
+        // Obtener configuración antes de finalizar
         await handleFinishGame(existingGameId || partidaId, 'La partida fue cerrada correctamente.', 'success');
-        await startNewGame(personalization, grupoID); // Iniciar nueva partida después de cerrar
+        await startNewGame(personalization, grupoID);
       } else {
         Swal.fire('Información', 'La partida existente no fue cancelada.', 'info');
       }
       
-    } else if (status === 3) { // Nueva partida creada
+    } else if (status === 3) { // Nueva partida
       Swal.fire('Partida Iniciada', 'La partida se ha iniciado correctamente.', 'success');
-      console.log('Partida iniciada con ID:', partidaId);
       
     } else {
       Swal.fire('Error', data.message || 'Respuesta inesperada del servidor.', 'error');
@@ -257,6 +257,19 @@ const handleFinishGame = (partidaId, message, icon) => {
       allowOutsideClick: false
     });
 
+    // Primero obtener la configuración de la partida
+    const getGameConfig = () => {
+      return new Promise((resolveConfig, rejectConfig) => {
+        if (!socket.connected) {
+          socket.once('connect', () => {
+            socket.emit('getGameConfig', partidaId, resolveConfig);
+          });
+        } else {
+          socket.emit('getGameConfig', partidaId, resolveConfig);
+        }
+      });
+    };
+
     const handleSocketResponse = (response) => {
       console.log('Respuesta de finishGame:', response);
       if (response.error) {
@@ -267,14 +280,31 @@ const handleFinishGame = (partidaId, message, icon) => {
       resolve();
     };
 
-    if (!socket.connected) {
-      socket.once('connect', () => {
-        console.log('[Socket] Conectado, emitiendo finishGame');
-        socket.emit('finishGame', partidaId, handleSocketResponse);
+    // Flujo completo:
+    getGameConfig()
+      .then(config => {
+        console.log('Configuración obtenida:', config);
+        
+        // Verificar si hay una partida activa
+        if (!config || !config.juegos) {
+          throw new Error('No se pudo obtener la configuración de la partida');
+        }
+
+        // Ahora emitir finishGame con la configuración obtenida
+        if (!socket.connected) {
+          socket.once('connect', () => {
+            console.log('[Socket] Conectado, emitiendo finishGame');
+            socket.emit('finishGame', partidaId, handleSocketResponse);
+          });
+        } else {
+          socket.emit('finishGame', partidaId, handleSocketResponse);
+        }
+      })
+      .catch(error => {
+        console.error('Error al obtener configuración:', error);
+        Swal.fire('Error', 'No se pudo obtener la configuración de la partida', 'error');
+        resolve();
       });
-    } else {
-      socket.emit('finishGame', partidaId, handleSocketResponse);
-    }
   });
 };
 

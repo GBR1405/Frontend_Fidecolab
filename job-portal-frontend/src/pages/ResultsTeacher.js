@@ -29,11 +29,11 @@ function ResultsTeacher() {
             try {
                 const response = await fetch(`https://backend-fidecolab.onrender.com/api/resultados/${partidaId}`, {
                     method: 'GET',
+                    credentials: 'include',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    credentials: 'include',
                     });
 
                 if (!response.ok) {

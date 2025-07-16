@@ -18,7 +18,6 @@ function ResultsTeacher() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Simulación de carrusel
   const handleNextClick = useCallback(() => {
     setActive((prev) => (prev + 1 < imagenesDibujo.length ? prev + 1 : 0));
   }, [imagenesDibujo.length]);
@@ -47,17 +46,12 @@ function ResultsTeacher() {
 
         if (!response.ok) throw new Error('Error al obtener resultados');
         const data = await response.json();
-        console.log(data);
-        setEquipos(data.equipos || []);
-        console.log(data.equipos);
-        setResultados(data.resultados || []);
-        console.log(data.resultados);
-        setLogros(data.logros || {});
-        console.log(data.logros);
-        setPartida(data.partida || null);
-        console.log(data.partida);
-        setGrupoSeleccionado(data.equipos?.[0]?.grupo || null);
 
+        setEquipos(data.equipos || []);
+        setResultados(data.resultados || []);
+        setLogros(data.logros || {});
+        setPartida(data.partida || null);
+        setGrupoSeleccionado(data.equipos?.[0]?.equipo || null);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -70,7 +64,6 @@ function ResultsTeacher() {
 
   useEffect(() => {
     if (!grupoSeleccionado) return;
-
     const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
     if (!resultadoGrupo || !resultadoGrupo.resultados) return;
 
@@ -78,8 +71,9 @@ function ResultsTeacher() {
       .map(r => {
         try {
           const parsed = JSON.parse(r.Resultados);
-          return parsed.filter(j => j.tipoJuego === 'Dibujo' && j.comentario?.startsWith('data:image'))
-                       .map(j => j.comentario);
+          return parsed
+            .filter(j => j.tipoJuego === 'Dibujo' && j.comentario?.startsWith('data:image'))
+            .map(j => j.comentario);
         } catch {
           return [];
         }
@@ -90,7 +84,7 @@ function ResultsTeacher() {
   }, [grupoSeleccionado, resultados]);
 
   const obtenerMiembros = (grupo) => {
-    const equipo = equipos.find(e => e.grupo === grupo);
+    const equipo = equipos.find(e => e.equipo === grupo);
     return equipo?.miembros || [];
   };
 
@@ -121,8 +115,7 @@ function ResultsTeacher() {
   if (!equipos.length) return <div>No se encontraron resultados</div>;
 
 
-
-     const miembros = obtenerMiembros(grupoSeleccionado);
+    const miembros = obtenerMiembros(grupoSeleccionado);
   const juegos = obtenerResultadosGrupo(grupoSeleccionado);
 
   return (
@@ -157,14 +150,18 @@ function ResultsTeacher() {
               <div className="box__content">
                 <div className="content__list">
                   <div className="list__award">
-                    {(logros?.[grupoSeleccionado] || []).map((_, i) => (
-                      <div className="award" key={i}>
-                        <div className="award__border"></div>
-                        <div className="award__body"><i className="fa-solid fa-star"></i></div>
-                        <div className="award__ribbon ribbon--left"></div>
-                        <div className="award__ribbon ribbon--right"></div>
-                      </div>
-                    ))}
+                    {(logros?.[grupoSeleccionado]?.length > 0) ? (
+                      logros[grupoSeleccionado].map((_, i) => (
+                        <div className="award" key={i}>
+                          <div className="award__border"></div>
+                          <div className="award__body"><i className="fa-solid fa-star"></i></div>
+                          <div className="award__ribbon ribbon--left"></div>
+                          <div className="award__ribbon ribbon--right"></div>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No hay medallas disponibles</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -195,7 +192,7 @@ function ResultsTeacher() {
                         </div>
                         <div className="data__text">
                           <h4 className="data__title">Dificultad:</h4>
-                          <p className="data__text">{juego.dificultad}</p>
+                          <p className="data__text">{juego.dificultad || 'No definida'}</p>
                         </div>
                       </div>
                     </div>
@@ -212,15 +209,15 @@ function ResultsTeacher() {
               <div className="right__box">
                 <div className="box__list">
                   {equipos.map(e => {
-                    const tiempoGrupo = obtenerResultadosGrupo(e.grupo)
+                    const tiempoGrupo = obtenerResultadosGrupo(e.equipo)
                       .reduce((acc, j) => acc + (j.tiempo || 0), 0);
                     return (
                       <div
-                        key={e.grupo}
-                        className={`list__group ${e.grupo === grupoSeleccionado ? 'grupo-activo' : ''}`}
-                        onClick={() => handleGrupoClick(e.grupo)}
+                        key={e.equipo}
+                        className={`list__group ${e.equipo === grupoSeleccionado ? 'grupo-activo' : ''}`}
+                        onClick={() => handleGrupoClick(e.equipo)}
                       >
-                        <h4>Grupo {e.grupo}</h4>
+                        <h4>Grupo {e.equipo}</h4>
                         <h4>{formatearTiempo(tiempoGrupo)}</h4>
                       </div>
                     );
@@ -235,27 +232,33 @@ function ResultsTeacher() {
 
             <div className="right__images">
               <div className="right__slider">
-                <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
-                  {imagenesDibujo.map((src, i) => (
-                    <img key={i} className="image__item" src={src} alt={`Slide ${i + 1}`} />
-                  ))}
-                </div>
-                <div className="slider__nav">
-                  <button className="nav__button" onClick={handlePrevClick}>
-                    <i className="fa-solid fa-caret-left"></i>
-                  </button>
-                  <button className="nav__button" onClick={handleNextClick}>
-                    <i className="fa-solid fa-caret-right"></i>
-                  </button>
-                </div>
-                <button className="button__download" onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = imagenesDibujo[active];
-                  link.download = `imagen-${active + 1}.jpg`;
-                  link.click();
-                }}>
-                  <i className="fa-solid fa-download"></i>
-                </button>
+                {imagenesDibujo.length > 0 ? (
+                  <>
+                    <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
+                      {imagenesDibujo.map((src, i) => (
+                        <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
+                      ))}
+                    </div>
+                    <div className="slider__nav">
+                      <button className="nav__button" onClick={handlePrevClick}>
+                        <i className="fa-solid fa-caret-left"></i>
+                      </button>
+                      <button className="nav__button" onClick={handleNextClick}>
+                        <i className="fa-solid fa-caret-right"></i>
+                      </button>
+                    </div>
+                    <button className="button__download" onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = imagenesDibujo[active];
+                      link.download = `imagen-${active + 1}.png`;
+                      link.click();
+                    }}>
+                      <i className="fa-solid fa-download"></i>
+                    </button>
+                  </>
+                ) : (
+                  <p className="sin-imagenes-texto">Sin dibujos disponibles</p>
+                )}
               </div>
             </div>
           </div>

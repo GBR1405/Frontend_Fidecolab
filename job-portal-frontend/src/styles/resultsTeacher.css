@@ -478,3 +478,16 @@
 .button__download:hover {
     background-color: var(--dark-orange-clr);
 }
+
+.grupo-activo {
+  background-color: #2a40bf;
+  color: white;
+  border-radius: 10px;
+}
+.grupo-activo h4 {
+  color: white;
+}
+.list__group {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}

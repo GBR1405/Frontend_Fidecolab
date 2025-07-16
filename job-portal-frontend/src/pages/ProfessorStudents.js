@@ -390,6 +390,13 @@ const ProfessorStudents = () => {
               if (!resultGroup.isConfirmed) {
                 return false;
               }
+
+               Swal.fire({
+                  title: 'Agregando estudiante...',
+                  text: 'Por favor espera un momento.',
+                  allowOutsideClick: false,
+                  didOpen: () => Swal.showLoading()
+                });
         
               const selectedGroupId = resultGroup.value;
         
@@ -412,6 +419,9 @@ const ProfessorStudents = () => {
                 });
         
                 const result = await response.json();
+
+                Swal.close();
+
                 if (response.ok) {
                   const { mensaje, pdfBase64 } = result;
         

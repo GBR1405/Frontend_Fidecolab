@@ -47,11 +47,15 @@ function ResultsTeacher() {
 
         if (!response.ok) throw new Error('Error al obtener resultados');
         const data = await response.json();
-
+        console.log(data);
         setEquipos(data.equipos || []);
+        console.log(data.equipos);
         setResultados(data.resultados || []);
+        console.log(data.resultados);
         setLogros(data.logros || {});
+        console.log(data.logros);
         setPartida(data.partida || null);
+        console.log(data.partida);
         setGrupoSeleccionado(data.equipos?.[0]?.grupo || null);
 
       } catch (err) {

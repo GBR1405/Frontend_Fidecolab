@@ -13,6 +13,13 @@ import { SocketProvider } from './context/SocketContext';
 import FullScreenLoader from "./components/FullScreenLoader";
 import DelayedSuspense from "./components/DelayedSuspense";
 
+window.addEventListener("error", (e) => {
+  if (e?.message?.includes("ChunkLoadError") || e?.message?.includes("Loading chunk")) {
+    console.warn("⚠️ Error de carga de chunk detectado. Recargando...");
+    window.location.reload();
+  }
+});
+
 // Rutas de usuario s
 const Login = lazy(() => import("./pages/Login"));
 const Profile = lazy(() => import("./pages/Profile"));

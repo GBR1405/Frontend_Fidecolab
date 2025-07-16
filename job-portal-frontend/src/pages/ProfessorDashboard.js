@@ -119,28 +119,29 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
     {sortedTeams.map(team => {
       // Ahorcado: mostrar correctas vs errores
       if (currentGameType === 'Ahorcado') {
-        const letrasEncontradas = teamProgress[team]?.correctas ?? 0;
-        const letrasErradas = teamProgress[team]?.errores ?? 0;
-        const total = letrasEncontradas + letrasErradas || 1;
+  const ahorcadoData = teamProgress[team]?.Ahorcado ?? {};
+  const letrasEncontradas = ahorcadoData.correctas ?? 0;
+  const letrasErradas = ahorcadoData.errores ?? 0;
+  const total = letrasEncontradas + letrasErradas || 1;
 
-        const porcentajeCorrectas = (letrasEncontradas / total) * 100;
-        const porcentajeErrores = (letrasErradas / total) * 100;
+  const porcentajeCorrectas = (letrasEncontradas / total) * 100;
+  const porcentajeErrores = (letrasErradas / total) * 100;
 
-        return (
-          <div key={team} className="team-progress-item">
-            <div className="team-header">
-              <span className="team-name">Equipo {team}</span>
-              <span className="team-progress-value">
-                Letras encontradas: {letrasEncontradas} / Errores: {letrasErradas}
-              </span>
-            </div>
-            <div className="progress-bar dual">
-              <div className="progress-fill correct" style={{ width: `${porcentajeCorrectas}%` }}></div>
-              <div className="progress-fill wrong" style={{ width: `${porcentajeErrores}%` }}></div>
-            </div>
-          </div>
-        );
-      }
+  return (
+    <div key={team} className="team-progress-item">
+      <div className="team-header">
+        <span className="team-name">Equipo {team}</span>
+        <span className="team-progress-value">
+          Letras encontradas: {letrasEncontradas} / Errores: {letrasErradas}
+        </span>
+      </div>
+      <div className="progress-bar dual">
+        <div className="progress-fill correct" style={{ width: `${porcentajeCorrectas}%` }}></div>
+        <div className="progress-fill wrong" style={{ width: `${porcentajeErrores}%` }}></div>
+      </div>
+    </div>
+  );
+}
 
       // Otros juegos: barra de progreso normal
       return (

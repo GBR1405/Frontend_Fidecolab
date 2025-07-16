@@ -213,7 +213,7 @@ const FilterPersonalization = () => {
     console.log('Respuesta del servidor:', data);
 
     if (status === 1) { // Partida vencida
-      await handleFinishGame(partidaId, 'La partida anterior estaba vencida y fue cerrada automáticamente.', 'info');
+      await handleFinishGame(partidaId, 'La partida anterior estaba vencida y fue cerrada automáticamente, una nueva partida a sido iniciada, disfruta!.', 'info');
       await startNewGame(personalization, grupoID);
       
     } else if (status === 2) { // Partida activa

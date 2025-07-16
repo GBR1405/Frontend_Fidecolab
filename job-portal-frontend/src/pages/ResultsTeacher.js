@@ -38,6 +38,7 @@ function ResultsTeacher() {
         if (!response.ok) throw new Error("Error al obtener resultados");
 
         const data = await response.json();
+        console.log('Datos recibidos:', data);
         setResults(Array.isArray(data) ? data : []);
         setGrupoSeleccionado((Array.isArray(data) && data[0]) ? data[0].grupo : null);
       } catch (err) {

@@ -154,6 +154,32 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   };
 }, [socket, partidaId, equipoNumero, userId]);
 
+useEffect(() => {
+  if (!socket) return;
+
+  const handleDrawingCleared = () => {
+    console.log("🧽 Drawing cleared, limpiando canvas local");
+    clearLocalDrawing();
+  };
+
+  socket.on('drawingCleared', handleDrawingCleared);
+
+  return () => {
+    socket.off('drawingCleared', handleDrawingCleared);
+  };
+}, [socket]);
+
+const clearLocalDrawing = () => {
+  setLines([]);
+  setRemoteLines({});
+  setTinta(MAX_TINTA);
+  tintaConsumida.current = 0;
+  lastPoint.current = null;
+
+  // Limpiar storage
+  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
+};
 
   // Guardar líneas en localStorage cuando cambian
   useEffect(() => {

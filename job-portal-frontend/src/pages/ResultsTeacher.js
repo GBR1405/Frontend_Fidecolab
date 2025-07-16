@@ -110,11 +110,6 @@ function ResultsTeacher() {
     return `${min}:${sec}`;
   };
 
-  if (loading) return <div>Cargando resultados...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!equipos.length) return <div>No se encontraron resultados</div>;
-
-
     const miembros = obtenerMiembros(grupoSeleccionado);
   const juegos = obtenerResultadosGrupo(grupoSeleccionado);
 
@@ -132,12 +127,16 @@ function ResultsTeacher() {
 
       <main className="main">
         {loading ? (
-          <div className="loading__container">
-            <div className="loader"></div>
-            <p className="loading__text">Cargando resultados...</p>
-          </div>
-        ) : (
-          <div className="results__container">
+        <div className="loading__container">
+          <div className="loader"></div>
+          <p className="loading__text">Cargando resultados...</p>
+        </div>
+      ) : error ? (
+        <div className="error-message">Error: {error}</div>
+      ) : equipos.length === 0 ? (
+        <div className="no-results">No se encontraron resultados</div>
+      ) : (
+        <div className="results__container">
             {/* Lado izquierdo: Miembros y medallas */}
             <div className="container__left">
               <div className="container__box">

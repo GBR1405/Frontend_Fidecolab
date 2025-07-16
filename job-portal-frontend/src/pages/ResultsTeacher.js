@@ -132,9 +132,13 @@ function ResultsTeacher() {
           <p className="loading__text">Cargando resultados...</p>
         </div>
       ) : error ? (
-        <div className="error-message">Error: {error}</div>
+        <div className="error-message">
+            <i className="fa-solid fa-triangle-exclamation"></i> Error: {error}
+          </div>
       ) : equipos.length === 0 ? (
-        <div className="no-results">No se encontraron resultados</div>
+        <div className="no-results">
+            <i className="fa-solid fa-magnifying-glass"></i> No se encontraron resultados
+          </div>
       ) : (
         <div className="results__container">
             {/* Lado izquierdo: Miembros y medallas */}

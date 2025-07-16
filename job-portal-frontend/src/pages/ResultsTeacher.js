@@ -131,138 +131,189 @@ function ResultsTeacher() {
       </header>
 
       <main className="main">
-        <div className="results__container">
-          {/* Lado izquierdo: Miembros y medallas */}
-          <div className="container__left">
-            <div className="container__box">
-              <div className="box__title"><h3>Miembros</h3></div>
-              <div className="box__group">
-                {miembros.map((m, i) => (
-                  <div key={i} className="group__shape">
-                    <h4 className="shape__name">{m.Nombre} {m.Apellido1} {m.Apellido2}</h4>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="container__box">
-              <div className="box__title"><h3>Medallas</h3></div>
-              <div className="box__content">
-                <div className="content__list">
-                  <div className="list__award">
-                    {(logros?.[grupoSeleccionado]?.length > 0) ? (
-                      logros[grupoSeleccionado].map((_, i) => (
-                        <div className="award" key={i}>
-                          <div className="award__border"></div>
-                          <div className="award__body"><i className="fa-solid fa-star"></i></div>
-                          <div className="award__ribbon ribbon--left"></div>
-                          <div className="award__ribbon ribbon--right"></div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No hay medallas disponibles</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+        {loading ? (
+          <div className="loading__container">
+            <div className="loader"></div>
+            <p className="loading__text">Cargando resultados...</p>
           </div>
-
-          {/* Centro: Juegos */}
-          <div className="container__center">
-            <div className="container__box">
-              <div className="box__title"><h3>Progreso de la Partida</h3></div>
-              <div className="box__results">
-                <div className="results__header">
-                  <h4>Grupo: {grupoSeleccionado}</h4>
-                  <h4>Fecha: {new Date(partida?.FechaFin).toLocaleDateString()}</h4>
-                </div>
-                <div className="results__content">
-                  {juegos.map((juego, index) => (
-                    <div key={index} className="results__shape">
-                      <div className="shape__icon"><i className="fa-solid fa-bolt"></i></div>
-                      <div className="shape__data">
-                        <div className="data__text">
-                          <h4 className="data__title">Juego #{juego.juegoNumero}</h4>
-                          <p className="data__text">{juego.tipoJuego}</p>
-                        </div>
-                        <div className="data__text">
-                          <h4 className="data__title">Tiempo:</h4>
-                          <p className="data__text">{formatearTiempo(juego.tiempo || 0)}</p>
-                        </div>
-                        <div className="data__text">
-                          <h4 className="data__title">Dificultad:</h4>
-                          <p className="data__text">{juego.dificultad || 'No definida'}</p>
-                        </div>
-                      </div>
+        ) : (
+          <div className="results__container">
+            {/* Lado izquierdo: Miembros y medallas */}
+            <div className="container__left">
+              <div className="container__box">
+                <div className="box__title"><h3>Miembros</h3></div>
+                <div className="box__group">
+                  {miembros.map((m, i) => (
+                    <div key={i} className="group__shape">
+                      <h4 className="shape__name" style={{textAlign: 'center', width: '100%', padding: '0 10px'}}>
+                        {m.Nombre} {m.Apellido1} {m.Apellido2}
+                      </h4>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Lado derecho: Grupos e imágenes */}
-          <div className="container__right">
-            <div className="right__groups">
-              <div className="box__title"><h3>Grupos</h3></div>
-              <div className="right__box">
-                <div className="box__list">
-                  {equipos.map(e => {
-                    const tiempoGrupo = obtenerResultadosGrupo(e.equipo)
-                      .reduce((acc, j) => acc + (j.tiempo || 0), 0);
-                    return (
-                      <div
-                        key={e.equipo}
-                        className={`list__group ${e.equipo === grupoSeleccionado ? 'grupo-activo' : ''}`}
-                        onClick={() => handleGrupoClick(e.equipo)}
-                      >
-                        <h4>Grupo {e.equipo}</h4>
-                        <h4>{formatearTiempo(tiempoGrupo)}</h4>
-                      </div>
-                    );
-                  })}
+              <div className="container__box">
+                <div className="box__title"><h3>Medallas</h3></div>
+                <div className="box__content">
+                  <div className="content__list">
+                    <div className="list__award">
+                      {(logros?.[grupoSeleccionado]?.length > 0) ? (
+                        logros[grupoSeleccionado].map((_, i) => (
+                          <div className="award" key={i}>
+                            <div className="award__border"></div>
+                            <div className="award__body"><i className="fa-solid fa-star"></i></div>
+                            <div className="award__ribbon ribbon--left"></div>
+                            <div className="award__ribbon ribbon--right"></div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{
+                          display: 'flex', 
+                          justifyContent: 'center', 
+                          alignItems: 'center', 
+                          height: '100%',
+                          width: '100%'
+                        }}>
+                          <p style={{
+                            fontWeight: 'bold', 
+                            fontSize: '1.2rem',
+                            color: '#2a40bf',
+                            textAlign: 'center'
+                          }}>No hay medallas disponibles</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="right__buttons">
-                <button className="right__button">Salir</button>
-                <button className="right__button">Descargar PDF</button>
+            </div>
+
+            {/* Centro: Juegos */}
+            <div className="container__center">
+              <div className="container__box">
+                <div className="box__title"><h3>Progreso de la Partida</h3></div>
+                <div className="box__results">
+                  <div className="results__header" style={{
+                    backgroundColor: 'white',
+                    boxShadow: '0px 0px 2px rgba(0, 0, 0, 0.04)',
+                    borderBottomLeftRadius: '1em',
+                    borderBottomRightRadius: '1em',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '10px'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      width: '80%',
+                      maxWidth: '400px'
+                    }}>
+                      <h4>Grupo: {grupoSeleccionado}</h4>
+                      <h4>Fecha: {new Date(partida?.FechaFin).toLocaleDateString()}</h4>
+                    </div>
+                  </div>
+                  <div className="results__content">
+                    {juegos.map((juego, index) => (
+                      <div key={index} className="results__shape">
+                        <div className="shape__icon"><i className="fa-solid fa-bolt"></i></div>
+                        <div className="shape__data">
+                          <div className="data__text">
+                            <h4 className="data__title">Juego #{juego.juegoNumero}</h4>
+                            <p className="data__text">{juego.tipoJuego}</p>
+                          </div>
+                          <div className="data__text">
+                            <h4 className="data__title">Tiempo:</h4>
+                            <p className="data__text">{formatearTiempo(juego.tiempo || 0)}</p>
+                          </div>
+                          <div className="data__text">
+                            <h4 className="data__title">Dificultad:</h4>
+                            <p className="data__text">{juego.dificultad || 'No definida'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="right__images">
-              <div className="right__slider">
-                {imagenesDibujo.length > 0 ? (
-                  <>
-                    <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
-                      {imagenesDibujo.map((src, i) => (
-                        <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
-                      ))}
-                    </div>
-                    <div className="slider__nav">
-                      <button className="nav__button" onClick={handlePrevClick}>
-                        <i className="fa-solid fa-caret-left"></i>
+            {/* Lado derecho: Grupos e imágenes */}
+            <div className="container__right">
+              <div className="right__groups">
+                <div className="box__title"><h3>Grupos</h3></div>
+                <div className="right__box">
+                  <div className="box__list">
+                    {equipos.map(e => {
+                      const tiempoGrupo = obtenerResultadosGrupo(e.equipo)
+                        .reduce((acc, j) => acc + (j.tiempo || 0), 0);
+                      return (
+                        <div
+                          key={e.equipo}
+                          className={`list__group ${e.equipo === grupoSeleccionado ? 'grupo-activo' : ''}`}
+                          onClick={() => handleGrupoClick(e.equipo)}
+                        >
+                          <h4>Grupo {e.equipo}</h4>
+                          <h4>{formatearTiempo(tiempoGrupo)}</h4>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="right__buttons">
+                  <button className="right__button">Salir</button>
+                  <button className="right__button">Descargar PDF</button>
+                </div>
+              </div>
+
+              <div className="right__images">
+                <div className="right__slider">
+                  {imagenesDibujo.length > 0 ? (
+                    <>
+                      <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
+                        {imagenesDibujo.map((src, i) => (
+                          <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
+                        ))}
+                      </div>
+                      <div className="slider__nav">
+                        <button className="nav__button" onClick={handlePrevClick}>
+                          <i className="fa-solid fa-caret-left"></i>
+                        </button>
+                        <button className="nav__button" onClick={handleNextClick}>
+                          <i className="fa-solid fa-caret-right"></i>
+                        </button>
+                      </div>
+                      <button className="button__download" onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = imagenesDibujo[active];
+                        link.download = `imagen-${active + 1}.png`;
+                        link.click();
+                      }}>
+                        <i className="fa-solid fa-download"></i>
                       </button>
-                      <button className="nav__button" onClick={handleNextClick}>
-                        <i className="fa-solid fa-caret-right"></i>
-                      </button>
-                    </div>
-                    <button className="button__download" onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = imagenesDibujo[active];
-                      link.download = `imagen-${active + 1}.png`;
-                      link.click();
+                    </>
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: '100%',
+                      width: '100%'
                     }}>
-                      <i className="fa-solid fa-download"></i>
-                    </button>
-                  </>
-                ) : (
-                  <p className="sin-imagenes-texto">Sin dibujos disponibles</p>
-                )}
+                      <p style={{
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem',
+                        color: '#2a40bf',
+                        textAlign: 'center'
+                      }}>Sin dibujos disponibles</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

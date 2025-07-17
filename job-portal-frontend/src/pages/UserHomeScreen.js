@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import Cookies from "js-cookie";
 import "../styles/HomeScreen.css";
+import useDebugMode from './debug';
 
 function UserHomeScreen() {
   const [error, setError] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
+
+  useDebugMode();
 
   useEffect(() => {
     const token = Cookies.get("IFUser_Info");
@@ -20,6 +23,8 @@ function UserHomeScreen() {
   }, []);
 
   if (error) return <Layout userData={null} />;
+
+  
 
   return (
     <Layout>

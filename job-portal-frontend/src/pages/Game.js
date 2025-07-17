@@ -7,6 +7,7 @@ import { games } from '../games/GameConfiguration';
 import "../styles/TeamRoom.css";
 import Swal from 'sweetalert2';
 import "../styles/TransicionesSimulacion.css";
+import ErrorBoundary from '../LN/ErrorBundary';
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
@@ -763,6 +764,7 @@ useEffect(() => {
                       }}
                     />
                   ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
+                    <ErrorBoundary>
                     <PuzzleGame 
                       key={`puzzle-${partidaId}-${equipoNumero}`}
                       gameConfig={currentGameInfo} 
@@ -770,6 +772,7 @@ useEffect(() => {
                         console.log('Rompecabezas completado:', result);
                       }}
                     />
+                    </ErrorBoundary>
                   ) : (
                     <div className="game-not-implemented">
                       <h3>Juego {currentGameInfo.name} en desarrollo</h3>

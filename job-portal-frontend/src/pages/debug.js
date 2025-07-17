@@ -15,6 +15,7 @@ const useDebugMode = () => {
     const TIME_LIMIT = 5000; // 5 segundos
 
     const resetSequence = () => {
+      console.log('%c❌ Secuencia reiniciada', 'color: red; font-weight: bold;');
       inputSequence = [];
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -23,24 +24,42 @@ const useDebugMode = () => {
     };
 
     const handleKeyDown = (event) => {
-      // Ignorar repeticiones de teclas
       if (event.repeat) return;
 
-      // Agregar la tecla actual a la secuencia
-      inputSequence.push(event.code);
+      const currentKey = event.code;
+      const expectedKey = KONAMI_CODE[inputSequence.length];
+      const isCorrectKey = currentKey === expectedKey;
+
+      // Debug visual en consola
+      if (isCorrectKey) {
+        console.log(`%c✅ ${currentKey}`, 'color: green; font-weight: bold;');
+      } else {
+        console.log(`%c❌ ${currentKey} (Se esperaba: ${expectedKey || 'nada'})`, 'color: red; font-weight: bold;');
+      }
+
+      // Agregar la tecla actual a la secuencia solo si es correcta
+      if (isCorrectKey) {
+        inputSequence.push(currentKey);
+      } else {
+        resetSequence();
+        return;
+      }
       
-      // Verificar si coincide con el código Konami
+      // Verificar si excedió el largo máximo
       if (inputSequence.length > KONAMI_CODE.length) {
         inputSequence.shift();
       }
 
-      // Reiniciar el temporizador con cada tecla válida
+      // Reiniciar temporizador
       if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(resetSequence, TIME_LIMIT);
+      timeoutId = setTimeout(() => {
+        console.log('%c⏰ Tiempo agotado!', 'color: orange; font-weight: bold;');
+        resetSequence();
+      }, TIME_LIMIT);
 
       // Verificar coincidencia completa
-      if (inputSequence.length === KONAMI_CODE.length && 
-          inputSequence.every((key, i) => key === KONAMI_CODE[i])) {
+      if (inputSequence.length === KONAMI_CODE.length) {
+        console.log('%c🎉 ¡Código Konami correcto!', 'color: #00FF00; font-weight: bold; font-size: 16px;');
         resetSequence();
         Swal.fire({
           title: '¡Modo Depuración Activado!',
@@ -53,7 +72,9 @@ const useDebugMode = () => {
       }
     };
 
+    console.log('%c🔍 Modo Debug: Escuchando código Konami...', 'color: #4CAF50; font-weight: bold;');
     window.addEventListener('keydown', handleKeyDown);
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       resetSequence();

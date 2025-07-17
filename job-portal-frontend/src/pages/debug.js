@@ -1,10 +1,11 @@
-// debug.js
 import Swal from 'sweetalert2';
 import { useEffect } from 'react';
-import sound from '../docs/login.mp3'; 
+import sound from '../docs/login.mp3';
+import 'animate.css';
 
 const useDebugMode = () => {
   useEffect(() => {
+    // Código Konami
     const KONAMI_CODE = [
       'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
       'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
@@ -12,48 +13,98 @@ const useDebugMode = () => {
     ];
     
     let inputSequence = [];
-    let timeoutId = null;
-    const TIME_LIMIT = 5000; // 5 segundos
+    let konamiTimeoutId = null;
+    const TIME_LIMIT = 5000;
     const audio = new Audio(sound);
 
-    const resetSequence = () => {
+    // Easter Egg de texto "fidecolab"
+    let textInput = '';
+    let textTimeoutId = null;
+    const TEXT_TIMEOUT = 3000;
+
+    const resetKonamiSequence = () => {
       inputSequence = [];
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
+      if (konamiTimeoutId) {
+        clearTimeout(konamiTimeoutId);
+        konamiTimeoutId = null;
       }
+    };
+
+    const resetTextInput = () => {
+      textInput = '';
+      if (textTimeoutId) {
+        clearTimeout(textTimeoutId);
+        textTimeoutId = null;
+      }
+    };
+
+    const showDedicationCard = () => {
+      Swal.fire({
+        title: '❤️ Para Nuestros Usuarios ❤️',
+        html: `
+          <div class="animate__animated animate__zoomIn" style="text-align: center;">
+            <img src="https://i.imgur.com/JR8hWFH.jpg" 
+                 style="width: 200px; border-radius: 50%; border: 5px solid #ff6b6b; margin-bottom: 20px;" 
+                 class="animate__animated animate__pulse animate__infinite"/>
+            <h3 class="animate__animated animate__fadeInUp" style="color: #ff6b6b;">¡Gracias por ser parte de FideColab!</h3>
+            <p class="animate__animated animate__fadeInUp animate__delay-1s">Este proyecto fue creado con ❤️ por el equipo de desarrollo</p>
+            <div style="margin-top: 20px; font-size: 24px;">
+              <span class="animate__animated animate__bounceIn animate__delay-2s">⭐</span>
+              <span class="animate__animated animate__bounceIn animate__delay-3s">🌟</span>
+              <span class="animate__animated animate__bounceIn animate__delay-4s">✨</span>
+            </div>
+            <audio autoplay>
+              <source src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" type="audio/mpeg">
+            </audio>
+          </div>
+        `,
+        width: '80%',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        backdrop: `
+          rgba(0,0,0,0.5)
+          url("https://media.giphy.com/media/3o7TKsQ8UQ4D7GRkcg/giphy.gif")
+          center center
+          no-repeat
+        `,
+        showConfirmButton: false,
+        showCloseButton: true,
+        customClass: {
+          container: 'animate__animated animate__fadeIn',
+          popup: 'special-card',
+          closeButton: 'close-button'
+        },
+        willOpen: () => {
+          document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomIn');
+        },
+        willClose: () => {
+          document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomOut');
+        }
+      });
     };
 
     const handleKeyDown = (event) => {
       if (event.repeat) return;
 
+      // Procesamiento del código Konami
       const currentKey = event.code;
       const expectedKey = KONAMI_CODE[inputSequence.length];
       const isCorrectKey = currentKey === expectedKey;
 
-      // Solo procesar si es la tecla correcta
       if (isCorrectKey) {
         inputSequence.push(currentKey);
       } else {
-        resetSequence();
-        return;
+        resetKonamiSequence();
       }
 
-      // Reiniciar temporizador
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(resetSequence, TIME_LIMIT);
+      if (konamiTimeoutId) clearTimeout(konamiTimeoutId);
+      konamiTimeoutId = setTimeout(resetKonamiSequence, TIME_LIMIT);
 
-      // Verificar coincidencia completa
       if (inputSequence.length === KONAMI_CODE.length) {
-        resetSequence();
-        
-        // Reproducir sonido
+        resetKonamiSequence();
         audio.play().catch(e => console.error("Error al reproducir sonido:", e));
-        
-        // Mostrar alerta con mejor manejo del Enter
         Swal.fire({
           title: 'Secreto encontrado!',
-          html: '⭐ FELICIDIADES ⭐',
+          html: '⭐ FELICIDADES ⭐',
           icon: 'success',
           confirmButtonText: '¡Entendido!',
           background: '#1a1a2e',
@@ -71,9 +122,19 @@ const useDebugMode = () => {
           hideClass: {
             popup: 'animate__animated animate__fadeOutUp'
           }
-        }).then(() => {
-          // Acciones adicionales después de cerrar
         });
+      }
+
+      // Procesamiento del texto "fidecolab"
+      if (event.key.length === 1) {
+        textInput += event.key.toLowerCase();
+        if (textTimeoutId) clearTimeout(textTimeoutId);
+        textTimeoutId = setTimeout(resetTextInput, TEXT_TIMEOUT);
+        
+        if (textInput.includes('fidecolab')) {
+          resetTextInput();
+          showDedicationCard();
+        }
       }
     };
 
@@ -81,7 +142,8 @@ const useDebugMode = () => {
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      resetSequence();
+      resetKonamiSequence();
+      resetTextInput();
     };
   }, []);
 };

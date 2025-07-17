@@ -52,8 +52,8 @@ const useDebugMode = () => {
         
         // Mostrar alerta con mejor manejo del Enter
         Swal.fire({
-          title: '¡Modo Depuración Activado!',
-          html: '🔓 <b>Función secreta desbloqueada</b>',
+          title: 'Secreto encontrado!',
+          html: '⭐ FELICIDIADES ⭐',
           icon: 'success',
           confirmButtonText: '¡Entendido!',
           background: '#1a1a2e',
@@ -61,7 +61,7 @@ const useDebugMode = () => {
           allowEnterKey: false,
           backdrop: `
             rgba(0,0,123,0.4)
-            url("https://i.gifer.com/7VE.gif")
+            url("https://media.tenor.com/8VMZ6wWu70IAAAAM/fish.gif")
             center top
             no-repeat
           `,

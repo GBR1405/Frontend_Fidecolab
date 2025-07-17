@@ -1,6 +1,7 @@
 // debug.js
 import Swal from 'sweetalert2';
 import { useEffect } from 'react';
+import sound from '../docs/login.mp3'; 
 
 const useDebugMode = () => {
   useEffect(() => {
@@ -13,9 +14,9 @@ const useDebugMode = () => {
     let inputSequence = [];
     let timeoutId = null;
     const TIME_LIMIT = 5000; // 5 segundos
+    const audio = new Audio(sound);
 
     const resetSequence = () => {
-      console.log('%c❌ Secuencia reiniciada', 'color: red; font-weight: bold;');
       inputSequence = [];
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -30,49 +31,52 @@ const useDebugMode = () => {
       const expectedKey = KONAMI_CODE[inputSequence.length];
       const isCorrectKey = currentKey === expectedKey;
 
-      // Debug visual en consola
-      if (isCorrectKey) {
-        console.log(`%c✅ ${currentKey}`, 'color: green; font-weight: bold;');
-      } else {
-        console.log(`%c❌ ${currentKey} (Se esperaba: ${expectedKey || 'nada'})`, 'color: red; font-weight: bold;');
-      }
-
-      // Agregar la tecla actual a la secuencia solo si es correcta
+      // Solo procesar si es la tecla correcta
       if (isCorrectKey) {
         inputSequence.push(currentKey);
       } else {
         resetSequence();
         return;
       }
-      
-      // Verificar si excedió el largo máximo
-      if (inputSequence.length > KONAMI_CODE.length) {
-        inputSequence.shift();
-      }
 
       // Reiniciar temporizador
       if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        console.log('%c⏰ Tiempo agotado!', 'color: orange; font-weight: bold;');
-        resetSequence();
-      }, TIME_LIMIT);
+      timeoutId = setTimeout(resetSequence, TIME_LIMIT);
 
       // Verificar coincidencia completa
       if (inputSequence.length === KONAMI_CODE.length) {
-        console.log('%c🎉 ¡Código Konami correcto!', 'color: #00FF00; font-weight: bold; font-size: 16px;');
         resetSequence();
+        
+        // Reproducir sonido
+        audio.play().catch(e => console.error("Error al reproducir sonido:", e));
+        
+        // Mostrar alerta con mejor manejo del Enter
         Swal.fire({
           title: '¡Modo Depuración Activado!',
-          text: 'Has descubierto la función secreta.',
+          html: '🔓 <b>Función secreta desbloqueada</b>',
           icon: 'success',
-          confirmButtonText: '¡Genial!',
+          confirmButtonText: '¡Entendido!',
           background: '#1a1a2e',
-          color: '#ffffff'
+          color: '#ffffff',
+          allowEnterKey: false,
+          backdrop: `
+            rgba(0,0,123,0.4)
+            url("https://i.gifer.com/7VE.gif")
+            center top
+            no-repeat
+          `,
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        }).then(() => {
+          // Acciones adicionales después de cerrar
         });
       }
     };
 
-    console.log('%c🔍 Modo Debug: Escuchando código Konami...', 'color: #4CAF50; font-weight: bold;');
     window.addEventListener('keydown', handleKeyDown);
     
     return () => {

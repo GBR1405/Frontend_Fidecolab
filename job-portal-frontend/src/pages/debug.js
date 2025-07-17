@@ -39,48 +39,93 @@ const useDebugMode = () => {
     };
 
     const showDedicationCard = () => {
-      Swal.fire({
-        title: '❤️ Para Nuestros Usuarios ❤️',
-        html: `
-          <div class="animate__animated animate__zoomIn" style="text-align: center;">
-            <img src="https://i.imgur.com/JR8hWFH.jpg" 
-                 style="width: 200px; border-radius: 50%; border: 5px solid #ff6b6b; margin-bottom: 20px;" 
-                 class="animate__animated animate__pulse animate__infinite"/>
-            <h3 class="animate__animated animate__fadeInUp" style="color: #ff6b6b;">¡Gracias por ser parte de FideColab!</h3>
-            <p class="animate__animated animate__fadeInUp animate__delay-1s">Este proyecto fue creado con ❤️ por el equipo de desarrollo</p>
-            <div style="margin-top: 20px; font-size: 24px;">
-              <span class="animate__animated animate__bounceIn animate__delay-2s">⭐</span>
-              <span class="animate__animated animate__bounceIn animate__delay-3s">🌟</span>
-              <span class="animate__animated animate__bounceIn animate__delay-4s">✨</span>
+        // Importar confetti (asegúrate de tener canvas-confetti instalado)
+        import('canvas-confetti').then((confetti) => {
+            // Efecto de confeti al abrir
+            confetti.default({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+            });
+        });
+
+        Swal.fire({
+            title: '<img src="https://i.postimg.cc/NGzXwBp6/logo.png" style="width: 100px; height: auto; margin-bottom: 20px;">',
+            html: `
+            <div style="
+                max-height: 60vh;
+                overflow-y: auto;
+                padding: 0 10px;
+                text-align: justify;
+                font-family: 'Arial', sans-serif;
+            ">
+                <h2 style="color: #2c3e50; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                Carta de un desarrollador
+                </h2>
+                
+                <div class="animate__animated animate__fadeIn" style="margin-bottom: 20px;">
+                <p>Esta carta va para quienes, con su ayuda, se logró completar este sistema. FideColab empezó siendo una propuesta difícil, retadora, que no sabíamos si aceptar o rechazar, pero todo lo que habíamos hecho en el pasado nos dio la respuesta de decir "sí".</p>
+                
+                <p>Este "sí" abrió un camino gigante de retos. Todo el sistema estaba hecho con lenguajes poco conocidos, nuevos para nosotros en su gran mayoría. No obstante, cuando caminas, llegas a un final, aquel que tanto anhelabas alcanzar.</p>
+                
+                <p>Mi equipo de trabajo fue increíble, siempre estuvo unido. Aun con dificultades al inicio, logramos caminar todos paso a paso hasta el final. Quiero destacar la gran ayuda de nuestra profesora y guía en el desarrollo del proyecto, <strong>Maribel Solís</strong>, quien fue un apoyo enorme para nosotros en la toma de decisiones y tiempos.</p>
+                </div>
+                
+                <div class="animate__animated animate__fadeIn animate__delay-1s" style="margin-bottom: 20px;">
+                <p>Dicho lo anterior, ahora me dispongo a mencionar a mis compañeros de trabajo. De mi parte, agradezco el apoyo que tuve de ellos y, propiamente, el aporte que le dieron a este proyecto. <strong>Nicole Gómez, Andrés Canul, Sebastián Barboza, Yiqi Xie Lei y Nazareth Zúñiga</strong> son ese equipo, uno que estuvo en las buenas y en las malas, aquellos que me acompañaron por casi un año entero, y algunos aún mucho más tiempo.</p>
+                
+                <p>De todos ellos, felicito especialmente a <strong>Andrés</strong> por ser quien hizo posible el gran diseño que tenemos actualmente. Aunque al inicio no estuvo con nosotros, su ingreso al grupo fue fundamental y súper importante.</p>
+                </div>
+                
+                <div class="animate__animated animate__fadeIn animate__delay-2s" style="margin-bottom: 20px;">
+                <p>Por último, agradezco a la <strong>Universidad Fidelitas</strong> por la oportunidad de empezar, estudiar y finalizar mi carrera de Ingeniería en Sistemas que tanto he querido, por los grandes hallazgos y la diversión que he tenido.</p>
+                
+                <p style="font-style: italic; text-align: center; padding: 15px; background: #f8f9fa; border-left: 4px solid #3498db;">
+                    "La vida te abre varios caminos, pero las amistades son quienes te ayudan a encontrar la mejor opción"
+                </p>
+                
+                <p>Con esto finalizo esta carta. Espero que les esté gustando el sistema y que pueda seguir evolucionando y avanzando.</p>
+                
+                <p style="text-align: right; font-weight: bold; margin-top: 30px;">Atentamente:<br>GBR</p>
+                </div>
             </div>
+            
             <audio autoplay>
-              <source src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" type="audio/mpeg">
+                <source src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" type="audio/mpeg">
             </audio>
-          </div>
-        `,
-        width: '80%',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        backdrop: `
-          rgba(0,0,0,0.5)
-          url("https://media.giphy.com/media/3o7TKsQ8UQ4D7GRkcg/giphy.gif")
-          center center
-          no-repeat
-        `,
-        showConfirmButton: false,
-        showCloseButton: true,
-        customClass: {
-          container: 'animate__animated animate__fadeIn',
-          popup: 'special-card',
-          closeButton: 'close-button'
-        },
-        willOpen: () => {
-          document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomIn');
-        },
-        willClose: () => {
-          document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomOut');
-        }
-      });
-    };
+            `,
+            width: '800px',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+            backdrop: `
+            rgba(0,0,0,0.5)
+            url("https://media.giphy.com/media/3o7TKsQ8UQ4D7GRkcg/giphy.gif")
+            center center
+            no-repeat
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            customClass: {
+            container: 'animate__animated animate__fadeIn',
+            popup: 'special-card',
+            closeButton: 'close-button'
+            },
+            willOpen: () => {
+            document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomIn');
+            },
+            willClose: () => {
+            document.querySelector('.special-card').classList.add('animate__animated', 'animate__zoomOut');
+            // Más confeti al cerrar
+            import('canvas-confetti').then((confetti) => {
+                confetti.default({
+                particleCount: 100,
+                spread: 60,
+                origin: { y: 0.4 }
+                });
+            });
+            }
+        });
+        };
 
     const handleKeyDown = (event) => {
       if (event.repeat) return;

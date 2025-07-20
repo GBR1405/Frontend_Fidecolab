@@ -4,13 +4,14 @@ import "../styles/profile.css";
 import Cookies from "js-cookie";
 import EditUser from "./EditUser";
 import CryptoJS from "crypto-js";
+import Swal from 'sweetalert2';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 function Profile() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
-  const [showModal, setShowModal] = useState(false); // Estado para controlar la visibilidad del modal
+  const [showModal, setShowModal] = useState(false); 
 
   useEffect(() => {
     fetchUserDetails();
@@ -129,7 +130,7 @@ function Profile() {
       </section>
 
       {/* Aquí se renderiza el modal de edición cuando showModal es true */}
-      {showModal && <EditUser showModal={showModal} setShowModal={setShowModal} />}
+      {showModal && <EditUser setShowModal={setShowModal} />}
     </Layout>
   );
 }

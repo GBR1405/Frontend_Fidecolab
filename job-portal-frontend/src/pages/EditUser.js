@@ -71,38 +71,36 @@ const EditarPerfil = ({ setShowModal }) => {
     }
   };
 
-  const cambiarContraseña = async () => {
-    if (!currentPassword || !newPassword) {
-      return Swal.fire("Campos incompletos", "Debes llenar ambas contraseñas", "warning");
+  const cambiarContraseña = async (actual, nueva) => {
+  if (!actual || !nueva) {
+    return Swal.fire("Campos incompletos", "Debes llenar ambas contraseñas", "warning");
+  }
+
+  try {
+    const token = Cookies.get("authToken");
+
+    const res = await fetch(`${apiUrl}/auth/user-update-password`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ currentPassword: actual, newPassword: nueva }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      Swal.fire("¡Listo!", "Contraseña actualizada correctamente", "success");
+    } else {
+      Swal.fire("Error", data.message || "No se pudo actualizar la contraseña", "error");
     }
+  } catch (error) {
+    console.error(error);
+    Swal.fire("Error", "Error inesperado al cambiar la contraseña", "error");
+  }
+};
 
-    try {
-      const token = Cookies.get("authToken");
-
-      const res = await fetch(`${apiUrl}/auth/user-update-password`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        Swal.fire("¡Listo!", "Contraseña actualizada correctamente", "success").then(() => {
-          setCurrentPassword("");
-          setNewPassword("");
-        });
-      } else {
-        Swal.fire("Error", data.message || "No se pudo actualizar la contraseña", "error");
-      }
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Error", "Error inesperado al cambiar la contraseña", "error");
-    }
-  };
 
   const mostrarModal = () => {
     Swal.fire({
@@ -149,9 +147,7 @@ const EditarPerfil = ({ setShowModal }) => {
         document.getElementById("btnPassword").addEventListener("click", () => {
           const actual = document.getElementById("passActual").value;
           const nueva = document.getElementById("passNueva").value;
-          setCurrentPassword(actual);
-          setNewPassword(nueva);
-          cambiarContraseña();
+          cambiarContraseña(actual, nueva);
         });
       },
     });

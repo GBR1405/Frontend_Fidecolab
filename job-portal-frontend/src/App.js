@@ -59,19 +59,19 @@ const AgregarContenido = lazy(() => import("./pages/AddGames.js"));
 
 // Componente principal de la app
 const App = () => {
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+  const [isSmallScreen, setIsSmallScreen] = useState(
+    window.innerWidth < 1100 || window.innerHeight < 550
+  );
 
-  // Detecta el tamaño de la pantalla
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
+      setIsSmallScreen(window.innerWidth < 1100 || window.innerHeight < 550);
     };
 
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Si la pantalla es pequeña, muestra un mensaje de error
   if (isSmallScreen) {
     return <ErrorWindowSize />;
   }

@@ -148,6 +148,20 @@ useEffect(() => {
     return hash;
   };
 
+  useEffect(() => {
+  if (currentGameInfo && (!currentGameInfo.name || !currentGameInfo.config)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de conexión interna',
+      text: 'No se pudo cargar la información del juego. Por favor, intente nuevamente en unos instantes.',
+      confirmButtonText: 'Reintentar',
+      confirmButtonColor: '#2a40bf'
+    }).then(() => {
+      window.location.reload(); // o navigate('/') si prefieres volver al inicio
+    });
+  }
+}, [currentGameInfo]);
+
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
     if (userId === localStorage.getItem('userId')) return;
@@ -725,7 +739,9 @@ useEffect(() => {
           {/* Header del equipo */}
           <div className="team-room-header">
             <h1>Equipo {equipoNumero}</h1>
-            {currentGameInfo.name.toLowerCase().includes('dibujo') && <h3 className="game__topic">Tema: {currentGameInfo.tema}</h3>}            
+            {currentGameInfo?.name?.toLowerCase().includes('dibujo') && (
+              <h3 className="game__topic">Tema: {currentGameInfo.tema}</h3>
+            )}            
             {currentGameInfo && (              
               <div className="game-progress">
                 Juego {gameProgress.current} de {gameProgress.total}                
@@ -733,7 +749,7 @@ useEffect(() => {
             )}
           </div>
 
-          {/* Efecto blur durante transición */}
+
           <div className={`game-display ${
               (transitionPhase === 'blurring' || transitionPhase === 'showing') ? '_blurring' : ''
             }`}>
@@ -775,7 +791,7 @@ useEffect(() => {
                     </ErrorBoundary>
                   ) : (
                     <div className="game-not-implemented">
-                      <h3>Juego {currentGameInfo.name} en desarrollo</h3>
+                      <h3>Juego {currentGameInfo?.name || "desconocido"} en desarrollo</h3>
                       <p>Este juego estará disponible pronto</p>
                     </div>
                   )}

@@ -89,7 +89,7 @@ function Profile() {
           </div>
           <div className="top__edit">
             <button className="edit__btn" onClick={() => setShowModal(true)}>
-              ✏️ Editar Perfil
+              Editar Perfil
             </button>
           </div>
         </div>

@@ -6,7 +6,7 @@ function ErrorWindowSize() {
 
     useEffect(() => {
         const checkScreenSize = () => {
-            setIsSmallScreen(window.innerWidth < 768);
+            setIsSmallScreen(window.innerWidth < 1100 || window.innerHeight < 550);
         };
         
         checkScreenSize();

@@ -8,11 +8,15 @@ import "../styles/TeamRoom.css";
 import Swal from 'sweetalert2';
 import "../styles/TransicionesSimulacion.css";
 import ErrorBoundary from '../LN/ErrorBundary';
+import Cookies from "js-cookie";
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
 import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
+
+const apiUrl = process.env.REACT_APP_API_URL;
+const token = Cookies.get("authToken");
 
 const TeamRoom = () => {
   const { partidaId, equipoNumero } = useParams();
@@ -44,6 +48,40 @@ const TeamRoom = () => {
   const [showBlackout, setShowBlackout] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!socket || !partidaId) return;
+  
+    // 🔍 Verificar estado de la partida antes de ejecutar lógica
+    const verificarEstadoPartida = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/check-activity`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ partidaId })
+        });
+  
+        const data = await res.json();
+  
+        if (data.isFinished) {
+          window.location.href = `/resultados/${partidaId}`;
+          return;
+        }
+  
+        console.log('Partida activa, obteniendo configuración...');
+      } catch (error) {
+        console.error('Error al verificar estado de la partida:', error);
+      }
+    };
+  
+    
+  
+    verificarEstadoPartida(); // Llamado antes del emit
+  }, [socket, partidaId]);
 
    useEffect(() => {
   if (!socket) return;
@@ -800,8 +838,8 @@ useEffect(() => {
                 <div className="waiting-message">
                   <div className="waiting-content">
                     <div className="loader"></div>
-                    <h2>Sala de Espera</h2>
-                    <p>Esperando que el profesor inicie los juegos...</p>
+                    <h2>Esperando el contenido</h2>
+                    <p>La partida esta a punto de comenzar.</p>
                   </div>
                 </div>
               )}

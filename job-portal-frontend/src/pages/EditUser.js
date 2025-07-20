@@ -106,131 +106,135 @@ const EditarPerfil = ({ setShowModal }) => {
 
   const mostrarModal = () => {
     Swal.fire({
-      title: '<div style="margin-bottom: 10px;">Editar Perfil</div><hr style="margin: 0; border: 1px solid #ddd;" />',
-      html: `
-        <style>
-          .edit-container {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-          }
-          .section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-          }
-          .section-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 1.1em;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-          }
-          .swal2-input-custom {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-          }
-          .password-row {
-            display: flex;
-            gap: 10px;
-          }
-          .swal2-eye {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            cursor: pointer;
-            font-size: 1rem;
-            color: #555;
-          }
-          .swal2-password-container {
-            position: relative;
-            flex: 1;
-          }
-          .divider {
-            width: 1px;
-            background-color: #ccc;
-            margin: 0 10px;
-          }
-          .btn-final {
-            width: 100%;
-            padding: 10px;
-            background: #2a40bf;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            margin-top: 20px;
-          }
-        </style>
+  title: `
+    <div style="margin-bottom: 10px; font-size: 1.4rem">Editar Perfil</div>
+    <hr style="margin: 0; border: 1px solid #ddd;" />
+  `,
+  width: '800px', // ← AUMENTA EL ANCHO DEL MODAL
+  html: `
+    <style>
+      .edit-container {
+        display: flex;
+        gap: 30px;
+        margin-top: 20px;
+      }
+      .section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+      .section-title {
+        font-weight: bold;
+        margin-bottom: 15px;
+        font-size: 1.15rem;
+        text-align: center;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 5px;
+      }
+      .swal2-input-custom {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .password-row {
+        display: flex;
+        gap: 10px;
+      }
+      .swal2-eye {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 1rem;
+        color: #555;
+      }
+      .swal2-password-container {
+        position: relative;
+        flex: 1;
+      }
+      .divider {
+        width: 1px;
+        background-color: #ccc;
+        margin: 0 10px;
+      }
+      .btn-final {
+        width: 100%;
+        padding: 12px;
+        background: #2a40bf;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        margin-top: 25px;
+      }
+    </style>
 
-        <div class="edit-container">
-          <div class="section">
-            <div class="section-title">Actualizar Género</div>
-            <label>Seleccionar Género:</label>
-            <select id="generoSelect" class="swal2-input-custom">
-              <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>
-              <option value="Mujer" ${genero === "Mujer" ? "selected" : ""}>Mujer</option>
-              <option value="Indefinido" ${genero === "Indefinido" ? "selected" : ""}>Indefinido</option>
-            </select>
-          </div>
+    <div class="edit-container">
+      <div class="section">
+        <div class="section-title">Actualizar Género</div>
+        <label>Seleccionar Género:</label>
+        <select id="generoSelect" class="swal2-input-custom">
+          <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>
+          <option value="Mujer" ${genero === "Mujer" ? "selected" : ""}>Mujer</option>
+          <option value="Indefinido" ${genero === "Indefinido" ? "selected" : ""}>Indefinido</option>
+        </select>
+      </div>
 
-          <div class="divider"></div>
+      <div class="divider"></div>
 
-          <div class="section">
-            <div class="section-title">Actualizar Contraseña</div>
-            <label>Contraseña actual:</label>
-            <div class="swal2-password-container">
-              <input id="passActual" type="password" class="swal2-input-custom" />
-              <i class="fa fa-eye swal2-eye" id="eyeActual"></i>
-            </div>
-
-            <div class="password-row">
-              <div class="swal2-password-container">
-                <label>Nueva:</label>
-                <input id="passNueva" type="password" class="swal2-input-custom" />
-                <i class="fa fa-eye swal2-eye" id="eyeNueva"></i>
-              </div>
-              <div class="swal2-password-container">
-                <label>Confirmar:</label>
-                <input id="passConfirm" type="password" class="swal2-input-custom" />
-                <i class="fa fa-eye swal2-eye" id="eyeConfirm"></i>
-              </div>
-            </div>
-          </div>
+      <div class="section">
+        <div class="section-title">Actualizar Contraseña</div>
+        <label>Contraseña actual:</label>
+        <div class="swal2-password-container">
+          <input id="passActual" type="password" class="swal2-input-custom" />
+          <i class="fa fa-eye swal2-eye" id="eyeActual"></i>
         </div>
 
-        <button id="btnFinal" class="btn-final">Guardar Cambios</button>
-      `,
-      showConfirmButton: false,
-      showCloseButton: true,
-      willClose: () => {
-        if (setShowModal) setShowModal(false);
-      },
-      didOpen: () => {
-        // Toggle visibilidad de contraseñas
-        ["Actual", "Nueva", "Confirm"].forEach((campo) => {
-          const input = document.getElementById(`pass${campo}`);
-          const eye = document.getElementById(`eye${campo}`);
-          eye.addEventListener("click", () => {
-            input.type = input.type === "password" ? "text" : "password";
-            eye.classList.toggle("fa-eye");
-            eye.classList.toggle("fa-eye-slash");
-          });
-        });
+        <div class="password-row">
+          <div class="swal2-password-container">
+            <label>Nueva:</label>
+            <input id="passNueva" type="password" class="swal2-input-custom" />
+            <i class="fa fa-eye swal2-eye" id="eyeNueva"></i>
+          </div>
+          <div class="swal2-password-container">
+            <label>Confirmar:</label>
+            <input id="passConfirm" type="password" class="swal2-input-custom" />
+            <i class="fa fa-eye swal2-eye" id="eyeConfirm"></i>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // Actualizar todo
-        document.getElementById("btnFinal").addEventListener("click", () => {
-          actualizarTodo();
-        });
-      },
+    <button id="btnFinal" class="btn-final">Guardar Cambios</button>
+  `,
+  showConfirmButton: false,
+  showCloseButton: true,
+  willClose: () => {
+    if (setShowModal) setShowModal(false);
+  },
+  didOpen: () => {
+    // Toggle visibilidad
+    ["Actual", "Nueva", "Confirm"].forEach((campo) => {
+      const input = document.getElementById(`pass${campo}`);
+      const eye = document.getElementById(`eye${campo}`);
+      eye.addEventListener("click", () => {
+        input.type = input.type === "password" ? "text" : "password";
+        eye.classList.toggle("fa-eye");
+        eye.classList.toggle("fa-eye-slash");
+      });
     });
+
+    document.getElementById("btnFinal").addEventListener("click", () => {
+      actualizarTodo();
+    });
+  },
+});
+
   };
 
   return null;

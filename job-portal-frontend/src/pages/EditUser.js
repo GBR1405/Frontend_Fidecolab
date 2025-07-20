@@ -110,9 +110,6 @@ const EditarPerfil = ({ setShowModal }) => {
       html: `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;">
           <div>
-            <label style="font-weight: bold;">Correo:</label>
-            <input id="correoInput" disabled value="${correo}" style="${styleInput()}" />
-
             <label style="font-weight: bold; margin-top: 10px;">Género:</label>
             <select id="generoSelect" style="${styleInput()}">
               <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>

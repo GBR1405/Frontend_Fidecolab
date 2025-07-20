@@ -1,10 +1,8 @@
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
 import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 import CryptoJS from "crypto-js";
 
-const MySwal = withReactContent(Swal);
 const apiUrl = process.env.REACT_APP_API_URL;
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 
@@ -24,6 +22,8 @@ const EditarPerfil = ({ setShowModal }) => {
     setCorreo(decrypted.correo);
     setGenero(decrypted.genero || "Indefinido");
     setOriginalGenero(decrypted.genero || "Indefinido");
+
+    mostrarModal();
   }, []);
 
   const actualizarGenero = async () => {
@@ -37,12 +37,12 @@ const EditarPerfil = ({ setShowModal }) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           correo,
-          generoId: genero === "Hombre" ? 1 : genero === "Mujer" ? 2 : 3
-        })
+          generoId: genero === "Hombre" ? 1 : genero === "Mujer" ? 2 : 3,
+        }),
       });
 
       const data = await res.json();
@@ -53,7 +53,12 @@ const EditarPerfil = ({ setShowModal }) => {
         const userData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         const updatedData = { ...userData, genero };
 
-        Cookies.set("IFUser_Info", CryptoJS.AES.encrypt(JSON.stringify(updatedData), secretKey).toString(), { expires: 7 });
+        Cookies.set(
+          "IFUser_Info",
+          CryptoJS.AES.encrypt(JSON.stringify(updatedData), secretKey).toString(),
+          { expires: 7 }
+        );
+
         Swal.fire("Éxito", "Género actualizado correctamente", "success").then(() => {
           window.location.reload();
         });
@@ -78,9 +83,9 @@ const EditarPerfil = ({ setShowModal }) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ currentPassword, newPassword })
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
       const data = await res.json();
@@ -99,79 +104,70 @@ const EditarPerfil = ({ setShowModal }) => {
     }
   };
 
-  // SweetAlert personalizado
-  MySwal.fire({
-    title: "Editar Perfil",
-    html: (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", textAlign: "left" }}>
-        {/* Columna 1: Género */}
-        <div>
-          <label style={{ fontWeight: "bold" }}>Correo:</label>
-          <input value={correo} disabled style={inputStyle} />
+  const mostrarModal = () => {
+    Swal.fire({
+      title: "Editar Perfil",
+      html: `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;">
+          <div>
+            <label style="font-weight: bold;">Correo:</label>
+            <input id="correoInput" disabled value="${correo}" style="${styleInput()}" />
 
-          <label style={{ fontWeight: "bold", marginTop: "10px" }}>Género:</label>
-          <select value={genero} onChange={(e) => setGenero(e.target.value)} style={inputStyle}>
-            <option value="Hombre">Hombre</option>
-            <option value="Mujer">Mujer</option>
-            <option value="Indefinido">Indefinido</option>
-          </select>
+            <label style="font-weight: bold; margin-top: 10px;">Género:</label>
+            <select id="generoSelect" style="${styleInput()}">
+              <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>
+              <option value="Mujer" ${genero === "Mujer" ? "selected" : ""}>Mujer</option>
+              <option value="Indefinido" ${genero === "Indefinido" ? "selected" : ""}>Indefinido</option>
+            </select>
 
-          <button onClick={actualizarGenero} style={buttonStyle}>Actualizar Género</button>
+            <button id="btnGenero" style="${styleButton("#0d6efd")}">Actualizar Género</button>
+          </div>
+
+          <div>
+            <label style="font-weight: bold;">Contraseña actual:</label>
+            <input id="passActual" type="password" style="${styleInput()}" />
+
+            <label style="font-weight: bold; margin-top: 10px;">Nueva contraseña:</label>
+            <input id="passNueva" type="password" style="${styleInput()}" />
+
+            <button id="btnPassword" style="${styleButton("#198754")}">Cambiar Contraseña</button>
+          </div>
         </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      willClose: () => {
+        if (setShowModal) setShowModal(false);
+      },
+      didOpen: () => {
+        // Eventos al abrir el modal
+        document.getElementById("generoSelect").addEventListener("change", (e) => {
+          setGenero(e.target.value);
+        });
 
-        {/* Columna 2: Contraseña */}
-        <div>
-          <label style={{ fontWeight: "bold" }}>Contraseña actual:</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            style={inputStyle}
-          />
+        document.getElementById("btnGenero").addEventListener("click", () => {
+          actualizarGenero();
+        });
 
-          <label style={{ fontWeight: "bold", marginTop: "10px" }}>Nueva contraseña:</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            style={inputStyle}
-          />
-
-          <button onClick={cambiarContraseña} style={{ ...buttonStyle, background: "#198754" }}>
-            Cambiar Contraseña
-          </button>
-        </div>
-      </div>
-    ),
-    showConfirmButton: false,
-    showCloseButton: true,
-    willClose: () => {
-      if (setShowModal) setShowModal(false);
-    }
-  });
+        document.getElementById("btnPassword").addEventListener("click", () => {
+          const actual = document.getElementById("passActual").value;
+          const nueva = document.getElementById("passNueva").value;
+          setCurrentPassword(actual);
+          setNewPassword(nueva);
+          cambiarContraseña();
+        });
+      },
+    });
+  };
 
   return null;
 };
 
-// Estilos comunes
-const inputStyle = {
-  width: "100%",
-  padding: "8px",
-  marginTop: "5px",
-  marginBottom: "15px",
-  borderRadius: "5px",
-  border: "1px solid #ccc"
-};
+// Helpers de estilos en línea
+const styleInput = () =>
+  `width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc;`;
 
-const buttonStyle = {
-  width: "100%",
-  padding: "10px",
-  background: "#0d6efd",
-  color: "white",
-  border: "none",
-  borderRadius: "5px",
-  fontWeight: "bold",
-  cursor: "pointer"
-};
+const styleButton = (color) =>
+  `width: 100%; padding: 10px; background: ${color}; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;`;
 
 export default EditarPerfil;

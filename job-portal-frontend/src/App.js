@@ -60,12 +60,12 @@ const AgregarContenido = lazy(() => import("./pages/AddGames.js"));
 // Componente principal de la app
 const App = () => {
   const [isSmallScreen, setIsSmallScreen] = useState(
-    window.innerWidth < 1100 || window.innerHeight < 550
+    window.innerWidth < 810 || window.innerHeight < 550
   );
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 1100 || window.innerHeight < 550);
+      setIsSmallScreen(window.innerWidth < 810 || window.innerHeight < 550);
     };
 
     window.addEventListener("resize", checkScreenSize);

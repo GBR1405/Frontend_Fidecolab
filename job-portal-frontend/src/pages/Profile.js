@@ -89,7 +89,7 @@ function Profile() {
           </div>
           <div className="top__edit">
             <button className="edit__btn" onClick={() => setShowModal(true)}>
-              Editar Información
+              ✏️ Editar Perfil
             </button>
           </div>
         </div>
@@ -130,11 +130,7 @@ function Profile() {
       </section>
 
       {/* Aquí se renderiza el modal de edición cuando showModal es true */}
-      <div className="top__edit">
-        <button className="edit__btn" onClick={() => setShowModal(true)}>
-          ✏️ Editar Perfil
-        </button>
-      </div>
+      {showModal && <EditUser setShowModal={setShowModal} />}
     </Layout>
   );
 }

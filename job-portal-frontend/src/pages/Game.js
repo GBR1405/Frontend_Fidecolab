@@ -798,8 +798,11 @@ useEffect(() => {
                 </>
               ) : (
                 <div className="waiting-message">
-                  <h2>Sala de Espera</h2>
-                  <p>Esperando que el profesor inicie los juegos...</p>
+                  <div className="waiting-content">
+                    <div className="loader"></div>
+                    <h2>Sala de Espera</h2>
+                    <p>Esperando que el profesor inicie los juegos...</p>
+                  </div>
                 </div>
               )}
           </div>

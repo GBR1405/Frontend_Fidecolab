@@ -733,3 +733,53 @@ border: 1px dashed #ccc; /* Solo para debug */
   text-align: center;
   font-family: sans-serif;
 }
+
+.waiting-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 300px;
+  text-align: center;
+}
+
+.waiting-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.waiting-content h2 {
+  font-size: 2rem;
+  color: #2a2a2a; /* Gris oscuro */
+}
+
+.waiting-content p {
+  color: #444;
+  font-size: 1rem;
+}
+
+/* Loader personalizado */
+.loader {
+  width: 40px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #2a2a2a; /* Gris oscuro inicial */
+  clip-path: polygon(0 0,100% 0,100% 100%,0 100%);
+  animation: l1 2s infinite cubic-bezier(0.3,1,0,1);
+}
+
+@keyframes l1 {
+  0%   { border-radius: 50%; background: #2a2a2a; clip-path: polygon(0 0,100% 0,100% 100%,0 100%) } /* Gris oscuro */
+  33%  { border-radius: 0; background: #2b3a8c; clip-path: polygon(0 0,100% 0,100% 100%,0 100%) }   /* Azul oscuro */
+  66%  { border-radius: 0; background: #ffa516; clip-path: polygon(50% 0,50% 0,100% 100%,0 100%) }  /* Amarillo */
+  100% { border-radius: 50%; background: #1935ca; clip-path: polygon(0 0,100% 0,100% 100%,0 100%) } /* Azul rey */
+}
+
+/* Fade de entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

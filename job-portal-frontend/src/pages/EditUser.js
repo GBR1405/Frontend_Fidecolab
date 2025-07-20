@@ -125,7 +125,7 @@ const EditarPerfil = ({ setShowModal }) => {
             <label style="font-weight: bold; margin-top: 10px;">Nueva contraseña:</label>
             <input id="passNueva" type="password" style="${styleInput()}" />
 
-            <button id="btnPassword" style="${styleButton("#aeb10fff")}">Cambiar Contraseña</button>
+            <button id="btnPassword" style="${styleButton("#cdcf2aff")}">Cambiar Contraseña</button>
           </div>
         </div>
       `,

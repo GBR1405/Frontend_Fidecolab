@@ -825,7 +825,7 @@ const AdminProfessorCourses = () => {
                             <div className="box__title">
                                 <h3>Lista Profesores</h3>
                             </div>
-                            <table className="box__table">
+                            <table className="box__table" id="tableTeacher">
                                 <thead className="table__head">
                                     <th className="disapear">Codigo</th>
                                     <th className="table__header">Nombre</th>

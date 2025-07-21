@@ -357,6 +357,7 @@ const AdminProfessorCourses = () => {
     };
 
     const handleShowCourseDetails = async (cursoId) => {
+        console.log("Curso ID:", cursoId);
         try {
             const response = await fetch(`${apiUrl}/detalles-curso/${cursoId}`, {
                 method: "GET",

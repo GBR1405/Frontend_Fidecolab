@@ -2404,7 +2404,6 @@ body, html {
 }
 
 .table__row.selected {
-  background-color: #9c9c9c !important; /* más oscuro que hover normal */
-  font-weight: bold;
+  background-color: #cacaca !important; /* más oscuro que hover normal */
   transition: background-color 0.2s;
 }

@@ -2393,3 +2393,12 @@ body, html {
   position: relative; /* Necesario para el centrado absoluto del loader */
 }
 
+.data__button {
+  padding: 5px 8px;
+}
+
+.button--info i,
+.button--edit i,
+.button--desactive i {
+  font-size: 14px;
+}

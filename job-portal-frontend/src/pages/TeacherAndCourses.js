@@ -889,10 +889,10 @@ const AdminProfessorCourses = () => {
                             </div>
                             <table className="box__table">
                                 <thead className="table__head">
-                                        <th className="table__header" style={{ width: "70%" }}>Curso</th>
-                                        <th className="table__header" style={{ width: "20%" }}>Grupo</th>
-                                        <th className="table__header">Detalles</th>
-                                        {selectedTeacher && <th className="table__header">Acciones</th>}
+                                    <th className="table__header" style={{ width: "60%" }}>Curso</th>
+                                    <th className="table__header" style={{ width: "15%", textAlign: "center" }}>Grupo</th>
+                                    <th className="table__header" style={{ width: "12%", textAlign: "center" }}>Detalles</th>
+                                    <th className="table__header" style={{ width: "13%", textAlign: "center" }}>Acciones</th>
                                 </thead>
                                 <tbody className="table__body">
                                     {loading ? (
@@ -901,38 +901,52 @@ const AdminProfessorCourses = () => {
                                         </tr>
                                     ) : (
                                         (selectedTeacher ? currentLinkedCourses : currentCourses).map((course) => (
-                                            <tr className="table__row"
-                                                key={course.id}
-                                                data-id={course.id}
-                                                onClick={() => handleRowClick(course.id, 'course')}
-                                            >
-                                                <td className="table__data" style={{ maxWidth: "70%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                {`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}
-                                                </td>
-                                                <td className="table__data" style={{ width: "20%", textAlign: "center" }}>
-                                                {`G${course.grupo ?? "Sin grupo"}`}
-                                                </td>
-                                                {selectedTeacher && ( // Mostrar botón de desvincular solo si hay un profesor seleccionado
-                                                    <td className="table__data">
-                                                        <button className="data__button button--info">
-                                                            <i className="fa-solid fa-circle-info"></i>
-                                                        </button>
-                                                    </td>
-                                                )}
-                                                {selectedTeacher && ( // Mostrar botón de desvincular solo si hay un profesor seleccionado
-                                                    <td className="table__data">
-                                                        <button className="data__button button--desactive"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation(); // Evitar que el evento de clic en la fila se dispare
-                                                                handleUnlinkGroup(course.id);
-                                                            }}
-                                                        >
-                                                            <i class="fa-solid fa-link-slash"></i>
-                                                        </button>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))
+                                            <tr
+                                            className="table__row"
+                                            key={course.id}
+                                            data-id={course.id}
+                                            onClick={() => handleRowClick(course.id, 'course')}
+                                        >
+                                            <td className="table__data" style={{ maxWidth: "60%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}
+                                            </td>
+
+                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            {`G${course.grupo ?? "Sin grupo"}`}
+                                            </td>
+
+                                            {/* Detalles */}
+                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            <button className="data__button button--info" disabled={!selectedTeacher}>
+                                                <i className="fa-solid fa-circle-info"></i>
+                                            </button>
+                                            </td>
+
+                                            {/* Acciones */}
+                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            {selectedTeacher ? (
+                                                <button className="data__button button--desactive"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleUnlinkGroup(course.id);
+                                                }}
+                                                >
+                                                <i className="fa-solid fa-link-slash"></i>
+                                                </button>
+                                            ) : (
+                                                <button className="data__button button--edit"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    // Aquí podrías invocar una función handleEditCourse(course)
+                                                    Swal.fire("Editar curso aún no implementado", "", "info");
+                                                }}
+                                                >
+                                                <i className="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                            )}
+                                            </td>
+                                        </tr>
+                                                                                ))
                                     )}
                                 </tbody>
                                 <tfoot className="table__foot">

@@ -357,7 +357,7 @@ const AdminProfessorCourses = () => {
     };
 
     const handleShowCourseDetails = async (cursoId) => {
-        console.log("Curso ID:", cursoId);
+        
         try {
             const response = await fetch(`${apiUrl}/detalles-curso/${cursoId}`, {
                 method: "GET",
@@ -1027,6 +1027,9 @@ const AdminProfessorCourses = () => {
                                              <button className="data__button button--info"
                                                 onClick={(e) => {
                                                 e.stopPropagation();
+                                                console.log("Detalles del curso:", course.Curso_ID_FK);
+                                                console.log("Detalles del curso:", course.course.Curso_ID);
+                                                console.log("Detalles del curso:", course.course.id);
                                                 handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
                                                 }}
                                             >

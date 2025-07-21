@@ -428,104 +428,123 @@ const AdminProfessorCourses = () => {
     
 
     const handleAddGroup = async () => {
-        try {
-            // Obtener cursos desde el backend
-            const response = await fetch(`${apiUrl}/cursos`);
-            const courses = await response.json();
-    
-            if (!response.ok) {
-                throw new Error("Error al obtener cursos");
-            }
-    
-            // Crear opciones del select con los cursos obtenidos
-            const courseOptions = courses.map(course =>
-                `<option value="${course.id}">${course.codigo} - ${course.nombre}</option>`
-            ).join("");
-    
-            Swal.fire({
-                title: 'Agregar Grupo',
-                html: `
-                    <label for="selectCourse">Selecciona el curso:</label>
-                    <select id="selectCourse" class="swal2-input">
-                        <option value="" disabled selected>Selecciona un curso</option>
-                        ${courseOptions}
-                    </select>
-                    <div id="groupNumber" style="margin-top: 10px; font-weight: bold;"></div>
-                `,
-                confirmButtonText: 'Agregar',
-                cancelButtonText: 'Cerrar',
-                showCancelButton: true,
-                didOpen: () => {
-                    document.getElementById('selectCourse').addEventListener('change', async () => {
-                        const selectedCourse = document.getElementById('selectCourse').value;
-    
-                        if (selectedCourse) {
-                            try {
-                                const latestGroupResponse = await fetch(`${apiUrl}/cursos/${selectedCourse}/ultimo-grupo`, {
-                                    method: "GET",
-                                    credentials: "include",
-                                    headers: {
-                                        "Authorization": `Bearer ${token}`,
-                                        "Content-Type": "application/json"
-                                    }
-                                });
-                                const latestGroup = await latestGroupResponse.json();
-                                const nextGroupNumber = latestGroup.numero + 1;
-    
-                                document.getElementById('groupNumber').innerText = `Se creará el grupo G${nextGroupNumber}`;
-                            } catch (error) {
-                                console.error('Error obteniendo el último grupo:', error);
-                            }
-                        }
-                    });
-                },
-                preConfirm: async () => {
-                    const selectedCourse = document.getElementById("selectCourse").value;
-                    const groupNumberText = document.getElementById("groupNumber").innerText;
-                    const groupNumber = parseInt(groupNumberText.replace(/\D/g, ""), 10);
+    try {
+        const response = await fetch(`${apiUrl}/cursos`);
+        const courses = await response.json();
 
-                    if (!selectedCourse) {
-                        Swal.showValidationMessage("Por favor selecciona un curso.");
-                        return false;
-                    }
+        if (!response.ok) throw new Error("Error al obtener cursos");
 
-                    try {
-                        const token = localStorage.getItem("token"); // Ajusta según dónde guardes el token
-
-                        const response = await fetch(`${apiUrl}/add-grupos`, { // Asegúrate de que coincida con la ruta del backend
-                            method: "POST",
-                            credentials: "include",
-                            headers: {
-                                "Authorization": `Bearer ${token}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                cursoId: selectedCourse, // Corregido para coincidir con el backend
-                                grupoNumero: groupNumber // Asegúrate de que se envía correctamente
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-                            throw new Error(data.mensaje || "Error desconocido");
-                        }
-
-                        Swal.fire("Éxito", "Grupo agregado con éxito", "success")
-                            .then(() => {
-                                // Recargar la página después de que el usuario cierre la alerta
-                                window.location.reload();
-                            });
-                    } catch (error) {
-                        Swal.fire("Error", error.message, "error");
-                    }
+        Swal.fire({
+            title: 'Agregar Grupo',
+            html: `
+                <div style="position: relative;">
+                    <input 
+                        type="text" 
+                        id="searchCourseInput" 
+                        placeholder="Buscar curso..." 
+                        style="width: 100%; padding: 8px; margin-bottom: 10px;"
+                    />
+                    <ul id="courseDropdown" style="list-style: none; padding: 0; margin: 0; border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
+                        ${courses.map(course => `
+                            <li 
+                                data-id="${course.id}" 
+                                style="padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;"
+                                onmouseover="this.style.backgroundColor='#f1f1f1'" 
+                                onmouseout="this.style.backgroundColor='transparent'"
+                            >
+                                ${course.codigo} - ${course.nombre}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div id="groupPreview" style="margin-top: 12px; font-weight: bold;"></div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Agregar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const selectedId = document.getElementById('courseDropdown').getAttribute('data-selected');
+                if (!selectedId) {
+                    Swal.showValidationMessage("Selecciona un curso.");
+                    return false;
                 }
-            });
-        } catch (error) {
-            console.error("Error obteniendo cursos:", error);
-            Swal.fire("Error", "No se pudieron obtener los cursos.", "error");
-        }
-    };
+                return selectedId;
+            },
+            didOpen: () => {
+                const input = document.getElementById('searchCourseInput');
+                const list = document.getElementById('courseDropdown');
+
+                input.addEventListener('input', () => {
+                    const text = input.value.toLowerCase();
+                    Array.from(list.children).forEach(li => {
+                        li.style.display = li.textContent.toLowerCase().includes(text) ? 'block' : 'none';
+                    });
+                });
+
+                list.addEventListener('click', async (e) => {
+                    if (e.target.tagName === 'LI') {
+                        const selectedId = e.target.getAttribute('data-id');
+                        list.setAttribute('data-selected', selectedId);
+
+                        // Estética
+                        Array.from(list.children).forEach(li => li.style.fontWeight = 'normal');
+                        e.target.style.fontWeight = 'bold';
+
+                        try {
+                            const groupResponse = await fetch(`${apiUrl}/cursos/${selectedId}/ultimo-grupo`, {
+                                method: "GET",
+                                credentials: "include",
+                                headers: {
+                                    "Authorization": `Bearer ${token}`,
+                                    "Content-Type": "application/json"
+                                }
+                            });
+                            const latestGroup = await groupResponse.json();
+                            const nextGroupNumber = latestGroup.numero + 1;
+                            document.getElementById('groupPreview').innerText = `Se creará el grupo G${nextGroupNumber}`;
+                        } catch (err) {
+                            document.getElementById('groupPreview').innerText = "Error al obtener grupo";
+                        }
+                    }
+                });
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed && result.value) {
+                const cursoId = result.value;
+
+                try {
+                    const groupPreview = document.getElementById('groupPreview').innerText;
+                    const grupoNumero = parseInt(groupPreview.replace(/\D/g, ""), 10);
+
+                    const res = await fetch(`${apiUrl}/add-grupos`, {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            cursoId,
+                            grupoNumero
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok) throw new Error(data.mensaje || "Error al agregar grupo");
+
+                    Swal.fire("Éxito", "Grupo agregado con éxito", "success")
+                        .then(() => window.location.reload());
+                } catch (error) {
+                    Swal.fire("Error", error.message, "error");
+                }
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "No se pudieron obtener los cursos.", "error");
+    }
+};
     
     
 

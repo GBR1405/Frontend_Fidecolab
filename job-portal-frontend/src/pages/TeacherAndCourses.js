@@ -370,43 +370,52 @@ const AdminProfessorCourses = () => {
             const courseCodeInput = document.getElementById("courseCode");
             const courseNameInput = document.getElementById("courseName");
 
+            let previousValue = ""; // Guardar valor anterior del input
+
             courseCodeInput.addEventListener("input", (e) => {
                 let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+                let current = raw;
                 let parts = raw.split("-");
-                
-                // CASO 1: Escribiendo las letras
+
+                // Detectar si se eliminó el guion manualmente
+                if (previousValue.includes("-") && !current.includes("-")) {
+                    // Eliminar última letra también
+                    const letras = previousValue.replace(/[^A-Z]/g, "").slice(0, -1);
+                    e.target.value = letras;
+                    previousValue = letras;
+                    return;
+                }
+
+                // CASO 1: Letras (máximo 2)
                 if (parts.length === 1 && parts[0].length <= 2) {
                     e.target.value = parts[0];
                     if (parts[0].length === 2) {
                         e.target.value = parts[0] + "-";
                     }
+                    previousValue = e.target.value;
                     return;
                 }
 
-                // CASO 2: Después del guion, solo permitir números (máx 4)
+                // CASO 2: Números después del guion
                 if (parts.length === 2) {
                     let letras = parts[0].substring(0, 2);
                     let numeros = parts[1].substring(0, 4).replace(/[^0-9]/g, "");
                     e.target.value = letras + "-" + numeros;
+                    previousValue = e.target.value;
                     return;
                 }
 
-                // CASO 3: Si borra el guion manualmente, reiniciar letras
-                if (!raw.includes("-") && raw.length < e.target.value.length) {
-                    let nueva = raw.replace(/[^A-Z]/g, "").substring(0, 2);
-                    e.target.value = nueva;
-                    return;
-                }
+                // Fallback para evitar errores
+                previousValue = e.target.value;
             });
         },
         preConfirm: async () => {
             const code = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
-
             const codeRegex = /^[A-Z]{2}-\d{1,4}$/;
 
             if (!codeRegex.test(code)) {
-                Swal.showValidationMessage("El código debe ser del formato XX-1234 (2 letras y hasta 4 números).");
+                Swal.showValidationMessage("El código debe tener el formato XX-1234 (2 letras + guion + hasta 4 números).");
                 return false;
             }
 
@@ -437,13 +446,13 @@ const AdminProfessorCourses = () => {
 
                 Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
                     .then(() => window.location.reload());
-
             } catch (error) {
                 Swal.fire('Error', error.message, 'error');
             }
         }
     });
 };
+
 
 
 

@@ -1022,16 +1022,16 @@ const AdminProfessorCourses = () => {
                                             </td>
 
                                             {/* Detalles */}
-                                            <td className="table__data">
-                                                <button className="data__button button--info"
-                                                    onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
-                                                    }}
-                                                >
-                                                    <i className="fa-solid fa-circle-info"></i>
-                                                </button>
-                                                </td>
+                                            <td className="table__data" style={{ width: "12%", textAlign: "center" }}>
+                                             <button className="data__button button--info"
+                                                onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
+                                                }}
+                                            >
+                                                <i className="fa-solid fa-circle-info"></i>
+                                            </button>
+                                            </td>
 
                                             {/* Acciones */}
                                             <td className="table__data" style={{ width: "13%", textAlign: "center" }}>

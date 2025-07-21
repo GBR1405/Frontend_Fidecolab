@@ -12,6 +12,7 @@ import Plantilla from '../docs/Plantilla.xlsx';
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
+
 const AdminProfessorCourses = () => {
     const [courses, setCourses] = useState([]);
     const [professors, setProfessors] = useState([]);
@@ -19,63 +20,7 @@ const AdminProfessorCourses = () => {
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [linkedCourses, setLinkedCourses] = useState([]);
-    const [searchProfessor, setSearchProfessor] = useState('');
-    const [searchCourse, setSearchCourse] = useState('');
-
-    // Estados para paginación
-    const [currentPageProfessors, setCurrentPageProfessors] = useState(1);
-    const [currentPageCourses, setCurrentPageCourses] = useState(1);
-    const [currentPageLinkedCourses, setCurrentPageLinkedCourses] = useState(1);
-    const [itemsPerPage] = useState(5);
-
-    // Función para filtrar profesores
-    const filteredProfessors = professors.filter(professor => {
-        if (!searchProfessor) return true;
-        const searchTerm = searchProfessor.toLowerCase();
-        return (
-            professor.Nombre.toLowerCase().includes(searchTerm) ||
-            professor.Apellido1.toLowerCase().includes(searchTerm) ||
-            professor.Apellido2.toLowerCase().includes(searchTerm) ||
-            professor.Correo.toLowerCase().includes(searchTerm)
-        );
-    });
-
-    // Función para filtrar cursos (cuando no hay profesor seleccionado)
-    const filteredCourses = courses.filter(course => {
-    if (!searchCourse) return true;
-    const searchTerm = searchCourse.toLowerCase();
-    return (
-        course.codigo?.toLowerCase().includes(searchTerm) ||
-        course.nombre?.toLowerCase().includes(searchTerm)
-    );
-    });
-
-    const filteredLinkedCourses = linkedCourses.filter(course => {
-    if (!searchCourse) return true;
-    const searchTerm = searchCourse.toLowerCase();
-    return (
-        course.codigo?.toLowerCase().includes(searchTerm) ||
-        course.nombre?.toLowerCase().includes(searchTerm)
-    );
-    });
-
-    // Cálculos para profesores
-    const indexOfLastProfessor = currentPageProfessors * itemsPerPage;
-    const indexOfFirstProfessor = indexOfLastProfessor - itemsPerPage;
-    const currentProfessors = filteredProfessors.slice(indexOfFirstProfessor, indexOfLastProfessor);
-    const totalPagesProfessors = Math.ceil(filteredProfessors.length / itemsPerPage);
-
-    // Cálculos para cursos
-    const indexOfLastCourse = currentPageCourses * itemsPerPage;
-    const indexOfFirstCourse = indexOfLastCourse - itemsPerPage;
-    const currentCourses = (selectedTeacher ? filteredLinkedCourses : filteredCourses).slice(indexOfFirstCourse, indexOfLastCourse);
-    const totalPagesCourses = Math.ceil((selectedTeacher ? filteredLinkedCourses : filteredCourses).length / itemsPerPage);
-
-    // Cálculos para cursos vinculados
-    const indexOfLastLinkedCourse = currentPageLinkedCourses * itemsPerPage;
-    const indexOfFirstLinkedCourse = indexOfLastLinkedCourse - itemsPerPage;
-    const currentLinkedCourses = filteredLinkedCourses.slice(indexOfFirstLinkedCourse, indexOfLastLinkedCourse);
-    const totalPagesLinkedCourses = Math.ceil(filteredLinkedCourses.length / itemsPerPage);
+    
 
     function descargarPDF(pdfBase64, fileName) {
         const link = document.createElement("a");
@@ -87,7 +32,7 @@ const AdminProfessorCourses = () => {
     const handleDeselectTeacher = () => {
         setSelectedTeacher(null);
         setLinkedCourses([]);
-        applyRowSelectionEffect(null, 'teacher');
+        applyRowSelectionEffect(null, 'teacher'); // Esto eliminará el resaltado
     };
 
     const handleRowClick = (id, type) => {
@@ -99,12 +44,9 @@ const AdminProfessorCourses = () => {
         if (type === 'teacher') {
             setSelectedTeacher(prev => (prev === id ? null : id));
             if (id !== null) {
-                fetchLinkedCourses(id);
-                // Limpiar búsquedas al seleccionar
-                setSearchProfessor('');
-                setSearchCourse('');
+                fetchLinkedCourses(id); // Obtener cursos vinculados al profesor seleccionado
             } else {
-                setLinkedCourses([]);
+                setLinkedCourses([]); // Limpiar cursos vinculados si no hay profesor seleccionado
             }
         } else if (type === 'course') {
             setSelectedCourse(prev => (prev === id ? null : id));
@@ -134,7 +76,11 @@ const AdminProfessorCourses = () => {
             }
     
             const result = await response.json();
+
+
             Swal.fire('Éxito', result.message, 'success');
+    
+            // Actualizar la lista de cursos vinculados
             fetchLinkedCourses(selectedTeacher);
         } catch (error) {
             console.error('Error:', error);
@@ -144,6 +90,7 @@ const AdminProfessorCourses = () => {
 
     const handleUnlinkGroup = async (grupoId) => {
         try {
+            // Mostrar un modal de confirmación
             const { isConfirmed } = await Swal.fire({
                 title: 'Desvincular Grupo',
                 text: '¿Deseas desvincular este profesor del grupo?',
@@ -155,6 +102,7 @@ const AdminProfessorCourses = () => {
                 cancelButtonColor: '#3085d6',
             });
     
+            // Si el usuario confirma, enviar la petición al backend
             if (isConfirmed) {
                 const response = await fetch(`${apiUrl}/quit-grupo-profesor`, {
                     method: 'DELETE',
@@ -175,6 +123,8 @@ const AdminProfessorCourses = () => {
     
                 const result = await response.json();
                 Swal.fire('Éxito', result.message, 'success');
+    
+                // Actualizar la lista de cursos vinculados
                 fetchLinkedCourses(selectedTeacher);
             }
         } catch (error) {
@@ -217,15 +167,16 @@ const AdminProfessorCourses = () => {
     
             const data = await response.json();
             console.log(data)
-            setLinkedCourses(data);
+            setLinkedCourses(data); // Actualizar el estado con los cursos vinculados
         } catch (error) {
             console.error('Error:', error);
-            setLinkedCourses([]);
+            setLinkedCourses([]); // Limpiar cursos vinculados en caso de error
         }
     };
     
     const handleOpenModal = async () => {
         try {
+            // Obtener los grupos disponibles desde el backend
             const response = await fetch(`${apiUrl}/get-grupos-disponibles`, {
                 method: 'GET',
                 credentials: 'include',
@@ -242,6 +193,7 @@ const AdminProfessorCourses = () => {
             const data = await response.json();
             const gruposDisponibles = data.grupos;
     
+            // Mostrar el modal con SweetAlert2
             const { value: selectedGroupId } = await Swal.fire({
                 title: 'Asignar Grupo',
                 html: `
@@ -271,17 +223,19 @@ const AdminProfessorCourses = () => {
                 showCancelButton: true,
                 confirmButtonText: 'Asignar',
                 cancelButtonText: 'Cancelar',
-                width: '600px',
+                width: '600px', // Hacer el modal más ancho
                 customClass: {
-                    popup: 'custom-modal',
+                    popup: 'custom-modal', // Clase personalizada para el modal
                 },
                 didOpen: () => {
                     const searchInput = document.getElementById('searchInput');
                     const dropdownList = document.getElementById('dropdownList');
     
+                    // Filtrar las opciones mientras el usuario escribe
                     searchInput.addEventListener('input', (e) => {
                         const searchText = e.target.value.toLowerCase();
     
+                        // Filtrar las opciones
                         Array.from(dropdownList.children).forEach(li => {
                             const optionText = li.textContent.toLowerCase();
                             if (optionText.includes(searchText)) {
@@ -292,6 +246,7 @@ const AdminProfessorCourses = () => {
                         });
                     });
     
+                    // Seleccionar una opción al hacer clic
                     dropdownList.addEventListener('click', (e) => {
                         if (e.target.tagName === 'LI') {
                             const selectedValue = e.target.getAttribute('data-value');
@@ -301,10 +256,12 @@ const AdminProfessorCourses = () => {
                     });
                 },
                 preConfirm: () => {
+                    // No necesitamos preConfirm porque la selección se maneja en el evento click
                     return null;
                 },
             });
     
+            // Si el usuario seleccionó un grupo, enviar la petición al backend
             if (selectedGroupId) {
                 await handleAssignGroup(selectedGroupId);
             }
@@ -314,6 +271,7 @@ const AdminProfessorCourses = () => {
         }
     };
     
+
     useEffect(() => {
         const fetchProfessors = async () => {
             try {
@@ -335,10 +293,10 @@ const AdminProfessorCourses = () => {
                 }
 
                 const data = await response.json();
-                setProfessors((data.professors || []).reverse());
+                setProfessors((data.professors || []).reverse()); // Asegurar que siempre es un array
             } catch (error) {
                 console.error('Error:', error);
-                setProfessors([]);
+                setProfessors([]); // Evitar undefined
             }
         };
 
@@ -361,18 +319,21 @@ const AdminProfessorCourses = () => {
                     throw new Error('Error al obtener los cursos');
                 }
         
-                const data = await response.json();
-                console.log("Datos recibidos de cursos:", data);
-                setCourses(data.groups || []);
+                const data = await response.json(); // Convertir la respuesta a JSON
+                console.log("Datos recibidos de cursos:", data); // Verificar que se recibe la estructura correcta
+        
+                setCourses(data.groups || []); // Asegurar que siempre es un array
             } catch (error) {
                 console.error('Error:', error);
-                setCourses([]);
+                setCourses([]); // Evitar undefined
             }
         };
         
+
         Promise.all([fetchProfessors(), fetchCourses()]).finally(() => setLoading(false));
     }, []);
 
+    // Muestra un alerta de éxito
     const showSuccessAlert = (message) => {
         Swal.fire({
             icon: 'success',
@@ -385,6 +346,7 @@ const AdminProfessorCourses = () => {
         });
     };
 
+    // Muestra una alerta de error
     const showErrorAlert = (message) => {
         Swal.fire({
             icon: 'error',
@@ -396,6 +358,7 @@ const AdminProfessorCourses = () => {
     };
 
     const handleShowCourseDetails = async (cursoId) => {
+        
         try {
             const response = await fetch(`${apiUrl}/detalles-curso/${cursoId}`, {
                 method: "GET",
@@ -445,71 +408,200 @@ const AdminProfessorCourses = () => {
         }
     };
 
+
     const handleAddCourse = () => {
+    Swal.fire({
+        title: 'Agregar Curso',
+        html: `
+            <input type="text" id="courseCode" class="swal2-input" placeholder="Ej: AL-1234" maxlength="9">
+            <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
+        `,
+        confirmButtonText: 'Agregar',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        didOpen: () => {
+            const courseCodeInput = document.getElementById("courseCode");
+            const courseNameInput = document.getElementById("courseName");
+
+            let previousValue = ""; // Guardar valor anterior del input
+
+            courseCodeInput.addEventListener("input", (e) => {
+                let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+                let current = raw;
+                let parts = raw.split("-");
+
+                // Detectar si se eliminó el guion manualmente
+                if (previousValue.includes("-") && !current.includes("-")) {
+                    // Eliminar última letra también
+                    const letras = previousValue.replace(/[^A-Z]/g, "").slice(0, -1);
+                    e.target.value = letras;
+                    previousValue = letras;
+                    return;
+                }
+
+                // CASO 1: Letras (máximo 2)
+                if (parts.length === 1 && parts[0].length <= 2) {
+                    e.target.value = parts[0];
+                    if (parts[0].length === 2) {
+                        e.target.value = parts[0] + "-";
+                    }
+                    previousValue = e.target.value;
+                    return;
+                }
+
+                // CASO 2: Números después del guion
+                if (parts.length === 2) {
+                    let letras = parts[0].substring(0, 2);
+                    let numeros = parts[1].substring(0, 4).replace(/[^0-9]/g, "");
+                    e.target.value = letras + "-" + numeros;
+                    previousValue = e.target.value;
+                    return;
+                }
+
+                // Fallback para evitar errores
+                previousValue = e.target.value;
+            });
+        },
+        preConfirm: async () => {
+            const code = document.getElementById('courseCode').value.trim();
+            const name = document.getElementById('courseName').value.trim();
+            const codeRegex = /^[A-Z]{2}-\d{1,4}$/;
+
+            if (!codeRegex.test(code)) {
+                Swal.showValidationMessage("El código debe tener el formato XX-1234 (2 letras + guion + hasta 4 números).");
+                return false;
+            }
+
+            if (!name) {
+                Swal.showValidationMessage("Por favor ingresa el nombre del curso.");
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/add-course`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        codigoCurso: code,
+                        nombreCurso: name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Error desconocido");
+                }
+
+                Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
+                    .then(() => window.location.reload());
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+    });
+};
+
+
+
+
+    
+    
+
+    const handleAddGroup = async () => {
+    try {
+        const response = await fetch(`${apiUrl}/cursos`);
+        const courses = await response.json();
+
+        if (!response.ok) throw new Error("Error al obtener cursos");
+
         Swal.fire({
-            title: 'Agregar Curso',
+            title: 'Agregar Grupo',
             html: `
-                <input type="text" id="courseCode" class="swal2-input" placeholder="Ej: AL-1234" maxlength="9">
-                <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
+                <div style="position: relative;">
+                    <input 
+                        type="text" 
+                        id="searchCourseInput" 
+                        placeholder="Buscar curso..." 
+                        style="width: 100%; padding: 8px; margin-bottom: 10px;"
+                    />
+                    <ul id="courseDropdown" style="list-style: none; padding: 0; margin: 0; border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
+                        ${courses.map(course => `
+                            <li 
+                                data-id="${course.id}" 
+                                style="padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;"
+                                onmouseover="this.style.backgroundColor='#f1f1f1'" 
+                                onmouseout="this.style.backgroundColor='transparent'"
+                            >
+                                ${course.codigo} - ${course.nombre}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div id="groupPreview" style="margin-top: 12px; font-weight: bold;"></div>
+                </div>
             `,
+            showCancelButton: true,
             confirmButtonText: 'Agregar',
             cancelButtonText: 'Cancelar',
-            showCancelButton: true,
-            didOpen: () => {
-                const courseCodeInput = document.getElementById("courseCode");
-                const courseNameInput = document.getElementById("courseName");
-
-                let previousValue = "";
-
-                courseCodeInput.addEventListener("input", (e) => {
-                    let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "");
-                    let current = raw;
-                    let parts = raw.split("-");
-
-                    if (previousValue.includes("-") && !current.includes("-")) {
-                        const letras = previousValue.replace(/[^A-Z]/g, "").slice(0, -1);
-                        e.target.value = letras;
-                        previousValue = letras;
-                        return;
-                    }
-
-                    if (parts.length === 1 && parts[0].length <= 2) {
-                        e.target.value = parts[0];
-                        if (parts[0].length === 2) {
-                            e.target.value = parts[0] + "-";
-                        }
-                        previousValue = e.target.value;
-                        return;
-                    }
-
-                    if (parts.length === 2) {
-                        let letras = parts[0].substring(0, 2);
-                        let numeros = parts[1].substring(0, 4).replace(/[^0-9]/g, "");
-                        e.target.value = letras + "-" + numeros;
-                        previousValue = e.target.value;
-                        return;
-                    }
-
-                    previousValue = e.target.value;
-                });
+            preConfirm: () => {
+                const selectedId = document.getElementById('courseDropdown').getAttribute('data-selected');
+                if (!selectedId) {
+                    Swal.showValidationMessage("Selecciona un curso.");
+                    return false;
+                }
+                return selectedId;
             },
-            preConfirm: async () => {
-                const code = document.getElementById('courseCode').value.trim();
-                const name = document.getElementById('courseName').value.trim();
-                const codeRegex = /^[A-Z]{2}-\d{1,4}$/;
+            didOpen: () => {
+                const input = document.getElementById('searchCourseInput');
+                const list = document.getElementById('courseDropdown');
 
-                if (!codeRegex.test(code)) {
-                    Swal.showValidationMessage("El código debe tener el formato XX-1234 (2 letras + guion + hasta 4 números).");
-                    return false;
-                }
+                input.addEventListener('input', () => {
+                    const text = input.value.toLowerCase();
+                    Array.from(list.children).forEach(li => {
+                        li.style.display = li.textContent.toLowerCase().includes(text) ? 'block' : 'none';
+                    });
+                });
 
-                if (!name) {
-                    Swal.showValidationMessage("Por favor ingresa el nombre del curso.");
-                    return false;
-                }
+                list.addEventListener('click', async (e) => {
+                    if (e.target.tagName === 'LI') {
+                        const selectedId = e.target.getAttribute('data-id');
+                        list.setAttribute('data-selected', selectedId);
+
+                        // Estética
+                        Array.from(list.children).forEach(li => li.style.fontWeight = 'normal');
+                        e.target.style.fontWeight = 'bold';
+
+                        try {
+                            const groupResponse = await fetch(`${apiUrl}/cursos/${selectedId}/ultimo-grupo`, {
+                                method: "GET",
+                                credentials: "include",
+                                headers: {
+                                    "Authorization": `Bearer ${token}`,
+                                    "Content-Type": "application/json"
+                                }
+                            });
+                            const latestGroup = await groupResponse.json();
+                            const nextGroupNumber = latestGroup.numero + 1;
+                            document.getElementById('groupPreview').innerText = `Se creará el grupo G${nextGroupNumber}`;
+                        } catch (err) {
+                            document.getElementById('groupPreview').innerText = "Error al obtener grupo";
+                        }
+                    }
+                });
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed && result.value) {
+                const cursoId = result.value;
 
                 try {
-                    const response = await fetch(`${apiUrl}/add-course`, {
+                    const groupPreview = document.getElementById('groupPreview').innerText;
+                    const grupoNumero = parseInt(groupPreview.replace(/\D/g, ""), 10);
+
+                    const res = await fetch(`${apiUrl}/add-grupos`, {
                         method: "POST",
                         credentials: "include",
                         headers: {
@@ -517,144 +609,30 @@ const AdminProfessorCourses = () => {
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            codigoCurso: code,
-                            nombreCurso: name
+                            cursoId,
+                            grupoNumero
                         })
                     });
 
-                    const data = await response.json();
+                    const data = await res.json();
 
-                    if (!response.ok) {
-                        throw new Error(data.error || "Error desconocido");
-                    }
+                    if (!res.ok) throw new Error(data.mensaje || "Error al agregar grupo");
 
-                    Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
+                    Swal.fire("Éxito", "Grupo agregado con éxito", "success")
                         .then(() => window.location.reload());
                 } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
+                    Swal.fire("Error", error.message, "error");
                 }
             }
         });
-    };
-
-    const handleAddGroup = async () => {
-        try {
-            const response = await fetch(`${apiUrl}/cursos`);
-            const courses = await response.json();
-
-            if (!response.ok) throw new Error("Error al obtener cursos");
-
-            Swal.fire({
-                title: 'Agregar Grupo',
-                html: `
-                    <div style="position: relative;">
-                        <input 
-                            type="text" 
-                            id="searchCourseInput" 
-                            placeholder="Buscar curso..." 
-                            style="width: 100%; padding: 8px; margin-bottom: 10px;"
-                        />
-                        <ul id="courseDropdown" style="list-style: none; padding: 0; margin: 0; border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
-                            ${courses.map(course => `
-                                <li 
-                                    data-id="${course.id}" 
-                                    style="padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;"
-                                    onmouseover="this.style.backgroundColor='#f1f1f1'" 
-                                    onmouseout="this.style.backgroundColor='transparent'"
-                                >
-                                    ${course.codigo} - ${course.nombre}
-                                </li>
-                            `).join('')}
-                        </ul>
-                        <div id="groupPreview" style="margin-top: 12px; font-weight: bold;"></div>
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'Agregar',
-                cancelButtonText: 'Cancelar',
-                preConfirm: () => {
-                    const selectedId = document.getElementById('courseDropdown').getAttribute('data-selected');
-                    if (!selectedId) {
-                        Swal.showValidationMessage("Selecciona un curso.");
-                        return false;
-                    }
-                    return selectedId;
-                },
-                didOpen: () => {
-                    const input = document.getElementById('searchCourseInput');
-                    const list = document.getElementById('courseDropdown');
-
-                    input.addEventListener('input', () => {
-                        const text = input.value.toLowerCase();
-                        Array.from(list.children).forEach(li => {
-                            li.style.display = li.textContent.toLowerCase().includes(text) ? 'block' : 'none';
-                        });
-                    });
-
-                    list.addEventListener('click', async (e) => {
-                        if (e.target.tagName === 'LI') {
-                            const selectedId = e.target.getAttribute('data-id');
-                            list.setAttribute('data-selected', selectedId);
-
-                            Array.from(list.children).forEach(li => li.style.fontWeight = 'normal');
-                            e.target.style.fontWeight = 'bold';
-
-                            try {
-                                const groupResponse = await fetch(`${apiUrl}/cursos/${selectedId}/ultimo-grupo`, {
-                                    method: "GET",
-                                    credentials: "include",
-                                    headers: {
-                                        "Authorization": `Bearer ${token}`,
-                                        "Content-Type": "application/json"
-                                    }
-                                });
-                                const latestGroup = await groupResponse.json();
-                                const nextGroupNumber = latestGroup.numero + 1;
-                                document.getElementById('groupPreview').innerText = `Se creará el grupo G${nextGroupNumber}`;
-                            } catch (err) {
-                                document.getElementById('groupPreview').innerText = "Error al obtener grupo";
-                            }
-                        }
-                    });
-                }
-            }).then(async (result) => {
-                if (result.isConfirmed && result.value) {
-                    const cursoId = result.value;
-
-                    try {
-                        const groupPreview = document.getElementById('groupPreview').innerText;
-                        const grupoNumero = parseInt(groupPreview.replace(/\D/g, ""), 10);
-
-                        const res = await fetch(`${apiUrl}/add-grupos`, {
-                            method: "POST",
-                            credentials: "include",
-                            headers: {
-                                "Authorization": `Bearer ${token}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                cursoId,
-                                grupoNumero
-                            })
-                        });
-
-                        const data = await res.json();
-
-                        if (!res.ok) throw new Error(data.mensaje || "Error al agregar grupo");
-
-                        Swal.fire("Éxito", "Grupo agregado con éxito", "success")
-                            .then(() => window.location.reload());
-                    } catch (error) {
-                        Swal.fire("Error", error.message, "error");
-                    }
-                }
-            });
-        } catch (err) {
-            console.error(err);
-            Swal.fire("Error", "No se pudieron obtener los cursos.", "error");
-        }
-    };
+    } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "No se pudieron obtener los cursos.", "error");
+    }
+};
     
+    
+
     const handleAddProfessor = () => {
         Swal.fire({
             title: 'Agregar Profesor',
@@ -664,6 +642,7 @@ const AdminProfessorCourses = () => {
                     <button class="swal2-tab" data-tab="2">Agregar Manualmente</button>
                     </div>
                     <div class="swal2-tab-content">
+                    <!-- Tab 1: Agregar via archivo -->
                     <div class="tab-1-content" id="tab-1-content" style="display: none;">
                         <input type="file" id="fileInput" class="custom-file-input" accept=".xlsx, .xls" />
                         <div style="margin-top: 10px; text-align: center;">
@@ -684,12 +663,15 @@ const AdminProfessorCourses = () => {
                         </div>
                     </div>
                     
+
+                    <!-- Tab 2: Agregar manualmente -->
                     <div class="tab-2-content" id="tab-2-content" style="display: none;">
                         <input type="text" id="professorName" placeholder="Nombre" class="swal2-input" />
                         <input type="text" id="professorLastName1" placeholder="Apellido 1" class="swal2-input" />
                         <input type="text" id="professorLastName2" placeholder="Apellido 2" class="swal2-input" />
                         <input type="email" id="professorEmail" placeholder="Correo" class="swal2-input" />
                         
+                        <!-- Select para el género -->
                         <select id="professorGender" class="swal2-input">
                             <option value="1">Hombre</option>
                             <option value="2">Mujer</option>
@@ -723,6 +705,7 @@ const AdminProfessorCourses = () => {
                 const isManual = document.querySelector('.swal2-tab.active').getAttribute('data-tab') === '2';
             
                 if (isManual) {
+                    // Capturar datos del formulario
                     const name = document.getElementById('professorName').value.trim();
                     const lastName1 = document.getElementById('professorLastName1').value.trim();
                     const lastName2 = document.getElementById('professorLastName2').value.trim();
@@ -737,13 +720,13 @@ const AdminProfessorCourses = () => {
                     try {
                         const response = await fetch(`${apiUrl}/add-profesor`, {
                             method: 'POST',
-                            credentials: 'include',
+                            credentials: 'include',  // Asegúrate de que las cookies (si usas cookies para el token) se incluyan
                             headers: {
-                                'Authorization': `Bearer ${token}`,
+                                'Authorization': `Bearer ${token}`,  // Asegúrate de tener el token de acceso
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                manual: "true",
+                                manual: "true",  // Indicar que es una carga manual
                                 name,
                                 lastName1,
                                 lastName2,
@@ -754,7 +737,7 @@ const AdminProfessorCourses = () => {
             
                         const result = await response.json();
                         if (response.ok) {
-                        const { mensaje, pdfBase64 } = result;
+                        const { mensaje, pdfBase64 } = result; // Desestructuración para obtener la cantidad de omitidos
                             
                         Swal.fire({
                             icon: 'success',
@@ -763,8 +746,9 @@ const AdminProfessorCourses = () => {
                             confirmButtonText: 'Aceptar',
                             confirmButtonColor: '#3e8e41'
                         }).then(() => {
+                           // Descargar PDF después del mensaje de éxito
                            descargarPDF(pdfBase64, "Credenciales_Generadas");
-                           window.location.reload();
+                           window.location.reload(); // Recargar la página después
                         });
                         } else {
                             showErrorAlert(result.message);
@@ -780,26 +764,29 @@ const AdminProfessorCourses = () => {
                     }
             
                     try {
+                        // Usar el middleware para procesar el archivo
                         const profesores = await processFileMiddleware(fileInput);
             
+                        // Crear el objeto JSON con los datos procesados
                         const dataToSend = {
-                            manual: "false",
-                            profesores,
+                            manual: "false",  // Indicar que es una carga desde archivo
+                            profesores, // Los datos procesados
                         };
             
+                        // Enviar los datos al backend
                         const response = await fetch(`${apiUrl}/add-profesor`, {
                             method: 'POST',
-                            credentials: 'include',
+                            credentials: 'include',  // Incluir cookies si las usas
                             headers: {
-                                'Authorization': `Bearer ${token}`,
+                                'Authorization': `Bearer ${token}`,  // Asegúrate de que el token esté en el encabezado
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(dataToSend)
+                            body: JSON.stringify(dataToSend)  // Enviar solo los datos procesados
                         });
             
                     const result = await response.json();
                         if (response.ok) {
-                            const { mensaje, pdfBase64 } = result;
+                            const { mensaje, pdfBase64 } = result; // Desestructuración para obtener la cantidad de omitidos
                                 
                         Swal.fire({
                             icon: 'success',
@@ -808,8 +795,9 @@ const AdminProfessorCourses = () => {
                             confirmButtonText: 'Aceptar',
                             confirmButtonColor: '#3e8e41'
                             }).then(() => {
+                               // Descargar PDF después del mensaje de éxito
                                descargarPDF(pdfBase64, "Credenciales_Generadas");
-                               window.location.reload();
+                               window.location.reload(); // Recargar la página después
                             });
                      } else {
                                 showErrorAlert(result.message);
@@ -822,6 +810,7 @@ const AdminProfessorCourses = () => {
         });
     };
     
+
     const handleAssign = () => {
         Swal.fire({
             title: 'Asignar Curso',
@@ -842,8 +831,10 @@ const AdminProfessorCourses = () => {
                     showErrorAlert("Por favor selecciona un curso.");
                     return false;
                 }
+                // Aquí va la lógica para asignar el curso
                 showSuccessAlert('Curso asignado con éxito')
                 .then(() => {
+                    // Recargar la página después de que el usuario cierre la alerta
                     window.location.reload();
                 });
             }
@@ -862,18 +853,52 @@ const AdminProfessorCourses = () => {
             cancelButtonColor: '#6c757d'
         }).then((result) => {
             if (result.isConfirmed) {
+                // Lógica para eliminar
                 showSuccessAlert('Curso eliminado con éxito')
                 .then(() => {
+                    // Recargar la página después de que el usuario cierre la alerta
                     window.location.reload();
                 });
             }
         });
     };
 
+
+
+
+    // Estados para paginación
+    const [currentPageProfessors, setCurrentPageProfessors] = useState(1);
+    const [currentPageCourses, setCurrentPageCourses] = useState(1);
+    const [currentPageLinkedCourses, setCurrentPageLinkedCourses] = useState(1);
+    const [itemsPerPage] = useState(5);
+
+    // Cálculos para profesores
+    const indexOfLastProfessor = currentPageProfessors * itemsPerPage;
+    const indexOfFirstProfessor = indexOfLastProfessor - itemsPerPage;
+    const currentProfessors = professors.slice(indexOfFirstProfessor, indexOfLastProfessor);
+    const totalPagesProfessors = Math.ceil(professors.length / itemsPerPage);
+
+    // Cálculos para cursos
+    const indexOfLastCourse = currentPageCourses * itemsPerPage;
+    const indexOfFirstCourse = indexOfLastCourse - itemsPerPage;
+    const currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse);
+    const totalPagesCourses = Math.ceil(courses.length / itemsPerPage);
+
+    // Cálculos para cursos vinculados
+    const indexOfLastLinkedCourse = currentPageLinkedCourses * itemsPerPage;
+    const indexOfFirstLinkedCourse = indexOfLastLinkedCourse - itemsPerPage;
+    const currentLinkedCourses = linkedCourses.slice(indexOfFirstLinkedCourse, indexOfLastLinkedCourse);
+
+
+
+
+    const totalPagesLinkedCourses = Math.ceil(linkedCourses.length / itemsPerPage);
+
     // Cambiar página
     const paginateProfessors = (pageNumber) => setCurrentPageProfessors(pageNumber);
     const paginateCourses = (pageNumber) => setCurrentPageCourses(pageNumber);
     const paginateLinkedCourses = (pageNumber) => setCurrentPageLinkedCourses(pageNumber);
+
 
     return (
         <>
@@ -884,22 +909,15 @@ const AdminProfessorCourses = () => {
               </div>
               <div className="container__options">
                 <div className="option__filters">
-                  <input 
-                    className="filter__input" 
-                    type="text" 
-                    placeholder="Buscar profesor..." 
-                    value={searchProfessor}
-                    onChange={(e) => setSearchProfessor(e.target.value)}
-                    disabled={selectedTeacher !== null}
-                  />
-                  <input 
-                    className="filter__input" 
-                    type="text" 
-                    placeholder="Buscar curso..." 
-                    value={searchCourse}
-                    onChange={(e) => setSearchCourse(e.target.value)}
-                    disabled={selectedTeacher !== null}
-                  />
+                  <input className="filter__input" type="text" placeholder="Buscar:" />
+                  <div className="filter__course">
+                    <select>
+                      <option value="0" disabled selected>Curso:</option>
+                      <option value="1">Curso 1</option>
+                      <option value="2">Curso 2</option>
+                      <option value="3">Curso 3</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="option__buttons">
                   <div className="option__button">

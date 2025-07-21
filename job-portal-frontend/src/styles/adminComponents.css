@@ -1588,6 +1588,7 @@
         font-weight: 500;
         border: none;
         outline: none;
+        padding-left: 1vh;
     }
     
     .option__buttons{

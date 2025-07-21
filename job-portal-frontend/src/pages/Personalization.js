@@ -194,74 +194,89 @@ const Depuration = () => {
   };
 
   const handleEdit = async (tema) => {
-  const isAhorcado = tema.Tipo_Juego === "Ahorcado";
-
-  const { value: newContent } = await Swal.fire({
-    title: 'Editar Contenido',
-    input: 'text',
-    inputLabel: `Edita el contenido${isAhorcado ? " (solo letras permitidas)" : ""}`,
-    inputPlaceholder: isAhorcado ? "Ej: 'computadora'" : "Escribe el nuevo contenido",
-    inputValue: tema.Contenido,
-    showCancelButton: true,
-    confirmButtonText: 'Guardar',
-    cancelButtonText: 'Cancelar',
-    inputValidator: (value) => {
-      if (!value) {
-        return 'El contenido no puede estar vacío';
-      }
-      // Validación adicional solo para Ahorcado
-      if (isAhorcado && !/^[a-zA-Z]+$/.test(value)) {
-        return 'Solo se permiten letras (sin números, espacios ni caracteres especiales)';
-      }
-    }
-  });
-
-  if (newContent) {
-    try {
-      const response = await fetch(`${apiURL}/edit-p`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          temaId: tema.Tema_Juego_ID_PK,
-          contenido: isAhorcado ? newContent.toLowerCase() : newContent // Convertir a minúsculas si es Ahorcado
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al editar el contenido');
-      }
-
-      const data = await response.json();
-      
-      Swal.fire(
-        '¡Editado!',
-        data.message || 'El contenido ha sido actualizado.',
-        'success'
-      );
-      
-      // Recargar los datos
-      const temasResponse = await axios.get(`${apiURL}/gettemas`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+    // Configuración específica según el tipo de juego
+    const inputValidator = (value) => {
+        if (!value) {
+            return 'El contenido no puede estar vacío';
         }
-      });
-      setTemas(temasResponse.data.temas);
+        // Validación específica para Ahorcado
+        if (tema.Tipo_Juego === "Ahorcado") {
+            const regex = /^[a-zA-Z]+$/;
+            if (!regex.test(value)) {
+                return 'Solo se permiten letras sin acentos ni caracteres especiales';
+            }
+        }
+        return null;
+    };
 
-    } catch (error) {
-      console.error('Error:', error);
-      Swal.fire(
-        'Error',
-        'No se pudo editar el contenido',
-        'error'
-      );
+    const { value: newContent } = await Swal.fire({
+        title: 'Editar Contenido',
+        input: 'text',
+        inputLabel: tema.Tipo_Juego === "Ahorcado" ? 
+            'Edita el contenido (solo letras sin acentos)' : 
+            'Edita el contenido',
+        inputPlaceholder: 'Escribe el nuevo contenido',
+        inputValue: tema.Contenido,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: inputValidator,
+        didOpen: (popup) => {
+            const input = popup.querySelector('input');
+            if (tema.Tipo_Juego === "Ahorcado") {
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.toLowerCase().replace(/[^a-z]/g, '');
+                });
+            }
+        }
+    });
+
+    if (newContent) {
+        try {
+            const response = await fetch(`${apiURL}/edit-p`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    temaId: tema.Tema_Juego_ID_PK,
+                    contenido: newContent
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al editar el contenido');
+            }
+
+            const data = await response.json();
+            
+            Swal.fire(
+                '¡Editado!',
+                data.message || 'El contenido ha sido actualizado.',
+                'success'
+            );
+            
+            // Recargar los datos
+            const temasResponse = await axios.get(`${apiURL}/gettemas`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+            setTemas(temasResponse.data.temas);
+
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire(
+                'Error',
+                'No se pudo editar el contenido',
+                'error'
+            );
+        }
     }
-  }
-};
+  };
   
   
   // Calcular los elementos actuales para la página

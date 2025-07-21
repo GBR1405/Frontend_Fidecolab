@@ -938,7 +938,7 @@ const AdminProfessorCourses = () => {
                   />
                   <div className="filter__course">
                     <input 
-                        className="filter__input"
+                        className="filter__course"
                         type="text" 
                         placeholder="Buscar curso..." 
                         value={searchCourse}

@@ -1569,21 +1569,6 @@
         color: var(--primary-text-clr);
         font-size: 0.9vw;
         font-weight: 500;
-
-        select{
-            appearance: none;
-            all: unset;
-            appearance: none;
-            border: none;
-            background: none;
-            outline: none;
-            width: 90%;
-            height: 100%;
-            padding-inline: 10%;    
-    
-            display: grid;
-            align-items: center;
-        }    
     }
     
     .option__buttons{

@@ -907,23 +907,23 @@ const AdminProfessorCourses = () => {
                                             data-id={course.id}
                                             onClick={() => handleRowClick(course.id, 'course')}
                                         >
-                                            <td className="table__data" style={{ maxWidth: "60%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            <td className="table__data" style={{ width: "60%", maxWidth: "60%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                             {`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}
                                             </td>
 
-                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            <td className="table__data" style={{ width: "15%", textAlign: "center" }}>
                                             {`G${course.grupo ?? "Sin grupo"}`}
                                             </td>
 
                                             {/* Detalles */}
-                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            <td className="table__data" style={{ width: "12%", textAlign: "center" }}>
                                             <button className="data__button button--info" disabled={!selectedTeacher}>
                                                 <i className="fa-solid fa-circle-info"></i>
                                             </button>
                                             </td>
 
                                             {/* Acciones */}
-                                            <td className="table__data" style={{ textAlign: "center" }}>
+                                            <td className="table__data" style={{ width: "13%", textAlign: "center" }}>
                                             {selectedTeacher ? (
                                                 <button className="data__button button--desactive"
                                                 onClick={(e) => {
@@ -937,7 +937,6 @@ const AdminProfessorCourses = () => {
                                                 <button className="data__button button--edit"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    // Aquí podrías invocar una función handleEditCourse(course)
                                                     Swal.fire("Editar curso aún no implementado", "", "info");
                                                 }}
                                                 >

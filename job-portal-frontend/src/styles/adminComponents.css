@@ -2402,3 +2402,9 @@ body, html {
 .button--desactive i {
   font-size: 14px;
 }
+
+.table__row.selected {
+  background-color: #9c9c9c !important; /* más oscuro que hover normal */
+  font-weight: bold;
+  transition: background-color 0.2s;
+}

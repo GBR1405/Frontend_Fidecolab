@@ -357,70 +357,82 @@ const AdminProfessorCourses = () => {
     };
 
     const handleAddCourse = () => {
-        Swal.fire({
-            title: 'Agregar Curso',
-            html: `
-                <input type="text" id="courseCode" class="swal2-input" placeholder="Código del curso" value="SC-" maxlength="10">
-                <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
-            `,
-            confirmButtonText: 'Agregar',
-            cancelButtonText: 'Cancelar',
-            showCancelButton: true,
-            didOpen: () => {
-                const courseCodeInput = document.getElementById("courseCode");
+    Swal.fire({
+        title: 'Agregar Curso',
+        html: `
+            <input type="text" id="courseCode" class="swal2-input" placeholder="Código del curso (SC-XX)" maxlength="6">
+            <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
+        `,
+        confirmButtonText: 'Agregar',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        didOpen: () => {
+            const courseCodeInput = document.getElementById("courseCode");
+            const courseNameInput = document.getElementById("courseName");
 
-                // Evita que se borre el prefijo "SC-"
-                courseCodeInput.addEventListener("input", (e) => {
-                    if (!e.target.value.startsWith("SC-")) {
-                        e.target.value = "SC-";
-                    }
-                    e.target.value = e.target.value.replace(/[^0-9SC-]/g, ""); // Solo permite números después de "SC-"
-                });
-            },
-            confirmButtonText: 'Agregar',
-            cancelButtonText: 'Cancelar',
-            showCancelButton: true,
-            preConfirm: async () => {
-                const code = document.getElementById('courseCode').value.trim();
-                const name = document.getElementById('courseName').value.trim();
-    
-                if (!code || !name) {
-                    Swal.showValidationMessage("Por favor ingresa todos los campos.");
-                    return false;
+            // Inicializar con SC-
+            courseCodeInput.value = "SC-";
+
+            courseCodeInput.addEventListener("input", (e) => {
+                // Remueve todo lo que no sea letra
+                let inputLetters = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase();
+
+                // Solo 2 letras
+                if (inputLetters.length > 2) {
+                    inputLetters = inputLetters.substring(0, 2);
                 }
-    
-                try {
-    
-                    const response = await fetch(`${apiUrl}/add-course`, {
-                        method: "POST",
-                        credentials: "include", 
-                        headers: {
-                            "Authorization": `Bearer ${token}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            codigoCurso: code,
-                            nombreCurso: name
-                        })
-                    });
-    
-                    const data = await response.json();
-    
-                    if (!response.ok) {
-                        throw new Error(data.error || "Error desconocido");
-                    }
-    
-                    Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
-                        .then(() => {
-                            // Recargar la página después de que el usuario cierre la alerta
-                            window.location.reload();
-                        });
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
+
+                // Formato SC-XX
+                e.target.value = `SC-${inputLetters}`;
+
+                // Si ya se completaron las 2 letras, enfocar el input de nombre
+                if (inputLetters.length === 2) {
+                    setTimeout(() => {
+                        courseNameInput.focus();
+                    }, 100);
                 }
+            });
+        },
+        preConfirm: async () => {
+            const codeRaw = document.getElementById('courseCode').value.trim();
+            const name = document.getElementById('courseName').value.trim();
+
+            if (!codeRaw || !name || codeRaw.length !== 6) {
+                Swal.showValidationMessage("El código debe ser 'SC-XX' y el nombre no puede estar vacío.");
+                return false;
             }
-        });
-    };
+
+            try {
+                const response = await fetch(`${apiUrl}/add-course`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        codigoCurso: codeRaw,
+                        nombreCurso: name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Error desconocido");
+                }
+
+                Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
+                    .then(() => {
+                        window.location.reload();
+                    });
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+    });
+};
+
     
     
 

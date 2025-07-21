@@ -20,6 +20,8 @@ const AdminProfessorCourses = () => {
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [linkedCourses, setLinkedCourses] = useState([]);
+    const [searchProfessor, setSearchProfessor] = useState('');
+    const [searchCourse, setSearchCourse] = useState('');
     
 
     function descargarPDF(pdfBase64, fileName) {
@@ -723,7 +725,7 @@ const AdminProfessorCourses = () => {
                             credentials: 'include',  // Asegúrate de que las cookies (si usas cookies para el token) se incluyan
                             headers: {
                                 'Authorization': `Bearer ${token}`,  // Asegúrate de tener el token de acceso
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
                                 manual: "true",  // Indicar que es una carga manual
@@ -875,14 +877,31 @@ const AdminProfessorCourses = () => {
     // Cálculos para profesores
     const indexOfLastProfessor = currentPageProfessors * itemsPerPage;
     const indexOfFirstProfessor = indexOfLastProfessor - itemsPerPage;
-    const currentProfessors = professors.slice(indexOfFirstProfessor, indexOfLastProfessor);
-    const totalPagesProfessors = Math.ceil(professors.length / itemsPerPage);
+    const filteredProfessors = professors.filter(professor => {
+        if (!searchProfessor) return true;
+        
+        const fullName = `${professor.Nombre} ${professor.Apellido1} ${professor.Apellido2}`.toLowerCase();
+        const email = professor.Correo.toLowerCase();
+        const searchTerm = searchProfessor.toLowerCase();
+        
+        return fullName.includes(searchTerm) || email.includes(searchTerm);
+    });
+    const currentProfessors = filteredProfessors.slice(indexOfFirstProfessor, indexOfLastProfessor);
+    const totalPagesProfessors = Math.ceil(filteredProfessors.length / itemsPerPage);
 
     // Cálculos para cursos
     const indexOfLastCourse = currentPageCourses * itemsPerPage;
     const indexOfFirstCourse = indexOfLastCourse - itemsPerPage;
-    const currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse);
-    const totalPagesCourses = Math.ceil(courses.length / itemsPerPage);
+    const filteredCourses = courses.filter(course => {
+        if (!searchCourse) return true;
+        
+        const courseName = `${course.codigo} ${course.nombre}`.toLowerCase();
+        const searchTerm = searchCourse.toLowerCase();
+        
+        return courseName.includes(searchTerm);
+    });
+    const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
+    const totalPagesCourses = Math.ceil(filteredCourses.length / itemsPerPage);
 
     // Cálculos para cursos vinculados
     const indexOfLastLinkedCourse = currentPageLinkedCourses * itemsPerPage;
@@ -909,14 +928,23 @@ const AdminProfessorCourses = () => {
               </div>
               <div className="container__options">
                 <div className="option__filters">
-                  <input className="filter__input" type="text" placeholder="Buscar:" />
+                  <input 
+                    className="filter__input" 
+                    type="text" 
+                    placeholder="Buscar profesor..." 
+                    value={searchProfessor}
+                    onChange={(e) => setSearchProfessor(e.target.value)}
+                    disabled={selectedTeacher !== null}
+                  />
                   <div className="filter__course">
-                    <select>
-                      <option value="0" disabled selected>Curso:</option>
-                      <option value="1">Curso 1</option>
-                      <option value="2">Curso 2</option>
-                      <option value="3">Curso 3</option>
-                    </select>
+                    <input 
+                        className="filter__input"
+                        type="text" 
+                        placeholder="Buscar curso..." 
+                        value={searchCourse}
+                        onChange={(e) => setSearchCourse(e.target.value)}
+                        disabled={selectedTeacher !== null}
+                    />
                   </div>
                 </div>
                 <div className="option__buttons">

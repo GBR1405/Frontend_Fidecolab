@@ -29,8 +29,12 @@ const AdminProfessorCourses = () => {
     }
 
     const handleDeselectTeacher = () => {
-        setSelectedTeacher(null); // Deseleccionar al profesor
-        setLinkedCourses([]); // Limpiar los cursos vinculados
+        setSelectedTeacher(null);
+        setLinkedCourses([]);
+
+        // 🔁 Remueve la clase "selected" de cualquier fila
+        const rows = document.querySelectorAll(`#tableTeacher tbody tr`);
+        rows.forEach(row => row.classList.remove("selected"));
     };
 
     const handleRowClick = (id, type) => {

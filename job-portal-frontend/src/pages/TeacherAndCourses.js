@@ -360,7 +360,7 @@ const AdminProfessorCourses = () => {
     Swal.fire({
         title: 'Agregar Curso',
         html: `
-            <input type="text" id="courseCode" class="swal2-input" placeholder="Código del curso (SC-XX)" maxlength="6">
+            <input type="text" id="courseCode" class="swal2-input" placeholder="Ej: AL-1234" maxlength="9">
             <input type="text" id="courseName" class="swal2-input" placeholder="Nombre del curso">
         `,
         confirmButtonText: 'Agregar',
@@ -370,35 +370,48 @@ const AdminProfessorCourses = () => {
             const courseCodeInput = document.getElementById("courseCode");
             const courseNameInput = document.getElementById("courseName");
 
-            // Inicializar con SC-
-            courseCodeInput.value = "SC-";
-
             courseCodeInput.addEventListener("input", (e) => {
-                // Remueve todo lo que no sea letra
-                let inputLetters = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase();
-
-                // Solo 2 letras
-                if (inputLetters.length > 2) {
-                    inputLetters = inputLetters.substring(0, 2);
+                let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+                let parts = raw.split("-");
+                
+                // CASO 1: Escribiendo las letras
+                if (parts.length === 1 && parts[0].length <= 2) {
+                    e.target.value = parts[0];
+                    if (parts[0].length === 2) {
+                        e.target.value = parts[0] + "-";
+                    }
+                    return;
                 }
 
-                // Formato SC-XX
-                e.target.value = `SC-${inputLetters}`;
+                // CASO 2: Después del guion, solo permitir números (máx 4)
+                if (parts.length === 2) {
+                    let letras = parts[0].substring(0, 2);
+                    let numeros = parts[1].substring(0, 4).replace(/[^0-9]/g, "");
+                    e.target.value = letras + "-" + numeros;
+                    return;
+                }
 
-                // Si ya se completaron las 2 letras, enfocar el input de nombre
-                if (inputLetters.length === 2) {
-                    setTimeout(() => {
-                        courseNameInput.focus();
-                    }, 100);
+                // CASO 3: Si borra el guion manualmente, reiniciar letras
+                if (!raw.includes("-") && raw.length < e.target.value.length) {
+                    let nueva = raw.replace(/[^A-Z]/g, "").substring(0, 2);
+                    e.target.value = nueva;
+                    return;
                 }
             });
         },
         preConfirm: async () => {
-            const codeRaw = document.getElementById('courseCode').value.trim();
+            const code = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
 
-            if (!codeRaw || !name || codeRaw.length !== 6) {
-                Swal.showValidationMessage("El código debe ser 'SC-XX' y el nombre no puede estar vacío.");
+            const codeRegex = /^[A-Z]{2}-\d{1,4}$/;
+
+            if (!codeRegex.test(code)) {
+                Swal.showValidationMessage("El código debe ser del formato XX-1234 (2 letras y hasta 4 números).");
+                return false;
+            }
+
+            if (!name) {
+                Swal.showValidationMessage("Por favor ingresa el nombre del curso.");
                 return false;
             }
 
@@ -411,7 +424,7 @@ const AdminProfessorCourses = () => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        codigoCurso: codeRaw,
+                        codigoCurso: code,
                         nombreCurso: name
                     })
                 });
@@ -423,15 +436,16 @@ const AdminProfessorCourses = () => {
                 }
 
                 Swal.fire('Éxito', 'Curso agregado con éxito', 'success')
-                    .then(() => {
-                        window.location.reload();
-                    });
+                    .then(() => window.location.reload());
+
             } catch (error) {
                 Swal.fire('Error', error.message, 'error');
             }
         }
     });
 };
+
+
 
     
     

@@ -356,6 +356,57 @@ const AdminProfessorCourses = () => {
         });
     };
 
+    const handleShowCourseDetails = async (cursoId) => {
+        try {
+            const response = await fetch(`${apiUrl}/detalles-curso/${cursoId}`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const data = await response.json();
+
+            const profesorHTML = data.profesor
+                ? `<strong style="color:#2980b9">Profesor:</strong> ${data.profesor.Nombre} ${data.profesor.Apellido1} ${data.profesor.Apellido2} (${data.profesor.Correo})`
+                : `<strong style="color:#e67e22">Profesor:</strong> <em>Ninguno vinculado</em>`;
+
+            const estudiantesHTML = data.estudiantes.length > 0
+                ? data.estudiantes.map(e => `
+                    <li style="margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">
+                        <strong style="color:#34495e">${e.Nombre} ${e.Apellido1} ${e.Apellido2}</strong><br/>
+                        <span style="color:#7f8c8d">${e.Correo}</span>
+                    </li>
+                `).join("")
+                : `<em style="color: gray;">No hay estudiantes vinculados.</em>`;
+
+            Swal.fire({
+                title: 'Detalles del Curso',
+                html: `
+                    <div style="text-align: left; font-size: 0.95rem;">
+                        <div style="margin-bottom: 12px;">${profesorHTML}</div>
+                        <div><strong style="color:#2980b9">Estudiantes:</strong></div>
+                        <div style="max-height: 250px; overflow-y: auto; margin-top: 8px; padding-right: 5px;">
+                            <ul style="list-style: none; padding-left: 0;">${estudiantesHTML}</ul>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                confirmButtonText: 'Cerrar',
+                customClass: {
+                    popup: 'custom-modal-curso-detalles'
+                }
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+            Swal.fire("Error", "No se pudieron obtener los detalles del curso.", "error");
+        }
+    };
+
+
     const handleAddCourse = () => {
     Swal.fire({
         title: 'Agregar Curso',
@@ -971,11 +1022,16 @@ const AdminProfessorCourses = () => {
                                             </td>
 
                                             {/* Detalles */}
-                                            <td className="table__data" style={{ width: "12%", textAlign: "center" }}>
-                                            <button className="data__button button--info" disabled={!selectedTeacher}>
-                                                <i className="fa-solid fa-circle-info"></i>
-                                            </button>
-                                            </td>
+                                            <td className="table__data">
+                                                <button className="data__button button--info"
+                                                    onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
+                                                    }}
+                                                >
+                                                    <i className="fa-solid fa-circle-info"></i>
+                                                </button>
+                                                </td>
 
                                             {/* Acciones */}
                                             <td className="table__data" style={{ width: "13%", textAlign: "center" }}>

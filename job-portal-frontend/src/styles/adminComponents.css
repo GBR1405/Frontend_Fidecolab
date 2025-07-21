@@ -1569,6 +1569,25 @@
         color: var(--primary-text-clr);
         font-size: 0.9vw;
         font-weight: 500;
+        border: none; 
+        outline: none;
+    }
+
+    .filter__course__input{
+        background-color: white;
+        align-self: center;
+        justify-self: center;
+        display: flex;
+        height: 70%;
+        width: 95%;
+        border-radius: 5px;
+        cursor: pointer;
+    
+        color: var(--primary-text-clr);
+        font-size: 0.9vw;
+        font-weight: 500;
+        border: none;
+        outline: none;
     }
     
     .option__buttons{

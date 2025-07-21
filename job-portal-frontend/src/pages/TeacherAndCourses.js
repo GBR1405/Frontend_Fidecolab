@@ -291,7 +291,7 @@ const AdminProfessorCourses = () => {
                 }
 
                 const data = await response.json();
-                setProfessors(data.professors || []); // Asegurar que siempre es un array
+                setProfessors((data.professors || []).reverse()); // Asegurar que siempre es un array
             } catch (error) {
                 console.error('Error:', error);
                 setProfessors([]); // Evitar undefined
@@ -889,9 +889,9 @@ const AdminProfessorCourses = () => {
                             </div>
                             <table className="box__table">
                                 <thead className="table__head">
-                                        <th className="table__header">Curso</th>
-                                        <th className="table__header">Grupo</th>
-                                        {selectedTeacher && <th className="table__header">Detalles</th>}
+                                        <th className="table__header" style={{ width: "70%" }}>Curso</th>
+                                        <th className="table__header" style={{ width: "20%" }}>Grupo</th>
+                                        <th className="table__header">Detalles</th>
                                         {selectedTeacher && <th className="table__header">Acciones</th>}
                                 </thead>
                                 <tbody className="table__body">
@@ -906,8 +906,12 @@ const AdminProfessorCourses = () => {
                                                 data-id={course.id}
                                                 onClick={() => handleRowClick(course.id, 'course')}
                                             >
-                                                <td className="table__data">{`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}</td>
-                                                <td className="table__data">{`G${course.grupo ?? "Sin grupo"}`}</td>
+                                                <td className="table__data" style={{ maxWidth: "70%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                {`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}
+                                                </td>
+                                                <td className="table__data" style={{ width: "20%", textAlign: "center" }}>
+                                                {`G${course.grupo ?? "Sin grupo"}`}
+                                                </td>
                                                 {selectedTeacher && ( // Mostrar botón de desvincular solo si hay un profesor seleccionado
                                                     <td className="table__data">
                                                         <button className="data__button button--info">

@@ -1027,9 +1027,7 @@ const AdminProfessorCourses = () => {
                                              <button className="data__button button--info"
                                                 onClick={(e) => {
                                                 e.stopPropagation();
-                                                console.log("Detalles del curso:", course.Curso_ID_FK);
-                                                console.log("Detalles del curso:", course.course.Curso_ID);
-                                                console.log("Detalles del curso:", course.course.id);
+                                                console.log("Detalles del curso:", course);
                                                 handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
                                                 }}
                                             >

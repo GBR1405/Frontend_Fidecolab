@@ -31,10 +31,7 @@ const AdminProfessorCourses = () => {
     const handleDeselectTeacher = () => {
         setSelectedTeacher(null);
         setLinkedCourses([]);
-
-        // 🔁 Remueve la clase "selected" de cualquier fila
-        const rows = document.querySelectorAll(`#tableTeacher tbody tr`);
-        rows.forEach(row => row.classList.remove("selected"));
+        applyRowSelectionEffect(null, 'teacher'); // Esto eliminará el resaltado
     };
 
     const handleRowClick = (id, type) => {
@@ -141,10 +138,10 @@ const AdminProfessorCourses = () => {
         rows.forEach(row => {
             const rowId = row.getAttribute("data-id");
             if (rowId) {
-                if (parseInt(rowId) === selectedRow) {
-                    row.classList.add("selected");  // Fila seleccionada
+                if (selectedRow !== null && parseInt(rowId) === selectedRow) {
+                    row.classList.add("selected");
                 } else {
-                    row.classList.remove("selected");  // Fila no seleccionada
+                    row.classList.remove("selected");
                 }
             }
         });

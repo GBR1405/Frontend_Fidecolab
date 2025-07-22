@@ -601,6 +601,8 @@ const clearLocalDrawing = () => {
     };
   }, [socket, partidaId, equipoNumero, userId]);
 
+  
+
   // Renderizado
   return (
     <div className="drawing-game-container">

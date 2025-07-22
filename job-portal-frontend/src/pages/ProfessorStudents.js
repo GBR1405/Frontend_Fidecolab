@@ -478,10 +478,155 @@ const ProfessorStudents = () => {
     });
   }, []);
 
-  const handleUnlinkStudent = (studentId) => {
-    console.log("Desvinculando estudiante con ID:", studentId);
-    // Aquí iría tu lógica para desvincular al estudiante
-    // Puedes usar un modal de confirmación antes de proceder
+    const handleUnlinkStudent = async (studentId) => {
+      const result = await Swal.fire({
+          title: '¿Desvincular estudiante?',
+          text: "Esta acción no se puede deshacer",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, desvincular',
+          cancelButtonText: 'Cancelar'
+      });
+
+      if (result.isConfirmed) {
+          try {
+              Swal.fire({
+                  title: 'Desvinculando estudiante...',
+                  allowOutsideClick: false,
+                  didOpen: () => Swal.showLoading()
+              });
+
+              const response = await fetch(`${apiUrl}/desvincular-estudiante`, {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ estudianteId: studentId })
+              });
+
+              const data = await response.json();
+
+              if (response.ok) {
+                  Swal.fire({
+                      icon: 'success',
+                      title: '¡Estudiante desvinculado!',
+                      text: data.mensaje,
+                      confirmButtonText: 'Aceptar',
+                      confirmButtonColor: '#3e8e41'
+                  }).then(() => {
+                      // Actualizar la lista de estudiantes
+                      const updatedEstudiantes = estudiantes.filter(est => est.Usuario_ID_PK !== studentId);
+                      setEstudiantes(updatedEstudiantes);
+                  });
+              } else {
+                  showErrorAlert(data.mensaje || "Error al desvincular estudiante");
+              }
+          } catch (error) {
+              showErrorAlert("Error al desvincular estudiante");
+          }
+      }
+  };
+
+  const handleUnlinkAllStudents = async () => {
+      try {
+          // Mostrar selector de grupo
+          const resultGroup = await Swal.fire({
+              title: 'Selecciona un grupo para desvincular',
+              input: 'select',
+              inputOptions: await getGroupOptions(),
+              inputPlaceholder: 'Selecciona un grupo',
+              showCancelButton: true,
+              cancelButtonText: 'Cancelar',
+              confirmButtonText: 'Continuar',
+              inputValidator: (value) => {
+                  if (!value) {
+                      return 'Por favor selecciona un grupo.';
+                  }
+              }
+          });
+
+          if (!resultGroup.isConfirmed) return;
+
+          const grupoId = resultGroup.value;
+          const grupoNombre = resultGroup.inputOptions[grupoId];
+
+          // Confirmación con temporizador
+          let timerInterval;
+          Swal.fire({
+              title: `¿Desvincular todos los estudiantes de ${grupoNombre}?`,
+              html: 'Esta acción no se puede deshacer. El botón se habilitará en <b></b> segundos.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Desvincular (3)',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33',
+              allowOutsideClick: false,
+              didOpen: () => {
+                  const confirmButton = Swal.getConfirmButton();
+                  confirmButton.disabled = true;
+                  let timeLeft = 3;
+                  timerInterval = setInterval(() => {
+                      timeLeft--;
+                      Swal.getHtmlContainer().querySelector('b').textContent = timeLeft;
+                      confirmButton.textContent = `Desvincular (${timeLeft})`;
+                      if (timeLeft <= 0) {
+                          clearInterval(timerInterval);
+                          confirmButton.disabled = false;
+                          confirmButton.textContent = 'Desvincular';
+                      }
+                  }, 1000);
+              }
+          }).then(async (result) => {
+              clearInterval(timerInterval);
+              if (result.isConfirmed) {
+                  try {
+                      Swal.fire({
+                          title: 'Desvinculando estudiantes...',
+                          allowOutsideClick: false,
+                          didOpen: () => Swal.showLoading()
+                      });
+
+                      const response = await fetch(`${apiUrl}/desvincular-todos-estudiantes`, {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ grupoId })
+                      });
+
+                      const data = await response.json();
+
+                      if (response.ok) {
+                          Swal.fire({
+                              icon: 'success',
+                              title: '¡Estudiantes desvinculados!',
+                              text: data.mensaje,
+                              confirmButtonText: 'Aceptar',
+                              confirmButtonColor: '#3e8e41'
+                          }).then(() => {
+                              // Actualizar la lista de estudiantes
+                              const updatedEstudiantes = estudiantes.filter(est => 
+                                  !est.Codigo_Curso.includes(grupoNombre.split(' - ')[0])
+                              );
+                              setEstudiantes(updatedEstudiantes);
+                          });
+                      } else {
+                          showErrorAlert(data.mensaje || "Error al desvincular estudiantes");
+                      }
+                  } catch (error) {
+                      showErrorAlert("Error al desvincular estudiantes");
+                  }
+              }
+          });
+      } catch (error) {
+          showErrorAlert("Error al procesar la solicitud");
+      }
   };
 
   // Paginación para estudiantes filtrados y ordenados
@@ -506,6 +651,8 @@ const ProfessorStudents = () => {
     }
   }, [estudiantes]);
 
+  
+
 
   return (
     <>
@@ -524,7 +671,15 @@ const ProfessorStudents = () => {
             </div>
             <div className="up__button">
               <button className="button__add" type="button" onClick={handleAddStudent}>Agregar estudiantes</button>
-            </div>            
+              <button 
+                  className="button__add" 
+                  type="button" 
+                  onClick={handleUnlinkAllStudents}
+                  style={{ marginLeft: '10px', backgroundColor: '#d33' }}
+              >
+                  Desvincular todos
+              </button>
+          </div>          
           </div>          
           <div className="container__content">
             <div className="content__box">

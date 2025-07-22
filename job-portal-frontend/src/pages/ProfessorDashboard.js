@@ -215,20 +215,20 @@ const SimulationProfessor = () => {
     teams: []
   });
 
-  useEffect(() => {
-    if (!socket) return;
+ useEffect(() => {
+  if (!socket) return;
 
-    const handleDemoStarted = () => setDemoActive(true);
-    const handleDemoEnded = () => setDemoActive(false);
+  const handleDemoEnded = () => {
+    setDemoActive(false); // 👈 Oculta el modal al profesor también
+  };
 
-    socket.on('drawingDemoStarted', handleDemoStarted);
-    socket.on('drawingDemoEnded', handleDemoEnded);
+  socket.on('drawingDemoEnded', handleDemoEnded);
 
-    return () => {
-      socket.off('drawingDemoStarted', handleDemoStarted);
-      socket.off('drawingDemoEnded', handleDemoEnded);
-    };
-  }, [socket]);
+  return () => {
+    socket.off('drawingDemoEnded', handleDemoEnded);
+  };
+}, [socket]);
+
 
   useEffect(() => {
     if (!socket) return;

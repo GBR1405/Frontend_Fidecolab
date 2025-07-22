@@ -264,35 +264,20 @@ useEffect(() => {
 
   const transitionTimeout = 3000;
 
-  useEffect(() => {
-  if (!socket) return;
-
-  const handleDemoStarted = () => setIsStudentDemoActive(true);
-  const handleDemoEnded = () => setIsStudentDemoActive(false);
-
-  socket.on('drawingDemoStarted', handleDemoStarted);
-  socket.on('drawingDemoEnded', handleDemoEnded);
-
-  return () => {
-    socket.off('drawingDemoStarted', handleDemoStarted);
-    socket.off('drawingDemoEnded', handleDemoEnded);
-  };
-}, [socket]);
 
   useEffect(() => {
-     if (!socket) return;
- 
-     const handleDemoStarted = () => setDemoActive(true);
-     const handleDemoEnded = () => setDemoActive(false);
- 
-     socket.on('drawingDemoStarted', handleDemoStarted);
-     socket.on('drawingDemoEnded', handleDemoEnded);
- 
-     return () => {
-       socket.off('drawingDemoStarted', handleDemoStarted);
-       socket.off('drawingDemoEnded', handleDemoEnded);
-     };
-   }, [socket]);
+  if (!socket || !partidaId) return;
+
+  // Terminar cualquier demo activa al recargar/montar el componente
+  socket.emit('endDrawingDemo', partidaId, (response) => {
+    if (response?.success) {
+      setIsStudentDemoActive(false);
+      setShowProfessorModal(false);
+    }
+  });
+
+  // ...resto del código del useEffect existente...
+}, [socket, partidaId]);
 
 
 

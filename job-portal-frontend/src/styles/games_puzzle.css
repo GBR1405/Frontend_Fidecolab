@@ -141,3 +141,39 @@
     transform-origin: top left;
   }
 }
+
+/* PIEZA SELECCIONADA */
+.puzzle-piece.selected {
+  border: 3px solid gold;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+/* PIEZA BLOQUEADA POR OTRO USUARIO */
+.puzzle-piece.blocked {
+  filter: grayscale(80%) brightness(0.7);
+  animation: pulseBlocked 1s infinite;
+  cursor: not-allowed;
+}
+
+@keyframes pulseBlocked {
+  0% { opacity: 0.9; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.9; }
+}
+
+/* PIEZA CORRECTAMENTE COLOCADA */
+.puzzle-piece.correct {
+  border: 2px solid #28a745;
+  animation: correctGlow 1s ease-in-out infinite;
+}
+
+@keyframes correctGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px #28a745;
+  }
+  50% {
+    box-shadow: 0 0 15px #28a745;
+  }
+}

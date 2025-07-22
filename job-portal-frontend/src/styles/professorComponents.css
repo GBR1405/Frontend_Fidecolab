@@ -1671,3 +1671,10 @@ th.hidden-column {
   color: #555;
   margin: 0 10px;
 }
+
+.swal2-select-wide {
+    min-width: 300px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    margin: 10px 0 !important;
+}

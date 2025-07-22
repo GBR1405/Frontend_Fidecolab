@@ -532,102 +532,122 @@ const ProfessorStudents = () => {
   };
 
   const handleUnlinkAllStudents = async () => {
-      try {
-          // Mostrar selector de grupo
-          const resultGroup = await Swal.fire({
-              title: 'Selecciona un grupo para desvincular',
-              input: 'select',
-              inputOptions: await getGroupOptions(),
-              inputPlaceholder: 'Selecciona un grupo',
-              showCancelButton: true,
-              cancelButtonText: 'Cancelar',
-              confirmButtonText: 'Continuar',
-              inputValidator: (value) => {
-                  if (!value) {
-                      return 'Por favor selecciona un grupo.';
-                  }
-              }
-          });
+    console.log("Iniciando handleUnlinkAllStudents");
+    try {
+        // Mostrar selector de grupo
+        console.log("Obteniendo opciones de grupos...");
+        const groupOptions = await getGroupOptions();
+        console.log("Opciones de grupos obtenidas:", groupOptions);
 
-          if (!resultGroup.isConfirmed) return;
+        const resultGroup = await Swal.fire({
+            title: 'Selecciona un grupo para desvincular',
+            input: 'select',
+            inputOptions: groupOptions,
+            inputPlaceholder: 'Selecciona un grupo',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Continuar',
+            inputClass: 'swal2-select-wide', // Añadimos clase para estilo
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Por favor selecciona un grupo.';
+                }
+            }
+        });
 
-          const grupoId = resultGroup.value;
-          const grupoNombre = resultGroup.inputOptions[grupoId];
+        if (!resultGroup.isConfirmed) {
+            console.log("Usuario canceló la selección de grupo");
+            return;
+        }
 
-          // Confirmación con temporizador
-          let timerInterval;
-          Swal.fire({
-              title: `¿Desvincular todos los estudiantes de ${grupoNombre}?`,
-              html: 'Esta acción no se puede deshacer. El botón se habilitará en <b></b> segundos.',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Desvincular (3)',
-              cancelButtonText: 'Cancelar',
-              confirmButtonColor: '#d33',
-              allowOutsideClick: false,
-              didOpen: () => {
-                  const confirmButton = Swal.getConfirmButton();
-                  confirmButton.disabled = true;
-                  let timeLeft = 3;
-                  timerInterval = setInterval(() => {
-                      timeLeft--;
-                      Swal.getHtmlContainer().querySelector('b').textContent = timeLeft;
-                      confirmButton.textContent = `Desvincular (${timeLeft})`;
-                      if (timeLeft <= 0) {
-                          clearInterval(timerInterval);
-                          confirmButton.disabled = false;
-                          confirmButton.textContent = 'Desvincular';
-                      }
-                  }, 1000);
-              }
-          }).then(async (result) => {
-              clearInterval(timerInterval);
-              if (result.isConfirmed) {
-                  try {
-                      Swal.fire({
-                          title: 'Desvinculando estudiantes...',
-                          allowOutsideClick: false,
-                          didOpen: () => Swal.showLoading()
-                      });
+        const grupoId = resultGroup.value;
+        const grupoNombre = groupOptions[grupoId];
+        console.log("Grupo seleccionado - ID:", grupoId, "Nombre:", grupoNombre);
 
-                      const response = await fetch(`${apiUrl}/desvincular-todos-estudiantes`, {
-                          method: 'POST',
-                          credentials: 'include',
-                          headers: {
-                              'Authorization': `Bearer ${token}`,
-                              'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({ grupoId })
-                      });
+        // Confirmación con temporizador
+        let timerInterval;
+        const confirmationResult = await Swal.fire({
+            title: `¿Desvincular todos los estudiantes de ${grupoNombre}?`,
+            html: 'Esta acción no se puede deshacer. El botón se habilitará en <b></b> segundos.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Desvincular (3)',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d33',
+            allowOutsideClick: false,
+            didOpen: () => {
+                const confirmButton = Swal.getConfirmButton();
+                confirmButton.disabled = true;
+                let timeLeft = 3;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    Swal.getHtmlContainer().querySelector('b').textContent = timeLeft;
+                    confirmButton.textContent = `Desvincular (${timeLeft})`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        confirmButton.disabled = false;
+                        confirmButton.textContent = 'Desvincular';
+                    }
+                }, 1000);
+            }
+        });
 
-                      const data = await response.json();
+        clearInterval(timerInterval);
+        
+        if (!confirmationResult.isConfirmed) {
+            console.log("Usuario canceló la confirmación");
+            return;
+        }
 
-                      if (response.ok) {
-                          Swal.fire({
-                              icon: 'success',
-                              title: '¡Estudiantes desvinculados!',
-                              text: data.mensaje,
-                              confirmButtonText: 'Aceptar',
-                              confirmButtonColor: '#3e8e41'
-                          }).then(() => {
-                              // Actualizar la lista de estudiantes
-                              const updatedEstudiantes = estudiantes.filter(est => 
-                                  !est.Codigo_Curso.includes(grupoNombre.split(' - ')[0])
-                              );
-                              setEstudiantes(updatedEstudiantes);
-                          });
-                      } else {
-                          showErrorAlert(data.mensaje || "Error al desvincular estudiantes");
-                      }
-                  } catch (error) {
-                      showErrorAlert("Error al desvincular estudiantes");
-                  }
-              }
-          });
-      } catch (error) {
-          showErrorAlert("Error al procesar la solicitud");
-      }
-  };
+        console.log("Iniciando proceso de desvinculación...");
+        Swal.fire({
+            title: 'Desvinculando estudiantes...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        console.log("Enviando petición al backend...");
+        const response = await fetch(`${apiUrl}/desvincular-todos-estudiantes`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ grupoId })
+        });
+
+        console.log("Respuesta recibida, status:", response.status);
+        const data = await response.json();
+        console.log("Datos de respuesta:", data);
+
+        if (response.ok) {
+            console.log("Desvinculación exitosa, actualizando estado...");
+            Swal.fire({
+                icon: 'success',
+                title: '¡Estudiantes desvinculados!',
+                text: data.mensaje,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#3e8e41'
+            }).then(() => {
+                // Actualizar la lista de estudiantes
+                const cursoCodigo = grupoNombre.split(' - ')[0].trim();
+                console.log("Filtrando estudiantes por código de curso:", cursoCodigo);
+                const updatedEstudiantes = estudiantes.filter(est => 
+                    est.Codigo_Curso !== cursoCodigo
+                );
+                console.log("Estudiantes después de filtrar:", updatedEstudiantes);
+                setEstudiantes(updatedEstudiantes);
+            });
+        } else {
+            console.error("Error en la respuesta del servidor:", data);
+            showErrorAlert(data.mensaje || "Error al desvincular estudiantes");
+        }
+    } catch (error) {
+        console.error("Error en handleUnlinkAllStudents:", error);
+        showErrorAlert("Error al procesar la solicitud: " + error.message);
+    }
+};
 
   // Paginación para estudiantes filtrados y ordenados
   const indexOfLastStudent = currentPage * studentsPerPage;

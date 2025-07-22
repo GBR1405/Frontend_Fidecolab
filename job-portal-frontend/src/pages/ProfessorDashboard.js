@@ -205,6 +205,7 @@ const SimulationProfessor = () => {
   const [teamDrawingLines, setTeamDrawingLines] = useState(null);
   const [drawingsByTeam, setDrawingsByTeam] = useState({});
    const userId = localStorage.getItem('userId');
+   const [showDemoModal, setShowDemoModal] = useState(false);
   
   
 
@@ -214,6 +215,8 @@ const SimulationProfessor = () => {
     totalTeams: 0,
     teams: []
   });
+
+  
 
  useEffect(() => {
      if (!socket) return;
@@ -232,7 +235,12 @@ const SimulationProfessor = () => {
 
 
 
-
+useEffect(() => {
+  // Resetear el estado del modal al cargar el componente
+  setDemoActive(false);
+  
+  // Resto de tu lógica de inicialización...
+}, []);
 
 
   
@@ -316,6 +324,7 @@ useEffect(() => {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
+        setShowDemoModal(true);
         socket.emit('startDrawingDemo', partidaId, (response) => {
           if (response.error) {
             Swal.fire('Error', response.error, 'error');

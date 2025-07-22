@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import '../styles/DrawingDemoModal.css';
 
-const DrawingDemoModal = ({ partidaId, isProfessor }) => {
+// Modifica la definición de props para incluir onClose
+const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
   const socket = useSocket();
   const canvasRef = useRef(null);
   const numericPartidaId = Number(partidaId);
@@ -145,6 +146,17 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     socket.emit('endDrawingDemo', numericPartidaId);
   };
 
+  // Modifica la función endDemo para que también llame a onClose
+  const handleClose = () => {
+    if (isProfessor) {
+      // Si es profesor, solo cerramos el modal sin terminar la demo
+      onClose();
+    } else {
+      // Si es estudiante, emitimos el evento de finalizar demo
+      socket.emit('endDrawingDemo', numericPartidaId);
+    }
+  };
+
   useEffect(() => {
     if (selectedTeam !== null) {
       console.log('Fetching drawing for team:', selectedTeam); // Para debugging
@@ -167,11 +179,9 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
       <div className="demo-modal-container">
         <div className="demo-header">
           <h2>Modo Demostración</h2>
-          {isProfessor && (
-            <button onClick={endDemo} className="demo-close-btn">
-              <i className="fas fa-times"></i>
-            </button>
-          )}
+          <button onClick={handleClose} className="demo-close-btn">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
 
         <div className="demo-content">

@@ -1,126 +1,115 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useSocket } from '../context/SocketContext';
-import '../styles/DrawingDemoModal.css';
+import "../styles/LiveViewDrawings.css";
 
-const DrawingDemoModal = ({ partidaId, isProfessor }) => {
-  const socket = useSocket();
+const ProfessorDrawingViewer = ({ partidaId, socket }) => {
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
   const canvasRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [error, setError] = useState(null);
+
   const numericPartidaId = Number(partidaId);
 
-  const [teams, setTeams] = useState([]);
-  const [currentTeam, setCurrentTeam] = useState(null);
-  const [isActive, setIsActive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
-
-  // Obtener lista de equipos y estado de demostración
+  // Obtener lista de equipos
   useEffect(() => {
-    if (!socket || isNaN(numericPartidaId)) return;
+    if (isNaN(numericPartidaId)) {
+      setError('ID de partida inválido');
+      return;
+    }
 
-    // Obtener equipos
+    if (!socket) {
+      setError('Socket no disponible');
+      return;
+    }
+
     socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
       if (response.success) {
         setTeams(response.equipos);
         if (response.equipos.length > 0) {
-          setCurrentTeam(response.equipos[0]);
+          setSelectedTeam(response.equipos[0]);
         }
       } else {
         setError(`Error obteniendo equipos: ${response.error || 'Desconocido'}`);
       }
     });
-
-    // Obtener estado de demostración
-    socket.emit('checkDrawingDemo', numericPartidaId, (response) => {
-      if (response.active) {
-        setIsActive(true);
-        setCurrentTeam(response.currentTeam);
-      }
-    });
-
-    // Eventos de sincronización
-    socket.on('drawingDemoStarted', ({ currentTeam }) => {
-      setIsActive(true);
-      setCurrentTeam(currentTeam);
-    });
-
-    socket.on('drawingDemoTeamChanged', ({ currentTeam }) => {
-      setCurrentTeam(currentTeam);
-    });
-
-    socket.on('drawingDemoEnded', () => {
-      setIsActive(false);
-    });
-
-    return () => {
-      socket.off('drawingDemoStarted');
-      socket.off('drawingDemoTeamChanged');
-      socket.off('drawingDemoEnded');
-    };
   }, [socket, numericPartidaId]);
 
-  // Cargar y dibujar el canvas
+  // Solicitar dibujo
   const fetchAndDrawTeamDrawing = () => {
-    if (!socket || !currentTeam) return;
+    if (!socket || !selectedTeam) return;
 
     setLoading(true);
     setError(null);
 
-    socket.emit('professorGetTeamDrawing', {
-      partidaId: numericPartidaId,
-      equipoNumero: currentTeam
-    }, (response) => {
-      setLoading(false);
-      if (response.success) {
-        drawCanvas(response.drawing);
-        setLastUpdate(new Date());
-      } else {
-        clearCanvas();
-      }
-    });
-  };
+    socket.emit(
+      'professorGetTeamDrawing',
+      { partidaId: numericPartidaId, equipoNumero: selectedTeam },
+      (response) => {
+        setLoading(false);
 
-  const drawCanvas = (drawingData) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!drawingData) return;
-
-    const sourceWidth = 800;
-    const sourceHeight = 600;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-
-    const scaleX = canvasWidth / sourceWidth;
-    const scaleY = canvasHeight / sourceHeight;
-
-    Object.values(drawingData).forEach((userPaths) => {
-      userPaths.forEach((path) => {
-        if (!Array.isArray(path.points) || path.points.length < 4) return;
-
-        ctx.beginPath();
-        ctx.strokeStyle = path.color || '#000000';
-        ctx.lineWidth = path.strokeWidth || 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        for (let i = 0; i < path.points.length; i += 2) {
-          const x = path.points[i] * scaleX;
-          const y = path.points[i + 1] * scaleY;
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
+        if (response.success) {
+          drawCanvas(response.drawing);
+          setLastUpdate(new Date());
+        } else {
+          setError(response.error || 'Error desconocido al obtener dibujo');
+          clearCanvas();
         }
-
-        ctx.stroke();
-      });
-    });
+      }
+    );
   };
+
+  // Dibujo real
+  const drawCanvas = (drawingData) => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!drawingData) return;
+
+  // 📐 Tamaño original de los canvas de Konva en el frontend
+  const sourceWidth = 800;
+  const sourceHeight = 600;
+  const canvasWidth = canvas.width;   // 800
+  const canvasHeight = canvas.height; // 600
+
+  const scaleX = canvasWidth / sourceWidth;
+  const scaleY = canvasHeight / sourceHeight;
+
+  Object.values(drawingData).forEach((userPaths) => {
+    userPaths.forEach((path) => {
+      if (!Array.isArray(path.points) || path.points.length < 4) return;
+
+      ctx.beginPath();
+      ctx.strokeStyle = path.color || '#000000';
+      ctx.lineWidth = path.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 0; i < path.points.length; i += 2) {
+        const rawX = path.points[i];
+        const rawY = path.points[i + 1];
+        if (typeof rawX !== 'number' || typeof rawY !== 'number') continue;
+
+        const x = rawX * scaleX;
+        const y = rawY * scaleY;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+
+      ctx.stroke();
+    });
+  });
+
+  console.log('[Professor] Dibujo escalado fijo 1280→800 completado');
+};
+
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -129,73 +118,72 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // Redibuja al cambiar equipo
+  // Cuando cambia de equipo
   useEffect(() => {
-    if (currentTeam !== null) {
+    if (selectedTeam !== null) {
       fetchAndDrawTeamDrawing();
     }
-  }, [currentTeam]);
+  }, [selectedTeam]);
 
   // Actualización periódica
   useEffect(() => {
-    if (!currentTeam) return;
+    if (!selectedTeam) return;
     const intervalId = setInterval(() => {
       fetchAndDrawTeamDrawing();
     }, 2000);
 
     return () => clearInterval(intervalId);
-  }, [currentTeam]);
-
-  // Cambiar equipo (solo profesor)
-  const changeTeam = (direction) => {
-    if (!isProfessor || !teams.length) return;
-
-    const index = teams.indexOf(currentTeam);
-    let newIndex = direction === 'next'
-      ? (index + 1) % teams.length
-      : (index - 1 + teams.length) % teams.length;
-
-    const newTeam = teams[newIndex];
-
-    socket.emit('changeDrawingDemoTeam', {
-      partidaId: numericPartidaId,
-      equipoNumero: newTeam
-    });
-  };
-
-  if (!isActive) return null;
+  }, [selectedTeam]);
 
   return (
-    <div className="demo-modal-overlay">
-      <div className="demo-modal-container">
-        <div className="demo-header">
-          <h2>Modo Demostración</h2>
+    <div className="live-view-container">
+      {/* Título centrado */}
+      <div className="live-view-header">
+        <h3 className="live-view-title">Vista en vivo</h3>
+      </div>
+
+      {/* Contenido principal - dos columnas */}
+      <div className="live-view-content">
+        {/* Columna izquierda - Lista de equipos */}
+        <div className="teams-column">
+          <div className="teams-header">
+            <h4>Equipos</h4>
+            <span className="teams-count">{teams.length} equipos</span>
+          </div>
+          <div className="teams-list-container">
+            <div className="teams-list-scroll">
+              {teams.map((team) => (
+                <button
+                  key={team}
+                  className={`team-button ${team === selectedTeam ? 'active' : ''}`}
+                  onClick={() => setSelectedTeam(team)}
+                >
+                  <span className="team-button-text">Equipo {team}</span>
+                  {team === selectedTeam && (
+                    <span className="team-button-indicator">
+                      <i className="fas fa-circle"></i>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="demo-content">
-          <div className="demo-drawing-container">
+        {/* Columna derecha - Canvas */}
+        <div className="canvas-column">
+          <div className="canvas-wrapper">
             <canvas
               ref={canvasRef}
               width={800}
               height={600}
-              className="demo-drawing"
+              className="live-view-canvas"
             />
-            <div className="team-indicator">
-              Equipo actual: {currentTeam}
-            </div>
-            {loading && <p className="demo-loading">Cargando dibujo...</p>}
           </div>
-
-          {isProfessor && (
-            <div className="demo-controls">
-              <button onClick={() => changeTeam('prev')}>Anterior</button>
-              <button onClick={() => changeTeam('next')}>Siguiente</button>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default DrawingDemoModal;
+export default ProfessorDrawingViewer;

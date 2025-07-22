@@ -157,6 +157,20 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
     }
   };
 
+  // Añade esta función para descargar el dibujo
+  const downloadDrawing = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Crear un elemento temporal de enlace
+    const link = document.createElement('a');
+    link.download = `dibujo-equipo-${selectedTeam}.png`;
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Actualización instantánea al cambiar de equipo
   useEffect(() => {
     if (selectedTeam !== null) {
@@ -188,9 +202,11 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
       <div className="demo-modal-container">
         <div className="demo-header">
           <h2>Modo Demostración</h2>
-          <button onClick={handleClose} className="demo-close-btn">
-            <i className="fas fa-times"></i>
-          </button>
+          {isProfessor && (
+            <button onClick={handleClose} className="demo-close-btn">
+              <i className="fas fa-times"></i>
+            </button>
+          )}
         </div>
 
         <div className="demo-content">
@@ -267,7 +283,11 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
                 <button className="action-btn star-btn">
                   <i className="fas fa-star"></i> Favorito
                 </button>
-                <button className="action-btn download-btn">
+                <button 
+                  className="action-btn download-btn"
+                  onClick={downloadDrawing}
+                  title="Descargar dibujo actual"
+                >
                   <i className="fas fa-download"></i> Descargar
                 </button>
               </div>

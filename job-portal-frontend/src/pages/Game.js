@@ -244,23 +244,30 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    // Primero buscar en teamMembers
-    const miembro = teamMembers.find(m => m.userId === userId);
-    if (miembro && miembro.fullName) {
-      return miembro.fullName;
-    }
+    console.log('getUserName llamado para userId:', userId);
+    console.log('Estado actual de teamMembers:', teamMembers);
+    console.log('Usuario actual:', localStorage.getItem('userId'));
+    console.log('Nombre actual:', localStorage.getItem('userFullName'));
 
-    // Si es el usuario actual
+    // Si es el usuario actual, usar nombre del localStorage
     if (userId === localStorage.getItem('userId')) {
       const fullName = localStorage.getItem('userFullName');
       if (fullName) {
+        console.log('Retornando nombre del localStorage:', fullName);
         return fullName;
       }
     }
 
-    // Si no se encuentra el nombre, mostrar ID corto
-    const shortId = userId.substring(0, 6);
-    return `Usuario ${shortId}`;
+    // Buscar en teamMembers
+    const miembro = teamMembers.find(m => m.userId === userId);
+    if (miembro?.fullName) {
+      console.log('Retornando nombre de teamMembers:', miembro.fullName);
+      return miembro.fullName;
+    }
+
+    // Último recurso: ID corto
+    console.log('No se encontró nombre, usando ID corto');
+    return `Usuario ${userId}`;
   };
 
   // Manejar movimiento del mouse
@@ -286,7 +293,8 @@ useEffect(() => {
     socket.emit('JoinTeamRoom', { 
       partidaId, 
       equipoNumero,
-      userId 
+      userId,
+      fullName: localStorage.getItem('userFullName') // Agregar esto
     });
 
     // Unirse a la sala general de la partida
@@ -294,7 +302,11 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
-      setTeamMembers(members);
+      console.log('Recibiendo actualización de miembros:', members);
+      // Asegurarse de que cada miembro tenga userId y fullName
+      const validMembers = members.filter(m => m.userId && m.fullName);
+      console.log('Miembros válidos:', validMembers);
+      setTeamMembers(validMembers);
     };
 
     const handleBroadcastMouse = (userId, x, y) => {

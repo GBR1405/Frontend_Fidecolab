@@ -14,7 +14,7 @@ const token = Cookies.get("authToken");
 const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   const [teamProgress, setTeamProgress] = useState({});
   const [allTeams, setAllTeams] = useState([]);
-  
+  const [completionOrder, setCompletionOrder] = useState([]);
 
   const navigate = useNavigate();
 
@@ -97,15 +97,46 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
 
   
   
-  // Ordenar equipos por número
-  const sortedTeams = [...allTeams].sort((a, b) => {
-    const progressA = teamProgress[a]?.[currentGameType] ?? 0;
-    const progressB = teamProgress[b]?.[currentGameType] ?? 0;
-    return progressB - progressA;
-  });
+  const sortTeams = (teams) => {
+    return teams.sort((a, b) => {
+      const progressA = teamProgress[a]?.[currentGameType] ?? 0;
+      const progressB = teamProgress[b]?.[currentGameType] ?? 0;
+      
+      // Si ambos equipos están completos, usar el orden de finalización
+      if (progressA === 100 && progressB === 100) {
+        const indexA = completionOrder.indexOf(a);
+        const indexB = completionOrder.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+      }
+      
+      // Si solo uno está completo, ese va primero
+      if (progressA === 100) return -1;
+      if (progressB === 100) return 1;
+      
+      // Si ninguno está completo, ordenar por progreso
+      return progressB - progressA;
+    });
+  };
 
-  
-  
+  useEffect(() => {
+    const handleProgressUpdate = (data) => {
+      setTeamProgress(prev => {
+        const newProgress = { ...prev };
+        if (data.progress === 100 && !completionOrder.includes(data.equipoNumero)) {
+          setCompletionOrder(prev => [...prev, data.equipoNumero]);
+        }
+        return newProgress;
+      });
+    };
+
+    socket.on('teamProgressUpdate', handleProgressUpdate);
+    return () => socket.off('teamProgressUpdate', handleProgressUpdate);
+  }, [socket, completionOrder]);
+
+  const sortedTeams = sortTeams([...allTeams]);
+
   if (sortedTeams.length === 0) {
     return (
       <div className="no-progress-message">
@@ -117,57 +148,35 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
   return (
   <div className="team-progress-container">
     {sortedTeams.map(team => {
-      // Ahorcado: mostrar correctas vs errores
-      if (currentGameType === 'Ahorcado') {
-  const ahorcadoData = teamProgress[team]?.Ahorcado ?? {};
-  const letrasEncontradas = ahorcadoData.correctas ?? 0;
-  const letrasErradas = ahorcadoData.errores ?? 0;
-  const total = letrasEncontradas + letrasErradas || 1;
+      const progress = teamProgress[team]?.[currentGameType] ?? 0;
+      const isCompleted = progress === 100;
+      const position = completionOrder.indexOf(team) + 1;
 
-  const porcentajeCorrectas = (letrasEncontradas / total) * 100;
-  const porcentajeErrores = (letrasErradas / total) * 100;
-
-  return (
-    <div key={team} className="team-progress-item">
-      <div className="team-header">
-        <span className="team-name">Equipo {team}</span>
-        <span className="team-progress-value">
-          Letras encontradas: {letrasEncontradas} / Errores: {letrasErradas}
-        </span>
-      </div>
-      <div className="progress-bar dual">
-        <div className="progress-fill correct" style={{ width: `${porcentajeCorrectas}%` }}></div>
-        <div className="progress-fill wrong" style={{ width: `${porcentajeErrores}%` }}></div>
-      </div>
-    </div>
-  );
-}
-
-      // Otros juegos: barra de progreso normal
       return (
-        <div key={team} className="team-progress-item">
-          <div className="team-header">
-            <span className="team-name">Equipo {team}</span>
-            {teamProgress[team]?.[currentGameType] !== undefined ? (
-              <span className="team-progress-value">
-                {teamProgress[team][currentGameType]}%
-              </span>
-            ) : (
-              <span className="team-inactive">Conectado</span>
-            )}
-          </div>
-          {teamProgress[team]?.[currentGameType] !== undefined ? (
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ width: `${teamProgress[team][currentGameType]}%` }}
-              ></div>
-            </div>
-          ) : (
-            <div className="progress-bar inactive">
-              <div className="progress-fill" style={{ width: '0%' }}></div>
-            </div>
+        <div 
+          key={team} 
+          className={`team-progress-item ${isCompleted ? 'completed' : ''} animate-in`}
+        >
+          {isCompleted && position <= 3 && (
+            <span className="team-crown">
+              {position === 1 ? '👑' : position === 2 ? '🥈' : '🥉'}
+            </span>
           )}
+          <div className="team-header">
+            <span className="team-name">
+              Equipo {team}
+              {isCompleted && position > 3 && ` (${position}º)`}
+            </span>
+            <span className="team-progress-value">
+              {progress}%
+            </span>
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
         </div>
       );
     })}

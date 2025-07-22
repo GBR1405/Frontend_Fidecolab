@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 import Swal from 'sweetalert2';
 import '../styles/DrawingDemoModal.css';
@@ -12,6 +12,49 @@ const DrawingDemoModal = ({ partidaId, equipoNumero, userId, isProfessor }) => {
   const [votes, setVotes] = useState({});
   const [isActive, setIsActive] = useState(false);
   const [teamsList, setTeamsList] = useState([]);
+  const canvasRef = useRef(null);
+
+  const drawCanvas = (drawingData) => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!drawingData) return;
+
+  const sourceWidth = 800;
+  const sourceHeight = 600;
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+
+  const scaleX = canvasWidth / sourceWidth;
+  const scaleY = canvasHeight / sourceHeight;
+
+  Object.values(drawingData).forEach((userPaths) => {
+    userPaths.forEach((path) => {
+      if (!Array.isArray(path.points) || path.points.length < 4) return;
+
+      ctx.beginPath();
+      ctx.strokeStyle = path.color || '#000000';
+      ctx.lineWidth = path.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 0; i < path.points.length; i += 2) {
+        const x = path.points[i] * scaleX;
+        const y = path.points[i + 1] * scaleY;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+
+      ctx.stroke();
+    });
+  });
+};
 
   // Verificar estado al cargar
   useEffect(() => {
@@ -68,8 +111,9 @@ const DrawingDemoModal = ({ partidaId, equipoNumero, userId, isProfessor }) => {
   const loadDrawing = (teamNumber) => {
     socket.emit('getTeamDrawingForDemo', { partidaId, equipoNumero: teamNumber }, (response) => {
       if (response.success) {
-        setDrawingData(response.drawing);
-      }
+    setDrawingData(response.drawing);
+    drawCanvas(response.drawing); // ✅ renderizar
+    }
     });
   };
 
@@ -146,19 +190,13 @@ const DrawingDemoModal = ({ partidaId, equipoNumero, userId, isProfessor }) => {
         <div className="demo-content">
           {/* Columna izquierda - Dibujo */}
           <div className="demo-drawing-container">
-            {drawingData ? (
-              <img 
-                src={drawingData} 
-                alt={`Dibujo del Equipo ${currentTeam}`}
+            <canvas
+                ref={canvasRef}
+                width={800}
+                height={600}
                 className="demo-drawing"
-              />
-            ) : (
-              <div className="no-drawing-placeholder">
-                <i className="fas fa-image"></i>
-                <p>Este equipo no ha subido dibujo</p>
-              </div>
-            )}
-          </div>
+            />
+            </div>
 
           {/* Columna derecha - Controles e información */}
           <div className="demo-controls-container">

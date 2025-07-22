@@ -221,27 +221,42 @@ const [demoState, setDemoState] = useState({
 useEffect(() => {
   if (!socket || !partidaId) return;
 
-  socket.emit('checkActiveDemo', partidaId, (response) => {
-    if (response.active) {
-      setIsStudentDemoActive(true);
-      setShowProfessorModal(true); // Abre automáticamente el modal del profesor
-    }
-  });
+  // Verificación inicial
+  const checkDemoStatus = () => {
+    socket.emit('checkActiveDemo', partidaId, (response) => {
+      if (response.active) {
+        setIsStudentDemoActive(true);
+        setShowProfessorModal(true);
+      } else {
+        setIsStudentDemoActive(false);
+        setShowProfessorModal(false);
+      }
+    });
+  };
 
+  // Verificar estado inicial
+  checkDemoStatus();
+
+  // Configurar intervalo para verificación periódica
+  const intervalId = setInterval(checkDemoStatus, 5000); // Verificar cada 2 segundos
+
+  // Event listeners para cambios en tiempo real
   const handleDemoStarted = () => {
     setIsStudentDemoActive(true);
-    setShowProfessorModal(true); // Abre el modal cuando inicia la demo
+    setShowProfessorModal(true);
   };
 
   const handleDemoEnded = () => {
     setIsStudentDemoActive(false);
-    setShowProfessorModal(false); // Cierra el modal cuando termina la demo
+    setShowProfessorModal(false);
   };
 
   socket.on('drawingDemoStarted', handleDemoStarted);
   socket.on('drawingDemoEnded', handleDemoEnded);
 
+  // Cleanup
   return () => {
+    clearInterval(intervalId);
     socket.off('drawingDemoStarted', handleDemoStarted);
     socket.off('drawingDemoEnded', handleDemoEnded);
   };

@@ -1072,9 +1072,21 @@ const stopDrawingDemonstration = () => {
                   <div className="box__options"> 
                     <div className="option__button">
                       <button 
-                        onClick={nextGame}
-                        disabled={gameConfig.currentIndex >= gameConfig.juegos.length - 1 || showTransition}
-                        className={gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 'disabled-button' : ''}
+                        onClick={() => {
+                          if (isStudentDemoActive) {
+                            Swal.fire({
+                              title: 'Demo Activa',
+                              text: 'Debes desactivar la demostración de estudiantes antes de continuar al siguiente juego',
+                              icon: 'warning',
+                              confirmButtonText: 'Entendido'
+                            });
+                            return;
+                          }
+                          nextGame();
+                        }}
+                        disabled={gameConfig.currentIndex >= gameConfig.juegos.length - 1 || showTransition || isStudentDemoActive}
+                        className={`${gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 'disabled-button' : ''} 
+                                   ${isStudentDemoActive ? 'demo-active-disabled' : ''}`}
                       >
                         {gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 
                           'Todos completados' : 
@@ -1087,7 +1099,7 @@ const stopDrawingDemonstration = () => {
                           <button 
                             onClick={() => setShowProfessorModal(!showProfessorModal)}
                           >
-                            {showProfessorModal ? 'Cerrar Vista Previa' : 'Ver Dibujos'}
+                            {showProfessorModal ? 'Cerrar Vista Previa' : 'Abrir modo demostracion propio'}
                           </button>
                         </div>
                         <div className="option__button">
@@ -1117,7 +1129,22 @@ const stopDrawingDemonstration = () => {
                       </>
                     )}
                     <div className="option__button">
-                      <button onClick={finishGame} className="finish-button">
+                      <button 
+                        onClick={() => {
+                          if (isStudentDemoActive) {
+                            Swal.fire({
+                              title: 'Demo Activa',
+                              text: 'Debes desactivar la demostración de estudiantes antes de finalizar la partida',
+                              icon: 'warning',
+                              confirmButtonText: 'Entendido'
+                            });
+                            return;
+                          }
+                          finishGame();
+                        }}
+                        disabled={isStudentDemoActive}
+                        className={`finish-button ${isStudentDemoActive ? 'demo-active-disabled' : ''}`}
+                      >
                         Finalizar partida
                       </button> 
                     </div>

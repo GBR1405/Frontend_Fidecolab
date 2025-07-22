@@ -1687,3 +1687,33 @@ th.hidden-column {
 .active-demo-btn:hover {
   background-color: #cc0000 !important;
 }
+
+.active-demo-btn {
+  background-color: #4a4a4a !important;
+  color: white !important;
+  position: relative;
+}
+
+.active-demo-btn::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+  background-color: #ffd700;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+  }
+}

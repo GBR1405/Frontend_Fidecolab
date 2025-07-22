@@ -35,14 +35,18 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
       }
     });
 
+    // Modifica el manejador del evento drawingDemoTeamChanged
+    const handleTeamChange = ({ currentTeam }) => {
+      console.log('Cambio de equipo recibido:', currentTeam); // Para debugging
+      setSelectedTeam(currentTeam);
+    };
+
     socket.on('drawingDemoStarted', ({ currentTeam }) => {
       setIsActive(true);
       setSelectedTeam(currentTeam);
     });
 
-    socket.on('drawingDemoTeamChanged', ({ currentTeam }) => {
-      setSelectedTeam(currentTeam);
-    });
+    socket.on('drawingDemoTeamChanged', handleTeamChange);
 
     socket.on('drawingDemoEnded', () => {
       setIsActive(false);
@@ -125,6 +129,11 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
   // Cambiar equipo (solo profesor)
   const selectTeam = (teamNumber) => {
     if (!isProfessor) return;
+    
+    // Actualiza el estado local inmediatamente
+    setSelectedTeam(teamNumber);
+    
+    // Emite el evento al servidor
     socket.emit('changeDrawingDemoTeam', {
       partidaId: numericPartidaId,
       equipoNumero: teamNumber
@@ -138,6 +147,7 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
 
   useEffect(() => {
     if (selectedTeam !== null) {
+      console.log('Fetching drawing for team:', selectedTeam); // Para debugging
       fetchAndDrawTeamDrawing();
     }
   }, [selectedTeam]);

@@ -946,7 +946,34 @@ const stopDrawingDemonstration = () => {
 
   return (
     <div className="professor-dashboard">
-      
+      {demoState.active && (
+        <DrawingDemoModal 
+          partidaId={partidaId}
+          isOpen={demoState.active}
+          currentTeam={demoState.currentTeam}
+          totalTeams={demoState.totalTeams}
+          currentDrawing={demoState.currentDrawing}
+          onClose={() => {
+            socket.emit('endDrawingDemo', partidaId, (response) => {
+              if (response.success) {
+                setDemoState({
+                  active: false,
+                  currentTeam: null,
+                  totalTeams: 0,
+                  teams: []
+                });
+              }
+            });
+          }}
+          onChangeTeam={(direction) => {
+            socket.emit('changeDemoTeam', { 
+              partidaId, 
+              direction
+            });
+          }}
+          isProfessor={true}
+        />
+      )}
     
       {/* Overlay de transición */}
       {showTransition && transitionGame && (

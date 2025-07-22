@@ -157,7 +157,9 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
 
   // Finalizar demostración
   const endDemo = () => {
-    socket.emit('endDrawingDemo', numericPartidaId);
+    socket.on('drawingDemoEnded', () => {
+    setIsActive(false);
+    });
   };
 
   // Cargar canvas cuando cambia el equipo

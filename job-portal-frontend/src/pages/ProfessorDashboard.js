@@ -216,76 +216,22 @@ const SimulationProfessor = () => {
   });
 
  useEffect(() => {
-  if (!socket) return;
+     if (!socket) return;
+ 
+     const handleDemoStarted = () => setDemoActive(true);
+     const handleDemoEnded = () => setDemoActive(false);
+ 
+     socket.on('drawingDemoStarted', handleDemoStarted);
+     socket.on('drawingDemoEnded', handleDemoEnded);
+ 
+     return () => {
+       socket.off('drawingDemoStarted', handleDemoStarted);
+       socket.off('drawingDemoEnded', handleDemoEnded);
+     };
+   }, [socket]);
 
-  const handleDemoEnded = () => {
-    setDemoActive(false); // 👈 Oculta el modal al profesor también
-  };
-
-  socket.on('drawingDemoEnded', handleDemoEnded);
-
-  return () => {
-    socket.off('drawingDemoEnded', handleDemoEnded);
-  };
-}, [socket]);
 
 
-  useEffect(() => {
-    if (!socket) return;
-  
-    // Verificar si hay demo activa al cargar
-    socket.emit('checkActiveDemo', partidaId, (response) => {
-      if (response.active) {
-        setDemoState({
-          active: true,
-          currentTeam: response.currentTeam,
-          totalTeams: response.totalTeams,
-          teams: response.teams
-        });
-      }
-    });
-
-    
-
-  
-    const handleDemoStarted = ({ currentTeam, totalTeams, teams }) => {
-      setDemoState({
-        active: true,
-        currentTeam,
-        totalTeams,
-        teams
-      });
-      setDemoActive(true);
-    };
-  
-    const handleTeamChanged = ({ currentTeam, teamIndex, totalTeams }) => {
-      setDemoState(prev => ({
-        ...prev,
-        currentTeam,
-        teamIndex
-      }));
-    };
-  
-    const handleDemoEnded = () => {
-      setDemoState({
-        active: false,
-        currentTeam: 1,
-        totalTeams: 0,
-        teams: []
-      });
-      setDemoActive(false);
-    };
-  
-    socket.on('demoStarted', handleDemoStarted);
-    socket.on('demoTeamChanged', handleTeamChanged);
-    socket.on('demoEnded', handleDemoEnded);
-  
-    return () => {
-      socket.off('demoStarted', handleDemoStarted);
-      socket.off('demoTeamChanged', handleTeamChanged);
-      socket.off('demoEnded', handleDemoEnded);
-    };
-  }, [socket, partidaId]);
 
 
 

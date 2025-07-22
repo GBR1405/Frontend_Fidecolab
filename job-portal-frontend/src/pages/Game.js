@@ -226,12 +226,17 @@ useEffect(() => {
       
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
-      nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
       
       container.appendChild(cursor);
     }
-  
+
+    // Actualizar el nombre cada vez que se mueve el cursor
+    const nameSpan = cursor.querySelector('.cursor-name');
+    if (nameSpan) {
+      nameSpan.textContent = getUserName(userId);
+    }
+
     // Aplicar posición absoluta con transform
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
@@ -239,14 +244,23 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
+    // Primero buscar en teamMembers
     const miembro = teamMembers.find(m => m.userId === userId);
-    if (miembro) return miembro.fullName;
-
-    if (userId === localStorage.getItem('userId')) {
-      return localStorage.getItem('userFullName') || `Tú (${userId})`;
+    if (miembro && miembro.fullName) {
+      return miembro.fullName;
     }
 
-    return `Usuario ${userId}`; // Nombre genérico temporal
+    // Si es el usuario actual
+    if (userId === localStorage.getItem('userId')) {
+      const fullName = localStorage.getItem('userFullName');
+      if (fullName) {
+        return fullName;
+      }
+    }
+
+    // Si no se encuentra el nombre, mostrar ID corto
+    const shortId = userId.substring(0, 6);
+    return `Usuario ${shortId}`;
   };
 
   // Manejar movimiento del mouse

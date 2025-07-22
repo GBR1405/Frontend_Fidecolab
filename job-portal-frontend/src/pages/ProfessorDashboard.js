@@ -207,16 +207,17 @@ const SimulationProfessor = () => {
   const userId = localStorage.getItem('userId');
   const [showDemoModal, setShowDemoModal] = useState(false);
 
-  const [demoState, setDemoState] = useState({
-    active: false,
-    currentTeam: null,
-    totalTeams: 0,
-    currentDrawing: null
-  });
-  
-  
+  // 1. Simplifica los estados de demo a uno solo
+const [demoState, setDemoState] = useState({
+  active: false,
+  currentTeam: null,
+  totalTeams: 0,
+  teams: []
+});
 
- useEffect(() => {
+  const transitionTimeout = 3000;
+
+  useEffect(() => {
      if (!socket) return;
  
      const handleDemoStarted = () => setDemoActive(true);
@@ -261,22 +262,25 @@ useEffect(() => {
 useEffect(() => {
   if (!socket) return;
 
-  const handleDemoStarted = ({ currentTeam, totalTeams }) => {
-    setDemoState(prev => ({
-      ...prev,
-      active: true,
-      currentTeam,
-      totalTeams
-    }));
-    loadCurrentDrawing(currentTeam);
-  };
+  // Verificar estado inicial de la demo
+  socket.emit('checkActiveDemo', partidaId, (response) => {
+    if (response.active) {
+      setDemoState({
+        active: true,
+        currentTeam: response.currentTeam,
+        totalTeams: response.totalTeams,
+        teams: response.teams
+      });
+    }
+  });
 
-  const handleTeamChanged = ({ currentTeam }) => {
-    setDemoState(prev => ({
-      ...prev,
-      currentTeam
-    }));
-    loadCurrentDrawing(currentTeam);
+  const handleDemoStarted = (data) => {
+    setDemoState({
+      active: true,
+      currentTeam: data.currentTeam,
+      totalTeams: data.totalTeams,
+      teams: data.teams || []
+    });
   };
 
   const handleDemoEnded = () => {
@@ -284,17 +288,15 @@ useEffect(() => {
       active: false,
       currentTeam: null,
       totalTeams: 0,
-      currentDrawing: null
+      teams: []
     });
   };
 
   socket.on('drawingDemoStarted', handleDemoStarted);
-  socket.on('drawingDemoTeamChanged', handleTeamChanged);
   socket.on('drawingDemoEnded', handleDemoEnded);
 
   return () => {
     socket.off('drawingDemoStarted', handleDemoStarted);
-    socket.off('drawingDemoTeamChanged', handleTeamChanged);
     socket.off('drawingDemoEnded', handleDemoEnded);
   };
 }, [socket, partidaId]);
@@ -944,23 +946,8 @@ const stopDrawingDemonstration = () => {
 
   return (
     <div className="professor-dashboard">
-
-    <DrawingDemoModal 
-      partidaId={partidaId}
-      isOpen={demoState.active}
-      currentTeam={demoState.currentTeam}
-      totalTeams={demoState.totalTeams}
-      currentDrawing={demoState.currentDrawing}
-      onClose={stopDrawingDemonstration}
-      onChangeTeam={(direction) => {
-        socket.emit('changeDemoTeam', { 
-          partidaId, 
-          direction // 'next' o 'prev'
-        });
-      }}
-      isProfessor={true}
-    />
-
+      
+    
       {/* Overlay de transición */}
       {showTransition && transitionGame && (
         <div className="game-transition-overlay">

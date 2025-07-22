@@ -218,49 +218,7 @@ const [demoState, setDemoState] = useState({
   teams: []
 });
 
-useEffect(() => {
-  if (!socket || !partidaId) return;
 
-  // Verificación inicial
-  const checkDemoStatus = () => {
-    socket.emit('checkActiveDemo', partidaId, (response) => {
-      if (response.active) {
-        setIsStudentDemoActive(true);
-        setShowProfessorModal(true);
-      } else {
-        setIsStudentDemoActive(false);
-        setShowProfessorModal(false);
-      }
-    });
-  };
-
-  // Verificar estado inicial
-  checkDemoStatus();
-
-  // Configurar intervalo para verificación periódica
-  const intervalId = setInterval(checkDemoStatus, 5000); // Verificar cada 2 segundos
-
-  // Event listeners para cambios en tiempo real
-  const handleDemoStarted = () => {
-    setIsStudentDemoActive(true);
-    setShowProfessorModal(true);
-  };
-
-  const handleDemoEnded = () => {
-    setIsStudentDemoActive(false);
-    setShowProfessorModal(false);
-  };
-
-  socket.on('drawingDemoStarted', handleDemoStarted);
-  socket.on('drawingDemoEnded', handleDemoEnded);
-
-  // Cleanup
-  return () => {
-    clearInterval(intervalId);
-    socket.off('drawingDemoStarted', handleDemoStarted);
-    socket.off('drawingDemoEnded', handleDemoEnded);
-  };
-}, [socket, partidaId]);
 
   const transitionTimeout = 3000;
 

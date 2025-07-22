@@ -1,32 +1,41 @@
+/* DrawingDemoModal.css */
+
+/* Fondo del modal */
 .demo-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
+/* Contenedor principal */
 .demo-modal-container {
+  background-color: #f5f7fa;
+  border-radius: 12px;
   width: 90%;
   max-width: 1200px;
-  background-color: white;
-  border-radius: 10px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Encabezado */
 .demo-header {
-  background-color: #2a40bf;
+  background-color: #3a7bd5;
   color: white;
   padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  text-align: center;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .demo-header h2 {
@@ -34,152 +43,176 @@
   font-size: 1.5rem;
 }
 
-.close-demo-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.close-demo-btn:hover {
-  transform: scale(1.2);
-}
-
+/* Contenido principal (canvas + lista equipos) */
 .demo-content {
   display: flex;
-  height: 600px;
+  flex: 1;
+  min-height: 0;
 }
 
+/* Contenedor del canvas */
 .demo-drawing-container {
-  flex: 2;
+  flex: 3;
   padding: 20px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
+  border-right: 1px solid #e1e5eb;
 }
 
 .demo-drawing {
+  background-color: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  max-height: 70vh;
 }
 
-.no-drawing-placeholder {
-  text-align: center;
-  color: #777;
-}
-
-.no-drawing-placeholder i {
-  font-size: 3rem;
-  margin-bottom: 10px;
-  display: block;
-}
-
-.demo-controls-container {
-  flex: 1;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid #eee;
-}
-
-.demo-info-section {
-  margin-bottom: 20px;
-}
-
-.demo-info-section h3 {
-  color: #2a40bf;
-  margin-bottom: 15px;
-}
-
-.most-voted-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.top-team-badge {
-  display: inline-block;
-  background-color: #2a40bf;
-  color: white;
-  padding: 5px 10px;
+/* Indicador de equipo */
+.team-indicator {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background-color: #ffc107;
+  color: #333;
   border-radius: 20px;
-  margin-right: 5px;
-  margin-bottom: 5px;
-}
-
-.demo-buttons-section {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.demo-nav-btn, .demo-end-btn, .demo-download-btn, .demo-vote-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
   font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Lista de equipos */
+.teams-list-container {
+  flex: 1;
+  padding: 15px;
+  background-color: #f8f9fa;
+  overflow-y: auto;
+  max-height: calc(70vh - 30px);
+}
+
+.teams-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.team-item {
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.2s;
+  border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.team-item:hover {
+  background-color: #e9f0ff;
+  transform: translateX(3px);
+}
+
+.team-item.active {
+  background-color: #e3eeff;
+  border-left-color: #3a7bd5;
+  font-weight: bold;
+}
+
+.team-number {
+  background-color: #3a7bd5;
+  color: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  margin-right: 10px;
+  font-size: 0.8rem;
 }
 
-.demo-nav-btn {
-  background-color: #2a40bf;
+/* Controles */
+.demo-controls {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background-color: #e9ecef;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.demo-controls button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.demo-controls button:first-child {
+  background-color: #6c757d;
   color: white;
 }
 
-.demo-nav-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+.demo-controls button:first-child:hover {
+  background-color: #5a6268;
 }
 
-.demo-nav-btn:hover:not(:disabled) {
-  background-color: #1a30af;
+.demo-controls button:last-child {
+  background-color: #3a7bd5;
+  color: white;
 }
 
+.demo-controls button:last-child:hover {
+  background-color: #2c65c4;
+}
+
+/* Botón de finalizar */
 .demo-end-btn {
-  background-color: #d9534f;
-  color: white;
-  margin-top: 20px;
+  padding: 12px 25px;
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .demo-end-btn:hover {
-  background-color: #c9302c;
+  background-color: #e0a800;
+  transform: translateY(-2px);
 }
 
-.demo-download-btn {
-  background-color: #5cb85c;
-  color: white;
+/* Mensaje de carga */
+.demo-loading {
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 10px;
 }
 
-.demo-download-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+/* Scrollbar personalizada */
+.teams-list-container::-webkit-scrollbar {
+  width: 8px;
 }
 
-.demo-download-btn:hover:not(:disabled) {
-  background-color: #4cae4c;
+.teams-list-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-.demo-vote-btn {
-  background-color: #f0ad4e;
-  color: white;
+.teams-list-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-.demo-vote-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.demo-vote-btn:hover:not(:disabled) {
-  background-color: #eea236;
+.teams-list-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

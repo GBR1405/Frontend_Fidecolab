@@ -8,57 +8,45 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
   const numericPartidaId = Number(partidaId);
 
   const [teams, setTeams] = useState([]);
-  const [currentTeam, setCurrentTeam] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState(null);
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [error, setError] = useState(null);
 
-  // SOLO el profesor obtiene equipos e inicia la demo
+  // Cargar equipos + estado de demostración
   useEffect(() => {
     if (!socket || isNaN(numericPartidaId)) return;
 
-    if (isProfessor) {
-      socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
-        if (response.success) {
-          const equiposOrdenados = [...response.equipos].sort((a, b) => a - b);
-          setTeams(equiposOrdenados);
+    socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
+      if (response.success) {
+        const equiposOrdenados = response.equipos.sort((a, b) => a - b);
+        setTeams(equiposOrdenados);
 
-          // Inicia la demo con el primer equipo
-          socket.emit('startDrawingDemo', numericPartidaId, (startResponse) => {
-            if (!startResponse || startResponse.error) {
-              console.error('Error al iniciar demostración', startResponse?.error);
-              return;
+        socket.emit('checkDrawingDemo', numericPartidaId, (res) => {
+          if (res.active) {
+            setIsActive(true);
+            setSelectedTeam(res.currentTeam);
+          } else {
+            if (equiposOrdenados.length > 0) {
+              setSelectedTeam(equiposOrdenados[0]);
             }
-            // El evento drawingDemoStarted se encargará de establecer el estado
-          });
-        } else {
-          setError(`Error obteniendo equipos: ${response.error || 'Desconocido'}`);
-        }
-      });
-    }
-
-    // Para estudiantes o reconexión
-    socket.emit('checkDrawingDemo', numericPartidaId, (response) => {
-      if (response.active) {
-        setIsActive(true);
-        setCurrentTeam(response.currentTeam);
+          }
+        });
       }
     });
 
-    // Eventos compartidos
+    // Escuchar sincronizaciones
     socket.on('drawingDemoStarted', ({ currentTeam }) => {
       setIsActive(true);
-      setCurrentTeam(currentTeam);
+      setSelectedTeam(currentTeam);
     });
 
     socket.on('drawingDemoTeamChanged', ({ currentTeam }) => {
-      setCurrentTeam(currentTeam);
+      setSelectedTeam(currentTeam);
     });
 
     socket.on('drawingDemoEnded', () => {
       setIsActive(false);
-      setCurrentTeam(null);
     });
 
     return () => {
@@ -66,18 +54,20 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
       socket.off('drawingDemoTeamChanged');
       socket.off('drawingDemoEnded');
     };
-  }, [socket, numericPartidaId, isProfessor]);
+  }, [socket, numericPartidaId]);
 
-  // Pedir y dibujar
+  // Solicitar dibujo
   const fetchAndDrawTeamDrawing = () => {
-    if (!socket || !currentTeam) return;
+    if (!socket || selectedTeam === null) return;
 
     setLoading(true);
+
     socket.emit('professorGetTeamDrawing', {
       partidaId: numericPartidaId,
-      equipoNumero: currentTeam
+      equipoNumero: selectedTeam
     }, (response) => {
       setLoading(false);
+
       if (response.success) {
         drawCanvas(response.drawing);
         setLastUpdate(new Date());
@@ -87,19 +77,26 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     });
   };
 
+  // Dibujar en canvas
   const drawCanvas = (drawingData) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     if (!drawingData) return;
 
-    const scaleX = canvas.width / 800;
-    const scaleY = canvas.height / 600;
+    const sourceWidth = 800;
+    const sourceHeight = 600;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
 
-    Object.values(drawingData).forEach(userPaths => {
-      userPaths.forEach(path => {
+    const scaleX = canvasWidth / sourceWidth;
+    const scaleY = canvasHeight / sourceHeight;
+
+    Object.values(drawingData).forEach((userPaths) => {
+      userPaths.forEach((path) => {
         if (!Array.isArray(path.points) || path.points.length < 4) return;
 
         ctx.beginPath();
@@ -111,8 +108,11 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
         for (let i = 0; i < path.points.length; i += 2) {
           const x = path.points[i] * scaleX;
           const y = path.points[i + 1] * scaleY;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
         }
 
         ctx.stroke();
@@ -127,80 +127,107 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // Redibuja al cambiar
-  useEffect(() => {
-    if (currentTeam !== null) {
-      fetchAndDrawTeamDrawing();
-    }
-  }, [currentTeam]);
-
-  useEffect(() => {
-    if (!currentTeam) return;
-    const interval = setInterval(fetchAndDrawTeamDrawing, 2000);
-    return () => clearInterval(interval);
-  }, [currentTeam]);
-
+  // Cambiar equipo (solo profesor)
   const changeTeam = (direction) => {
-    if (!isProfessor || !teams.length) return;
+    if (!isProfessor || teams.length === 0 || selectedTeam === null) return;
 
-    const index = teams.indexOf(currentTeam);
-    const newIndex = direction === 'next'
-      ? (index + 1) % teams.length
-      : (index - 1 + teams.length) % teams.length;
+    const currentIndex = teams.indexOf(selectedTeam);
+    let newIndex = direction === 'next'
+      ? (currentIndex + 1) % teams.length
+      : (currentIndex - 1 + teams.length) % teams.length;
 
     const newTeam = teams[newIndex];
+
+    // Emitir cambio global
     socket.emit('changeDrawingDemoTeam', {
       partidaId: numericPartidaId,
       equipoNumero: newTeam
     });
   };
 
-  if (!isActive) return null;
+  // Seleccionar equipo desde la lista
+  const selectTeam = (teamNumber) => {
+    if (!isProfessor) return;
+    
+    socket.emit('changeDrawingDemoTeam', {
+      partidaId: numericPartidaId,
+      equipoNumero: teamNumber
+    });
+  };
+
+  // Finalizar demostración
+  const endDemo = () => {
+    socket.emit('endDrawingDemo', numericPartidaId);
+  };
+
+  // Cargar canvas cuando cambia el equipo
+  useEffect(() => {
+    if (selectedTeam !== null) {
+      fetchAndDrawTeamDrawing();
+    }
+  }, [selectedTeam]);
+
+  // Actualización periódica
+  useEffect(() => {
+    if (!selectedTeam) return;
+    const intervalId = setInterval(() => {
+      fetchAndDrawTeamDrawing();
+    }, 2000);
+    return () => clearInterval(intervalId);
+  }, [selectedTeam]);
+
+  if (!isActive && !isProfessor) return null;
 
   return (
     <div className="demo-modal-overlay">
       <div className="demo-modal-container">
         <div className="demo-header">
           <h2>Modo Demostración</h2>
-          <p>Equipo actual: {currentTeam}</p>
         </div>
 
-        <div className="demo-body">
-          {isProfessor && (
-            <div className="teams-sidebar">
-              {teams.map((team) => (
-                <button
-                  key={team}
-                  className={`team-button ${team === currentTeam ? 'active' : ''}`}
-                  onClick={() =>
-                    socket.emit('changeDrawingDemoTeam', {
-                      partidaId: numericPartidaId,
-                      equipoNumero: team
-                    })
-                  }
-                >
-                  Equipo {team}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="drawing-area">
+        <div className="demo-content">
+          <div className="demo-drawing-container">
             <canvas
               ref={canvasRef}
               width={800}
               height={600}
               className="demo-drawing"
             />
-            {isProfessor && (
-              <div className="demo-controls">
-                <button onClick={() => changeTeam('prev')}>Anterior</button>
-                <button onClick={() => changeTeam('next')}>Siguiente</button>
-              </div>
-            )}
+            <div className="team-indicator">
+              Equipo actual: {selectedTeam}
+            </div>
             {loading && <p className="demo-loading">Cargando dibujo...</p>}
           </div>
+
+          <div className="teams-list-container">
+            <h3>Equipos Participantes</h3>
+            <ul className="teams-list">
+              {teams.map(team => (
+                <li 
+                  key={team}
+                  className={`team-item ${selectedTeam === team ? 'active' : ''}`}
+                  onClick={() => selectTeam(team)}
+                >
+                  <span className="team-number">{team}</span>
+                  Equipo {team}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
+
+        {isProfessor && (
+          <div className="demo-controls">
+            <button onClick={() => changeTeam('prev')}>Anterior</button>
+            <button 
+              onClick={endDemo}
+              className="demo-end-btn"
+            >
+              Finalizar Demostración
+            </button>
+            <button onClick={() => changeTeam('next')}>Siguiente</button>
+          </div>
+        )}
       </div>
     </div>
   );

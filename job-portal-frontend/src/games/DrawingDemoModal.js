@@ -13,29 +13,28 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  // Cargar equipos + estado de demostración
+  // Obtener equipos + estado de demo
   useEffect(() => {
     if (!socket || isNaN(numericPartidaId)) return;
 
     socket.emit('getTeamsForPartida', numericPartidaId, (response) => {
       if (response.success) {
-        const equiposOrdenados = response.equipos.sort((a, b) => a - b);
-        setTeams(equiposOrdenados);
+        const ordenados = response.equipos.sort((a, b) => a - b);
+        setTeams(ordenados);
 
         socket.emit('checkDrawingDemo', numericPartidaId, (res) => {
           if (res.active) {
             setIsActive(true);
             setSelectedTeam(res.currentTeam);
           } else {
-            if (equiposOrdenados.length > 0) {
-              setSelectedTeam(equiposOrdenados[0]);
+            if (ordenados.length > 0) {
+              setSelectedTeam(ordenados[0]);
             }
           }
         });
       }
     });
 
-    // Escuchar sincronizaciones
     socket.on('drawingDemoStarted', ({ currentTeam }) => {
       setIsActive(true);
       setSelectedTeam(currentTeam);
@@ -56,7 +55,7 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     };
   }, [socket, numericPartidaId]);
 
-  // Solicitar dibujo
+  // Obtener y renderizar dibujo
   const fetchAndDrawTeamDrawing = () => {
     if (!socket || selectedTeam === null) return;
 
@@ -67,7 +66,6 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
       equipoNumero: selectedTeam
     }, (response) => {
       setLoading(false);
-
       if (response.success) {
         drawCanvas(response.drawing);
         setLastUpdate(new Date());
@@ -77,11 +75,9 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     });
   };
 
-  // Dibujar en canvas
   const drawCanvas = (drawingData) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -91,7 +87,6 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
     const sourceHeight = 600;
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
-
     const scaleX = canvasWidth / sourceWidth;
     const scaleY = canvasHeight / sourceHeight;
 
@@ -128,48 +123,25 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
   };
 
   // Cambiar equipo (solo profesor)
-  const changeTeam = (direction) => {
-    if (!isProfessor || teams.length === 0 || selectedTeam === null) return;
-
-    const currentIndex = teams.indexOf(selectedTeam);
-    let newIndex = direction === 'next'
-      ? (currentIndex + 1) % teams.length
-      : (currentIndex - 1 + teams.length) % teams.length;
-
-    const newTeam = teams[newIndex];
-
-    // Emitir cambio global
-    socket.emit('changeDrawingDemoTeam', {
-      partidaId: numericPartidaId,
-      equipoNumero: newTeam
-    });
-  };
-
-  // Seleccionar equipo desde la lista
   const selectTeam = (teamNumber) => {
     if (!isProfessor) return;
-    
     socket.emit('changeDrawingDemoTeam', {
       partidaId: numericPartidaId,
       equipoNumero: teamNumber
     });
   };
 
-  // Finalizar demostración
+  // Finalizar demo (solo profesor)
   const endDemo = () => {
-    socket.on('drawingDemoEnded', () => {
-    setIsActive(false);
-    });
+    socket.emit('endDrawingDemo', numericPartidaId);
   };
 
-  // Cargar canvas cuando cambia el equipo
   useEffect(() => {
     if (selectedTeam !== null) {
       fetchAndDrawTeamDrawing();
     }
   }, [selectedTeam]);
 
-  // Actualización periódica
   useEffect(() => {
     if (!selectedTeam) return;
     const intervalId = setInterval(() => {
@@ -201,33 +173,42 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
             {loading && <p className="demo-loading">Cargando dibujo...</p>}
           </div>
 
-          <div className="teams-list-container">
-            <h3>Equipos Participantes</h3>
-            <ul className="teams-list">
-              {teams.map(team => (
-                <li 
-                  key={team}
-                  className={`team-item ${selectedTeam === team ? 'active' : ''}`}
-                  onClick={() => selectTeam(team)}
-                >
-                  <span className="team-number">{team}</span>
-                  Equipo {team}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {isProfessor ? (
+            <div className="teams-list-container">
+              <h3>Equipos Participantes</h3>
+              <ul className="teams-list">
+                {teams.map(team => (
+                  <li
+                    key={team}
+                    className={`team-item ${selectedTeam === team ? 'active' : ''}`}
+                    onClick={() => selectTeam(team)}
+                  >
+                    <span className="team-number">Equipo {team}</span>
+                    <span className="team-votes"> (0 votos)</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="student-extra-container">
+              <div className="most-voted-section">
+                <h4>Equipo más votado</h4>
+                <p>Equipo N</p>
+              </div>
+              <div className="student-actions">
+                <button className="vote-button">Votar</button>
+                <button className="star-button">⭐</button>
+                <button className="download-button">Descargar</button>
+              </div>
+            </div>
+          )}
         </div>
 
         {isProfessor && (
           <div className="demo-controls">
-            <button onClick={() => changeTeam('prev')}>Anterior</button>
-            <button 
-              onClick={endDemo}
-              className="demo-end-btn"
-            >
+            <button onClick={endDemo} className="demo-end-btn">
               Finalizar Demostración
             </button>
-            <button onClick={() => changeTeam('next')}>Siguiente</button>
           </div>
         )}
       </div>

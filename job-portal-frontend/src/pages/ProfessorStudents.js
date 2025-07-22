@@ -547,7 +547,7 @@ const ProfessorStudents = () => {
             showCancelButton: true,
             cancelButtonText: 'Cancelar',
             confirmButtonText: 'Continuar',
-            inputClass: 'swal2-select-wide', // Añadimos clase para estilo
+            inputClass: 'swal2-select-wide', 
             inputValidator: (value) => {
                 if (!value) {
                     return 'Por favor selecciona un grupo.';

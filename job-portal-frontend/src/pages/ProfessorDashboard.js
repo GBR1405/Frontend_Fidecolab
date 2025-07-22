@@ -7,6 +7,7 @@ import "../styles/simulationComponents.css";
 import "../styles/teacherComponents.css";
 import "../styles/animationRecharge.css";
 import Cookies from "js-cookie";
+import DrawingDemoModal from '../games/DrawingDemoModal';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
@@ -203,6 +204,8 @@ const SimulationProfessor = () => {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teamDrawingLines, setTeamDrawingLines] = useState(null);
   const [drawingsByTeam, setDrawingsByTeam] = useState({});
+   const userId = localStorage.getItem('userId');
+  
   
 
   const [demoState, setDemoState] = useState({
@@ -212,7 +215,20 @@ const SimulationProfessor = () => {
     teams: []
   });
 
-  
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDemoStarted = () => setDemoActive(true);
+    const handleDemoEnded = () => setDemoActive(false);
+
+    socket.on('drawingDemoStarted', handleDemoStarted);
+    socket.on('drawingDemoEnded', handleDemoEnded);
+
+    return () => {
+      socket.off('drawingDemoStarted', handleDemoStarted);
+      socket.off('drawingDemoEnded', handleDemoEnded);
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -971,6 +987,14 @@ useEffect(() => {
 
   return (
     <div className="professor-dashboard">
+
+    <DrawingDemoModal 
+      partidaId={partidaId} 
+      equipoNumero={1} // No es relevante para el profesor
+      userId={userId}
+      isProfessor={true}
+    />
+
       {/* Overlay de transición */}
       {showTransition && transitionGame && (
         <div className="game-transition-overlay">
@@ -1002,7 +1026,7 @@ useEffect(() => {
       {/* Contenido principal */}
       <div className="dashboard-content">
         {/* Sección izquierda - Información y controles */}
-        {!demoActive ? (
+        
           <>
             <div className="control-panel">
               <div className="info-section">
@@ -1126,75 +1150,6 @@ useEffect(() => {
               </div>
             </div>
           </>
-        ) : (
-          /* Vista completa de demostración cuando está activa */
-          <div className="full-demo-view">
-            <div className="demo-header">
-              <h2>Demostración de Dibujos</h2>
-              <div className="demo-team-counter">
-                Equipo {currentDemoTeam} de {totalDemoTeams}
-              </div>
-            </div>
-  
-            <div className="demo-main-content">
-              <div className="demo-image-container">
-                {demoDrawings[currentDemoTeam] ? (
-                  <img 
-                    src={demoDrawings[currentDemoTeam]} 
-                    alt={`Dibujo del Equipo ${currentDemoTeam}`}
-                    className="demo-image"
-                  />
-                ) : (
-                  <div className="no-drawing">
-                    <i className="fas fa-image"></i>
-                    <p>Este equipo no ha subido dibujo</p>
-                  </div>
-                )}
-              </div>
-  
-              <div className="demo-controls">
-                <button 
-                  onClick={() => changeDemoTeam('prev')}
-                  disabled={currentDemoTeam <= 1}
-                  className="demo-nav-button prev-button"
-                >
-                  <i className="fas fa-chevron-left"></i> Anterior
-                </button>
-                
-                <button 
-                  onClick={nextGame}
-                  disabled={gameConfig.currentIndex >= gameConfig.juegos.length - 1 || showTransition}
-                  className={gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 'disabled-button' : ''}
-                >
-                  {gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 
-                    'Todos completados' : 
-                    'Siguiente juego'}
-                </button> 
-                
-                <button 
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.download = `dibujo-equipo-${currentDemoTeam}.png`;
-                    link.href = demoDrawings[currentDemoTeam];
-                    link.click();
-                  }}
-                  className="download-button"
-                  disabled={!demoDrawings[currentDemoTeam]}
-                >
-                  <i className="fas fa-download"></i> Descargar
-                </button>
-                
-                <button 
-                  onClick={() => changeDemoTeam('next')}
-                  disabled={currentDemoTeam >= totalDemoTeams}
-                  className="demo-nav-button next-button"
-                >
-                  Siguiente <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

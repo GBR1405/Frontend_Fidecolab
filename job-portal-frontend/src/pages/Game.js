@@ -14,6 +14,7 @@ import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
 import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
+import DrawingDemoModal from '../games/DrawingDemoModal';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
@@ -46,8 +47,24 @@ const TeamRoom = () => {
   const [firstGameConfig, setFirstGameConfig] = useState(null);
   const [transitionPhase, setTransitionPhase] = useState('idle');
   const [showBlackout, setShowBlackout] = useState(false);
+  const [demoActive, setDemoActive] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDemoStarted = () => setDemoActive(true);
+    const handleDemoEnded = () => setDemoActive(false);
+
+    socket.on('drawingDemoStarted', handleDemoStarted);
+    socket.on('drawingDemoEnded', handleDemoEnded);
+
+    return () => {
+      socket.off('drawingDemoStarted', handleDemoStarted);
+      socket.off('drawingDemoEnded', handleDemoEnded);
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (!socket || !partidaId) return;
@@ -668,6 +685,12 @@ useEffect(() => {
 
   return (
     <LayoutSimulation>
+      <DrawingDemoModal 
+        partidaId={partidaId} 
+        equipoNumero={equipoNumero}
+        userId={userId}
+        isProfessor={false} // O puedes determinar esto basado en el rol del usuario
+      />
       <div className="team-room-container">
         {/* Overlay de transición */}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>

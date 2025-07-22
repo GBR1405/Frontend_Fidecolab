@@ -204,18 +204,16 @@ const SimulationProfessor = () => {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teamDrawingLines, setTeamDrawingLines] = useState(null);
   const [drawingsByTeam, setDrawingsByTeam] = useState({});
-   const userId = localStorage.getItem('userId');
-   const [showDemoModal, setShowDemoModal] = useState(false);
-  
-  
+  const userId = localStorage.getItem('userId');
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const [demoState, setDemoState] = useState({
     active: false,
-    currentTeam: 1,
+    currentTeam: null,
     totalTeams: 0,
-    teams: []
+    currentDrawing: null
   });
-
+  
   
 
  useEffect(() => {
@@ -261,57 +259,56 @@ useEffect(() => {
 // Efectos para sincronización
 // Reemplazar el useEffect que maneja la demostración
 useEffect(() => {
-    if (!socket) return;
+  if (!socket) return;
 
-    const handleDemoStarted = ({ currentTeam, totalTeams }) => {
-      setDemoState(prev => ({
-        ...prev,
-        active: true,
-        currentTeam,
-        totalTeams,
-        teamIndex: 1
-      }));
-      loadCurrentDrawing(currentTeam);
-    };
+  const handleDemoStarted = ({ currentTeam, totalTeams }) => {
+    setDemoState(prev => ({
+      ...prev,
+      active: true,
+      currentTeam,
+      totalTeams
+    }));
+    loadCurrentDrawing(currentTeam);
+  };
 
-    const handleTeamChanged = ({ currentTeam, teamIndex }) => {
-      setDemoState(prev => ({
-        ...prev,
-        currentTeam,
-        teamIndex
-      }));
-      loadCurrentDrawing(currentTeam);
-    };
+  const handleTeamChanged = ({ currentTeam }) => {
+    setDemoState(prev => ({
+      ...prev,
+      currentTeam
+    }));
+    loadCurrentDrawing(currentTeam);
+  };
 
-    const handleDemoEnded = () => {
-      setDemoState({
-        active: false,
-        currentTeam: null,
-        totalTeams: 0,
-        currentDrawing: null,
-        teamIndex: 0
-      });
-    };
-
-    socket.on('drawingDemoStarted', handleDemoStarted);
-    socket.on('drawingDemoTeamChanged', handleTeamChanged);
-    socket.on('drawingDemoEnded', handleDemoEnded);
-
-    return () => {
-      socket.off('drawingDemoStarted', handleDemoStarted);
-      socket.off('drawingDemoTeamChanged', handleTeamChanged);
-      socket.off('drawingDemoEnded', handleDemoEnded);
-    };
-  }, [socket, partidaId]);
-
-  const loadCurrentDrawing = (team) => {
-    socket.emit('getCurrentDrawing', partidaId, ({ imageData }) => {
-      setDemoState(prev => ({
-        ...prev,
-        currentDrawing: imageData
-      }));
+  const handleDemoEnded = () => {
+    setDemoState({
+      active: false,
+      currentTeam: null,
+      totalTeams: 0,
+      currentDrawing: null
     });
   };
+
+  socket.on('drawingDemoStarted', handleDemoStarted);
+  socket.on('drawingDemoTeamChanged', handleTeamChanged);
+  socket.on('drawingDemoEnded', handleDemoEnded);
+
+  return () => {
+    socket.off('drawingDemoStarted', handleDemoStarted);
+    socket.off('drawingDemoTeamChanged', handleTeamChanged);
+    socket.off('drawingDemoEnded', handleDemoEnded);
+  };
+}, [socket, partidaId]);
+
+const loadCurrentDrawing = (team) => {
+  socket.emit('getCurrentDrawing', partidaId, team, (response) => {
+    if (response.success) {
+      setDemoState(prev => ({
+        ...prev,
+        currentDrawing: response.imageData
+      }));
+    }
+  });
+};
 
  
   const startDemo = () => {
@@ -926,27 +923,41 @@ useEffect(() => {
   const completionPercentage = Math.round(((gameConfig.currentIndex + 1) / gameConfig.total) * 100);
 
   const startDrawingDemonstration = () => {
-    Swal.fire({
-      title: '¿Iniciar demostración?',
-      text: 'Mostrará los dibujos de todos los equipos en orden',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Iniciar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        socket.emit('startDrawingDemo', partidaId);
-      }
-    });
-  };
+  Swal.fire({
+    title: '¿Iniciar demostración de dibujos?',
+    text: 'Se mostrarán los dibujos de todos los equipos en orden',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Iniciar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      socket.emit('startDrawingDemo', partidaId);
+    }
+  });
+};
+
+
+const stopDrawingDemonstration = () => {
+  socket.emit('stopDrawingDemo', partidaId);
+};
 
   return (
     <div className="professor-dashboard">
 
     <DrawingDemoModal 
-      partidaId={partidaId} 
-      equipoNumero={1} // No es relevante para el profesor
-      userId={userId}
+      partidaId={partidaId}
+      isOpen={demoState.active}
+      currentTeam={demoState.currentTeam}
+      totalTeams={demoState.totalTeams}
+      currentDrawing={demoState.currentDrawing}
+      onClose={stopDrawingDemonstration}
+      onChangeTeam={(direction) => {
+        socket.emit('changeDemoTeam', { 
+          partidaId, 
+          direction // 'next' o 'prev'
+        });
+      }}
       isProfessor={true}
     />
 

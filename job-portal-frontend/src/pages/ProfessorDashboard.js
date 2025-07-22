@@ -209,6 +209,7 @@ const SimulationProfessor = () => {
   const [showProfessorModal, setShowProfessorModal] = useState(false);
   const [isStudentDemoActive, setIsStudentDemoActive] = useState(false);
 
+
   // 1. Simplifica los estados de demo a uno solo
 const [demoState, setDemoState] = useState({
   active: false,
@@ -216,6 +217,35 @@ const [demoState, setDemoState] = useState({
   totalTeams: 0,
   teams: []
 });
+
+useEffect(() => {
+  if (!socket || !partidaId) return;
+
+  socket.emit('checkActiveDemo', partidaId, (response) => {
+    if (response.active) {
+      setIsStudentDemoActive(true);
+      setShowProfessorModal(true); // Abre automáticamente el modal del profesor
+    }
+  });
+
+  const handleDemoStarted = () => {
+    setIsStudentDemoActive(true);
+    setShowProfessorModal(true); // Abre el modal cuando inicia la demo
+  };
+
+  const handleDemoEnded = () => {
+    setIsStudentDemoActive(false);
+    setShowProfessorModal(false); // Cierra el modal cuando termina la demo
+  };
+
+  socket.on('drawingDemoStarted', handleDemoStarted);
+  socket.on('drawingDemoEnded', handleDemoEnded);
+
+  return () => {
+    socket.off('drawingDemoStarted', handleDemoStarted);
+    socket.off('drawingDemoEnded', handleDemoEnded);
+  };
+}, [socket, partidaId]);
 
   const transitionTimeout = 3000;
 
@@ -1070,78 +1100,63 @@ const stopDrawingDemonstration = () => {
                     <h3>Opciones</h3>
                   </div>
                   <div className="box__options"> 
-                    <div className="option__button">
-                      <button 
-                        onClick={() => {
-                          if (isStudentDemoActive) {
-                            Swal.fire({
-                              title: 'Demo Activa',
-                              text: 'Debes desactivar la demostración de estudiantes antes de continuar al siguiente juego',
-                              icon: 'warning',
-                              confirmButtonText: 'Entendido'
-                            });
-                            return;
-                          }
-                          nextGame();
-                        }}
-                        disabled={gameConfig.currentIndex >= gameConfig.juegos.length - 1 || showTransition || isStudentDemoActive}
-                        className={`${gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 'disabled-button' : ''} 
-                                   ${isStudentDemoActive ? 'demo-active-disabled' : ''}`}
-                      >
-                        {gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 
-                          'Todos completados' : 
-                          'Siguiente juego'}
-                      </button> 
-                    </div>
                     {currentGame.tipo.toLowerCase() === 'dibujo' && (
                       <>
-                        <div className="option__button">
-                          <button 
-                            onClick={() => setShowProfessorModal(!showProfessorModal)}
-                          >
-                            {showProfessorModal ? 'Cerrar Vista Previa' : 'Abrir modo demostracion propio'}
-                          </button>
-                        </div>
+                        {isStudentDemoActive && (
+                          <div className="option__button">
+                            <button 
+                              onClick={() => setShowProfessorModal(!showProfessorModal)}
+                              className="view-demo-btn"
+                            >
+                              {showProfessorModal ? 'Cerrar Vista Previa' : 'Ver Modo Demostración'}
+                            </button>
+                          </div>
+                        )}
                         <div className="option__button">
                           <button 
                             onClick={() => {
                               if (!isStudentDemoActive) {
                                 socket.emit('startDrawingDemo', partidaId, (response) => {
-                                  if (response?.error) {
-                                    Swal.fire('Error', response.error, 'error');
-                                  } else {
+                                  if (response?.success) {
                                     setIsStudentDemoActive(true);
+                                    setShowProfessorModal(true);
                                   }
                                 });
                               } else {
                                 socket.emit('endDrawingDemo', partidaId, (response) => {
                                   if (response?.success) {
                                     setIsStudentDemoActive(false);
+                                    setShowProfessorModal(false);
                                   }
                                 });
                               }
                             }}
                             className={isStudentDemoActive ? 'active-demo-btn' : ''}
                           >
-                            {isStudentDemoActive ? 'Detener Demostración Estudiantes' : 'Iniciar Demostración Estudiantes'}
+                            {isStudentDemoActive ? 'Detener Demostración' : 'Iniciar Demostración'}
                           </button>
                         </div>
                       </>
                     )}
+
                     <div className="option__button">
                       <button 
-                        onClick={() => {
-                          if (isStudentDemoActive) {
-                            Swal.fire({
-                              title: 'Demo Activa',
-                              text: 'Debes desactivar la demostración de estudiantes antes de finalizar la partida',
-                              icon: 'warning',
-                              confirmButtonText: 'Entendido'
-                            });
-                            return;
-                          }
-                          finishGame();
-                        }}
+                        onClick={nextGame}
+                        disabled={gameConfig.currentIndex >= gameConfig.juegos.length - 1 || showTransition || isStudentDemoActive}
+                        className={`
+                          ${gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 'disabled-button' : ''} 
+                          ${isStudentDemoActive ? 'demo-active-disabled' : ''}
+                        `}
+                      >
+                        {gameConfig.currentIndex >= gameConfig.juegos.length - 1 ? 
+                          'Todos completados' : 
+                          'Siguiente juego'}
+                      </button> 
+                    </div>
+
+                    <div className="option__button">
+                      <button 
+                        onClick={finishGame}
                         disabled={isStudentDemoActive}
                         className={`finish-button ${isStudentDemoActive ? 'demo-active-disabled' : ''}`}
                       >

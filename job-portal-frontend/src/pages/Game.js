@@ -49,15 +49,6 @@ const TeamRoom = () => {
 
   const navigate = useNavigate();
 
-  const animals = [
-    { name: 'Lobo', icon: '🐺' },
-    { name: 'Oso', icon: '🐻' },
-    { name: 'Conejo', icon: '🐰' },
-    { name: 'Gato', icon: '🐱' },
-    { name: 'Zorro', icon: '🦊' },
-    { name: 'Panda', icon: '🐼' }
-  ];
-
   useEffect(() => {
     if (!socket || !partidaId) return;
   
@@ -249,16 +240,13 @@ useEffect(() => {
   // Obtener nombre de usuario
   const getUserName = (userId) => {
     const miembro = teamMembers.find(m => m.userId === userId);
-    if (miembro) {
-      const animalIcon = miembro.animal?.icon || '👤';
-      return `${animalIcon} ${miembro.fullName}`;
-    }
+    if (miembro) return miembro.fullName;
 
     if (userId === localStorage.getItem('userId')) {
-      return `👤 ${localStorage.getItem('userFullName') || `Tú (${userId})`}`;
+      return localStorage.getItem('userFullName') || `Tú (${userId})`;
     }
 
-    return `👤 Usuario ${userId}`; // Nombre genérico temporal
+    return `Usuario ${userId}`; // Nombre genérico temporal
   };
 
   // Manejar movimiento del mouse
@@ -292,11 +280,7 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
-      const membersWithAnimals = members.map((member, index) => ({
-        ...member,
-        animal: animals[index % animals.length]
-      }));
-      setTeamMembers(membersWithAnimals);
+      setTeamMembers(members);
     };
 
     const handleBroadcastMouse = (userId, x, y) => {
@@ -888,11 +872,8 @@ useEffect(() => {
                 </div>                
                 <ul className="section__members">
                   {teamMembers.map((member, index) => (
-                    <li key={index} className="member-item">
-                      <span className="member-animal">{member.animal?.icon}</span>
-                      <span className="member-name">
-                        {member.fullName} {member.userId === userId && "(Tú)"}
-                      </span>
+                    <li key={index}>
+                      {member.fullName} {member.userId === userId && "(Tú)"}
                     </li>
                   ))}
                 </ul>

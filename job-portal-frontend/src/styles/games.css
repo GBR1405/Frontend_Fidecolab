@@ -660,11 +660,13 @@
 }
 
 .custom-color-picker-large {
-  all: unset;
-  width: 46px;
-  height: 40px;
-  border-radius: 1em;
+  position: absolute;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0;
+  border: none;
   cursor: pointer;
+  opacity: 1;
 }
 
 .tools-section-extended {
@@ -731,11 +733,9 @@
 }
 
 .custom-color-container {
-  height: 100%;
-  display: flex;
-  align-items: center;
+  position: relative;
+  margin: 0 5px;
 }
-
 
 /* Canvas mejorado */
 .canvas-container {

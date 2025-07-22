@@ -416,6 +416,9 @@ const clearLocalDrawing = () => {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
+
+    // Asegurarse de que el estado de dibujo se resetea completamente
+    document.body.style.cursor = 'default';
   };
 
   // Eventos del mouse/touch
@@ -699,9 +702,11 @@ const clearLocalDrawing = () => {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp} // Agregar este evento
           onTouchStart={handleMouseDown}
           onTouchMove={handleMouseMove}
           onTouchEnd={handleMouseUp}
+          onTouchCancel={handleMouseUp} // Agregar este evento
         >
           <Layer>
             {/* Fondo blanco */}

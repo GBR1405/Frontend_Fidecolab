@@ -157,60 +157,94 @@ const DrawingDemoModal = ({ partidaId, isProfessor }) => {
       <div className="demo-modal-container">
         <div className="demo-header">
           <h2>Modo Demostración</h2>
+          {isProfessor && (
+            <button onClick={endDemo} className="demo-close-btn">
+              <i className="fas fa-times"></i>
+            </button>
+          )}
         </div>
 
         <div className="demo-content">
-          <div className="demo-drawing-container">
-            <canvas
-              ref={canvasRef}
-              width={800}
-              height={600}
-              className="demo-drawing"
-            />
-            <div className="team-indicator">
-              Equipo actual: {selectedTeam}
+          {/* Área principal del dibujo */}
+          <div className="demo-drawing-area">
+            <div className="drawing-header">
+              <h3 className="drawing-title">Dibujo del Equipo {selectedTeam}</h3>
+              <div className="drawing-stats">
+                <span className="votes-count">
+                  <i className="fas fa-star"></i> 0 votos
+                </span>
+              </div>
             </div>
-            {loading && <p className="demo-loading">Cargando dibujo...</p>}
+            
+            <div className="canvas-container">
+              <canvas
+                ref={canvasRef}
+                width={800}
+                height={600}
+                className="demo-drawing"
+              />
+              {loading && (
+                <div className="demo-loading">
+                  <div className="loading-spinner"></div>
+                  <p>Cargando dibujo...</p>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Panel lateral - diferente para profesor y estudiante */}
           {isProfessor ? (
-            <div className="teams-list-container">
-              <h3>Equipos Participantes</h3>
-              <ul className="teams-list">
-                {teams.map(team => (
-                  <li
-                    key={team}
-                    className={`team-item ${selectedTeam === team ? 'active' : ''}`}
-                    onClick={() => selectTeam(team)}
-                  >
-                    <span className="team-number">Equipo {team}</span>
-                    <span className="team-votes"> (0 votos)</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="professor-panel">
+              <div className="panel-header">
+                <h3>Equipos Participantes</h3>
+                <div className="teams-count">{teams.length} equipos</div>
+              </div>
+              
+              <div className="teams-scroll-container">
+                <ul className="teams-list">
+                  {teams.map(team => (
+                    <li
+                      key={team}
+                      className={`team-item ${selectedTeam === team ? 'active' : ''}`}
+                      onClick={() => selectTeam(team)}
+                    >
+                      <div className="team-badge">Equipo {team}</div>
+                      <div className="team-votes">
+                        <span className="votes-number">0</span>
+                        <i className="fas fa-star"></i>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ) : (
-            <div className="student-extra-container">
-              <div className="most-voted-section">
-                <h4>Equipo más votado</h4>
-                <p>Equipo N</p>
+            <div className="student-panel">
+              <div className="most-voted-team">
+                <h3>Equipo más votado</h3>
+                <div className="top-team-card">
+                  <div className="team-badge winner">Equipo N</div>
+                  <div className="team-votes">
+                    <span className="votes-number">0</span>
+                    <i className="fas fa-star"></i>
+                  </div>
+                </div>
               </div>
+              
               <div className="student-actions">
-                <button className="vote-button">Votar</button>
-                <button className="star-button">⭐</button>
-                <button className="download-button">Descargar</button>
+                <button className="action-btn vote-btn">
+                  <i className="fas fa-thumbs-up"></i> Votar
+                </button>
+                <button className="action-btn star-btn">
+                  <i className="fas fa-star"></i> Favorito
+                </button>
+                <button className="action-btn download-btn">
+                  <i className="fas fa-download"></i> Descargar
+                </button>
               </div>
             </div>
           )}
         </div>
-
-        {isProfessor && (
-          <div className="demo-controls">
-            <button onClick={endDemo} className="demo-end-btn">
-              Finalizar Demostración
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

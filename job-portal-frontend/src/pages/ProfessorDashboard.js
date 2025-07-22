@@ -206,6 +206,8 @@ const SimulationProfessor = () => {
   const [drawingsByTeam, setDrawingsByTeam] = useState({});
   const userId = localStorage.getItem('userId');
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showProfessorModal, setShowProfessorModal] = useState(false);
+  const [isStudentDemoActive, setIsStudentDemoActive] = useState(false);
 
   // 1. Simplifica los estados de demo a uno solo
 const [demoState, setDemoState] = useState({
@@ -216,6 +218,21 @@ const [demoState, setDemoState] = useState({
 });
 
   const transitionTimeout = 3000;
+
+  useEffect(() => {
+  if (!socket) return;
+
+  const handleDemoStarted = () => setIsStudentDemoActive(true);
+  const handleDemoEnded = () => setIsStudentDemoActive(false);
+
+  socket.on('drawingDemoStarted', handleDemoStarted);
+  socket.on('drawingDemoEnded', handleDemoEnded);
+
+  return () => {
+    socket.off('drawingDemoStarted', handleDemoStarted);
+    socket.off('drawingDemoEnded', handleDemoEnded);
+  };
+}, [socket]);
 
   useEffect(() => {
      if (!socket) return;
@@ -946,25 +963,14 @@ const stopDrawingDemonstration = () => {
 
   return (
     <div className="professor-dashboard">
-      {demoState.active && (
+      {showProfessorModal && (
         <DrawingDemoModal 
           partidaId={partidaId}
-          isOpen={demoState.active}
+          isOpen={showProfessorModal}
           currentTeam={demoState.currentTeam}
           totalTeams={demoState.totalTeams}
           currentDrawing={demoState.currentDrawing}
-          onClose={() => {
-            socket.emit('endDrawingDemo', partidaId, (response) => {
-              if (response.success) {
-                setDemoState({
-                  active: false,
-                  currentTeam: null,
-                  totalTeams: 0,
-                  teams: []
-                });
-              }
-            });
-          }}
+          onClose={() => setShowProfessorModal(false)}
           onChangeTeam={(direction) => {
             socket.emit('changeDemoTeam', { 
               partidaId, 
@@ -1076,20 +1082,39 @@ const stopDrawingDemonstration = () => {
                       </button> 
                     </div>
                     {currentGame.tipo.toLowerCase() === 'dibujo' && (
-                      <div className="option__button">
-                        <button 
-                          onClick={() => {
-                            setDemoActive(true);
-                            socket.emit('startDrawingDemo', partidaId, (response) => {
-                              if (response?.error) {
-                                Swal.fire('Error', response.error, 'error');
+                      <>
+                        <div className="option__button">
+                          <button 
+                            onClick={() => setShowProfessorModal(!showProfessorModal)}
+                          >
+                            {showProfessorModal ? 'Cerrar Vista Previa' : 'Ver Dibujos'}
+                          </button>
+                        </div>
+                        <div className="option__button">
+                          <button 
+                            onClick={() => {
+                              if (!isStudentDemoActive) {
+                                socket.emit('startDrawingDemo', partidaId, (response) => {
+                                  if (response?.error) {
+                                    Swal.fire('Error', response.error, 'error');
+                                  } else {
+                                    setIsStudentDemoActive(true);
+                                  }
+                                });
+                              } else {
+                                socket.emit('endDrawingDemo', partidaId, (response) => {
+                                  if (response?.success) {
+                                    setIsStudentDemoActive(false);
+                                  }
+                                });
                               }
-                            });
-                          }}
-                        >
-                          Iniciar Demostración
-                        </button>
-                      </div>
+                            }}
+                            className={isStudentDemoActive ? 'active-demo-btn' : ''}
+                          >
+                            {isStudentDemoActive ? 'Detener Demostración Estudiantes' : 'Iniciar Demostración Estudiantes'}
+                          </button>
+                        </div>
+                      </>
                     )}
                     <div className="option__button">
                       <button onClick={finishGame} className="finish-button">

@@ -943,12 +943,7 @@ useEffect(() => {
   return (
     <div className="professor-dashboard">
 
-    <DrawingDemoModal 
-      partidaId={partidaId} 
-      equipoNumero={1} // No es relevante para el profesor
-      userId={userId}
-      isProfessor={true}
-    />
+
 
       {/* Overlay de transición */}
       {showTransition && transitionGame && (

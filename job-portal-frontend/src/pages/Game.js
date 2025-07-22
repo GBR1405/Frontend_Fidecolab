@@ -226,17 +226,12 @@ useEffect(() => {
       
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
+      nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
       
       container.appendChild(cursor);
     }
-
-    // Actualizar el nombre cada vez que se mueve el cursor
-    const nameSpan = cursor.querySelector('.cursor-name');
-    if (nameSpan) {
-      nameSpan.textContent = getUserName(userId);
-    }
-
+  
     // Aplicar posición absoluta con transform
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
@@ -244,30 +239,14 @@ useEffect(() => {
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
-    console.log('getUserName llamado para userId:', userId);
-    console.log('Estado actual de teamMembers:', teamMembers);
-    console.log('Usuario actual:', localStorage.getItem('userId'));
-    console.log('Nombre actual:', localStorage.getItem('userFullName'));
-
-    // Si es el usuario actual, usar nombre del localStorage
-    if (userId === localStorage.getItem('userId')) {
-      const fullName = localStorage.getItem('userFullName');
-      if (fullName) {
-        console.log('Retornando nombre del localStorage:', fullName);
-        return fullName;
-      }
-    }
-
-    // Buscar en teamMembers
     const miembro = teamMembers.find(m => m.userId === userId);
-    if (miembro?.fullName) {
-      console.log('Retornando nombre de teamMembers:', miembro.fullName);
-      return miembro.fullName;
+    if (miembro) return miembro.fullName;
+
+    if (userId === localStorage.getItem('userId')) {
+      return localStorage.getItem('userFullName') || `Tú (${userId})`;
     }
 
-    // Último recurso: ID corto
-    console.log('No se encontró nombre, usando ID corto');
-    return `Usuario ${userId}`;
+    return `Usuario ${userId}`; // Nombre genérico temporal
   };
 
   // Manejar movimiento del mouse
@@ -293,8 +272,7 @@ useEffect(() => {
     socket.emit('JoinTeamRoom', { 
       partidaId, 
       equipoNumero,
-      userId,
-      fullName: localStorage.getItem('userFullName') // Agregar esto
+      userId 
     });
 
     // Unirse a la sala general de la partida
@@ -302,11 +280,7 @@ useEffect(() => {
 
     // Configurar listeners
     const handleUpdateTeamMembers = (members) => {
-      console.log('Recibiendo actualización de miembros:', members);
-      // Asegurarse de que cada miembro tenga userId y fullName
-      const validMembers = members.filter(m => m.userId && m.fullName);
-      console.log('Miembros válidos:', validMembers);
-      setTeamMembers(validMembers);
+      setTeamMembers(members);
     };
 
     const handleBroadcastMouse = (userId, x, y) => {

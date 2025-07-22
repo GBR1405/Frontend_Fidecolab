@@ -157,18 +157,27 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
     }
   };
 
+  // Actualización instantánea al cambiar de equipo
   useEffect(() => {
     if (selectedTeam !== null) {
-      console.log('Fetching drawing for team:', selectedTeam); // Para debugging
+      console.log('Fetching drawing for team:', selectedTeam);
       fetchAndDrawTeamDrawing();
     }
   }, [selectedTeam]);
 
+  // Actualización periódica cada 30 segundos
   useEffect(() => {
     if (!selectedTeam) return;
+    
+    // Primera carga
+    fetchAndDrawTeamDrawing();
+    
+    // Actualización cada 30 segundos
     const intervalId = setInterval(() => {
+      console.log('Periodic update for team:', selectedTeam);
       fetchAndDrawTeamDrawing();
-    }, 2000);
+    }, 30000); // 30 segundos
+
     return () => clearInterval(intervalId);
   }, [selectedTeam]);
 

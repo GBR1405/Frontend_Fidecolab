@@ -54,8 +54,30 @@ const TeamRoom = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleDemoStarted = () => setDemoActive(true);
-    const handleDemoEnded = () => setDemoActive(false);
+    const handleDemoStarted = () => {
+      setDemoActive(true);
+      // Cerrar el SweetAlert si está abierto
+      if (window.timeUpAlert) {
+        Swal.close();
+      }
+    };
+
+    const handleDemoEnded = () => {
+      setDemoActive(false);
+      // Volver a mostrar el SweetAlert si el tiempo está en 0
+      if (timer.remaining <= 0 && timer.gameType) {
+        Swal.fire({
+          title: '¡Tiempo terminado!',
+          text: `Se ha acabado el tiempo para el juego ${timer.gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          willOpen: () => {
+            window.timeUpAlert = Swal.getPopup();
+          }
+        });
+      }
+    };
 
     socket.on('drawingDemoStarted', handleDemoStarted);
     socket.on('drawingDemoEnded', handleDemoEnded);
@@ -64,7 +86,7 @@ const TeamRoom = () => {
       socket.off('drawingDemoStarted', handleDemoStarted);
       socket.off('drawingDemoEnded', handleDemoEnded);
     };
-  }, [socket]);
+  }, [socket, timer.remaining, timer.gameType]);
 
   useEffect(() => {
     if (!socket || !partidaId) return;
@@ -413,15 +435,14 @@ useEffect(() => {
         difficulty
       });
   
-      // Verificar si el tiempo llegó a 0 al recibir una actualización
-      if (remaining <= 0) {
+      // Solo mostrar el alert de tiempo agotado si no hay una demo activa
+      if (remaining <= 0 && !demoActive) {
         handleTimeUp(gameType);
       }
     };
   
     const handleTimeUp = (gameType) => {
-      // Evitar mostrar múltiples alerts
-      if (window.timeUpAlert) return;
+      if (window.timeUpAlert || demoActive) return;
   
       setTimer(prev => ({
         ...prev,
@@ -429,7 +450,6 @@ useEffect(() => {
         active: false
       }));
       
-      // Mostrar notificación de tiempo terminado (sin timer para que no se cierre solo)
       Swal.fire({
         title: '¡Tiempo terminado!',
         text: `Se ha acabado el tiempo para el juego ${gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
@@ -437,7 +457,6 @@ useEffect(() => {
         showConfirmButton: false,
         allowOutsideClick: false,
         willOpen: () => {
-          // Guardar referencia del alert para cerrarlo luego
           window.timeUpAlert = Swal.getPopup();
         }
       });

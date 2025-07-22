@@ -1100,9 +1100,12 @@ useEffect(() => {
                         <button 
                           onClick={() => {
                             setDemoActive(true);
-                            socket.emit('startDrawingDemo', partidaId);
+                            socket.emit('startDrawingDemo', partidaId, (response) => {
+                              if (response?.error) {
+                                Swal.fire('Error', response.error, 'error');
+                              }
+                            });
                           }}
-                          disabled={showTransition}
                         >
                           Iniciar Demostración
                         </button>

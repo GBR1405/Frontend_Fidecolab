@@ -288,12 +288,12 @@
 }
 
 .download-btn {
-  background-color: #28a745;
+  background-color: #e1c951;
   color: white;
 }
 
 .download-btn:hover {
-  background-color: #218838;
+  background-color: rgb(119, 121, 15);
 }
 
 /* Mensaje de carga */
@@ -367,7 +367,7 @@
 }
 
 .voted {
-  background-color: #28a745 !important;
+  background-color: #a6b1a8 !important;
 }
 
 .no-top-teams {
@@ -390,4 +390,20 @@
 .team-badge.winner {
   background-color: #ffc107;
   color: #000;
+}
+
+.top-team-indicator {
+  color: #ffc107;
+  margin-left: 5px;
+}
+
+.team-votes {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.votes-number {
+  min-width: 20px;
+  text-align: center;
 }

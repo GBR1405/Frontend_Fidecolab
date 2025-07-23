@@ -229,15 +229,10 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
       checkIfVoted(currentTeam);
     };
 
-    const handleVotesUpdated = ({ votes: serverVotes, topTeams: serverTopTeams }) => {
-    const completeVotes = { ...votes };
-    teams.forEach(team => {
-        completeVotes[team] = (serverVotes && serverVotes[team]) || 0;
-    });
-    
-    setVotes(completeVotes);
-    setTopTeams(serverTopTeams || []);
-    checkIfVoted(selectedTeam);
+    const handleVotesUpdated = ({ votes, topTeams }) => {
+      setVotes(votes);
+      setTopTeams(topTeams);
+      checkIfVoted(selectedTeam);
     };
 
     socket.on('drawingDemoStarted', ({ currentTeam }) => {
@@ -262,20 +257,12 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
 
   const loadVotes = () => {
     socket.emit('getDrawingVotes', numericPartidaId, (response) => {
-        if (response) {
-        // Asegurarnos de que todos los equipos tengan un valor, aunque sea 0
-        const completeVotes = { ...response.votes };
-        teams.forEach(team => {
-            if (completeVotes[team] === undefined) {
-            completeVotes[team] = 0;
-            }
-        });
-        
-        setVotes(completeVotes);
+      if (response) {
+        setVotes(response.votes || {});
         setTopTeams(response.topTeams || []);
-        }
+      }
     });
-    };
+  };
 
   const checkIfVoted = (team) => {
     if (!userId || !team) return;
@@ -350,36 +337,34 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
 
           {isProfessor ? (
             <div className="professor-panel">
-                <div className="panel-header">
+              <div className="panel-header">
                 <h3>Equipos Participantes</h3>
                 <div className="teams-count">{teams.length} equipos</div>
-                </div>
-                
-                <div className="teams-scroll-container">
+              </div>
+              
+              <div className="teams-scroll-container">
                 <ul className="teams-list">
-                    {teams.map(team => {
-                    const teamVotes = votes[team] || 0;
-                    return (
-                        <li
-                        key={team}
-                        className={`team-item ${selectedTeam === team ? 'active' : ''} ${topTeams.includes(team) ? 'top-team' : ''}`}
-                        onClick={() => selectTeam(team)}
-                        >
-                        <div className="team-badge">Equipo {team}</div>
-                        <div className="team-votes">
-                            <span className="votes-number">{teamVotes}</span>
-                            <i className="fas fa-star"></i>
-                            {topTeams.includes(team) && teamVotes > 0 && (
-                            <span className="top-team-indicator">★</span>
-                            )}
+                  {teams.map(team => (
+                    <li
+                      key={team}
+                      className={`team-item ${selectedTeam === team ? 'active' : ''} ${topTeams.includes(team) ? 'top-team' : ''}`}
+                      onClick={() => selectTeam(team)}
+                    >
+                      <div className="team-badge">Equipo {team}</div>
+                      <div className="team-votes">
+                        <span className="votes-number">{votes[team] || 0}</span>
+                        <i className="fas fa-star"></i>
+                      </div>
+                      {topTeams.includes(team) && (
+                        <div className="top-team-icon">
+                          <i className="fas fa-trophy"></i>
                         </div>
-                        </li>
-                    );
-                    })}
+                      )}
+                    </li>
+                  ))}
                 </ul>
-                </div>
+              </div>
             </div>
-
           ) : (
             <div className="student-panel">
               <div className="most-voted-team">

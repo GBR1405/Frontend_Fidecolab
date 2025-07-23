@@ -178,10 +178,11 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
   // Actualización instantánea al cambiar de equipo
   useEffect(() => {
     if (selectedTeam !== null) {
-      console.log('Fetching drawing for team:', selectedTeam);
-      fetchAndDrawTeamDrawing();
+        console.log('Fetching drawing for team:', selectedTeam);
+        fetchAndDrawTeamDrawing();
+        loadVotes(); // <<<<< esta línea es la clave
     }
-  }, [selectedTeam]);
+    }, [selectedTeam]);
 
   // Actualización periódica cada 30 segundos
   useEffect(() => {

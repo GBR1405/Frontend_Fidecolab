@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import "../styles/TransicionesSimulacion.css";
 import ErrorBoundary from '../LN/ErrorBundary';
 import Cookies from "js-cookie";
+import "../styles/gameComponents.css";
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
@@ -710,7 +711,7 @@ useEffect(() => {
         userId={userId}
         isProfessor={false} // O puedes determinar esto basado en el rol del usuario
       />
-      <div className="team-room-container">
+      <div className="teamroom__container">
         {/* Overlay de transición */}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
           {transitionPhase === 'next-game' && (
@@ -812,24 +813,9 @@ useEffect(() => {
           )}
         </div>
 
-
-
         {/* Área del juego */}
         <div ref={cursorContainerRef} className="game-container">
-          {/* Header del equipo */}
-          <div className="team-room-header">
-            <h1>Equipo {equipoNumero}</h1>
-            {currentGameInfo?.name?.toLowerCase().includes('dibujo') && (
-              <h3 className="game__topic">Tema: {currentGameInfo.tema}</h3>
-            )}            
-            {currentGameInfo && (              
-              <div className="game-progress">
-                Juego {gameProgress.current} de {gameProgress.total}                
-              </div>
-            )}
-          </div>
-
-
+          {/* Efecto blur durante transición */}
           <div className={`game-display ${
               (transitionPhase === 'blurring' || transitionPhase === 'showing') ? '_blurring' : ''
             }`}>
@@ -860,7 +846,6 @@ useEffect(() => {
                       }}
                     />
                   ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
-                    <ErrorBoundary>
                     <PuzzleGame 
                       key={`puzzle-${partidaId}-${equipoNumero}`}
                       gameConfig={currentGameInfo} 
@@ -868,91 +853,108 @@ useEffect(() => {
                         console.log('Rompecabezas completado:', result);
                       }}
                     />
-                    </ErrorBoundary>
                   ) : (
                     <div className="game-not-implemented">
-                      <h3>Juego {currentGameInfo?.name || "desconocido"} en desarrollo</h3>
+                      <h3>Juego {currentGameInfo.name} en desarrollo</h3>
                       <p>Este juego estará disponible pronto</p>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="waiting-message">
-                  <div className="waiting-content">
-                    <div className="loader"></div>
-                    <h2>Esperando el contenido</h2>
-                    <p>La partida esta a punto de comenzar.</p>
-                  </div>
+                  <h2>Sala de Espera</h2>
+                  <p>Esperando que el profesor inicie los juegos...</p>
                 </div>
               )}
           </div>
+
+          <button className="help__button" onClick={showHelpModal}>
+            <i className="fas fa-question-circle"></i> 
+            <span>Ayuda</span>
+          </button>
           
         </div>    
 
         {/* Panel de información */}
-        <div className="info__panel">
+        <div className="container__info">
+          <div className="info__logo">
+            <img className="logo__source" src="https://i.postimg.cc/NGzXwBp6/logo.png" alt="Logo" />
+            <h2 className="logo__text">FideColab</h2> 
+          </div>
+
           {currentGameInfo ? (
-            <>
-              <div className="info__section">
-                <div className="section__header">
-                  <h3>Juego Actual: <br></br> {currentGameInfo.name} <br></br> {currentGameInfo.icon}</h3>
-                </div>                
-                <div className="game__info">
-                  <p>{currentGameInfo.description}</p>                  
-                  <div className="game__details">                   
-                    <p><strong>Dificultad:</strong> {currentGameInfo.dificultad}</p>
-                    <p><strong>Configuración:</strong> {currentGameInfo.config}</p>
-                    {currentGameInfo.name.toLowerCase() === 'dibujo' && (
-                      <p><strong>Tema:</strong> {currentGameInfo.tema}</p>
-                    )}     
-                  </div>
-                </div>
-              </div>                  
-              <div className="info__section">
-                <div className="section__header">
-                  <h3>Miembros del Equipo</h3>
-                </div>                
-                <ul className="section__members">
-                  {teamMembers.map((member, index) => (
-                    <li key={index}>
-                      {member.fullName} {member.userId === userId && "(Tú)"}
-                    </li>
-                  ))}
-                </ul>
+            <>              
+              <div className="info__game">     
+                  <div className="game__icon">
+                      <span>{currentGameInfo.icon}</span>
+                  </div>                                   
+                  <h3 className="game__title">{currentGameInfo.name.split(' ').slice(0, 1).join(' ')}</h3>
               </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Descripción</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.description}</span>
+                  </div>
+              </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Dificultad</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.dificultad}</span>
+                  </div>
+              </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Configuración</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.config}</span>
+                  </div>
+              </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Grupo: {equipoNumero}</h3>
+                  </div>
+                  <div className="panel__body">
+                      {teamMembers.map((member, index) => (
+                        <p className="body__row" key={index}>
+                          {member.fullName.split(' ').slice(0, 2).join(' ')} {member.userId === userId && "(Tú)"}
+                        </p>
+                      ))}
+                  </div>
+              </div>              
             </>
           ) : (
-            <div className="info__section">
-              <div className="section__header">
+            <div className="info__panel">
+              <div className="panel__header">
                 <h3>Información</h3>
+              </div>
+              <div className="panel__body">
+                <p>Esperando a que todos los miembros se unan al equipo...</p>
               </div>              
-              <p>Esperando a que todos los miembros se unan al equipo...</p>
             </div>
           )}
-
-          <div className="info__section">
-            <div className="section__header">
-              <h3>Tiempo Restante</h3>
-            </div>            
-            <div className="time-display-container">
-              <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
-                {timer.active ? formatTime(timer.remaining) : '--:--'}
-                <div className="time-progress-bar">
-                  <div 
-                    className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
-                    style={{ width: `${getTimePercentage()}%` }}
-                  ></div>
-                </div>
+          <div className="info__panel">                    
+              <div className="panel__header">
+                  <h3>Tiempo Restante</h3>
               </div>
-            </div>
-          </div>
-        
-          <button 
-            className="help__button"
-            onClick={showHelpModal}
-          >
-            <i className="fas fa-question-circle"></i> Ayuda
-          </button>
+              <div className="panel__body">
+                  <div className="time-display-container">
+                    <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
+                      {timer.active ? formatTime(timer.remaining) : '--:--'}
+                      <div className="time-progress-bar">
+                        <div 
+                          className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
+                          style={{ width: `${getTimePercentage()}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>    
+              </div>
+          </div>     
         </div>       
       </div>
     </LayoutSimulation>

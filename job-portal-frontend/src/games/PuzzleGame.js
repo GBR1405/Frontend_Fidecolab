@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import '../styles/games_puzzle.css';
+
 
 const PuzzleGame = ({ gameConfig }) => {
   const { partidaId, equipoNumero } = useParams();

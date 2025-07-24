@@ -177,3 +177,211 @@
     box-shadow: 0 0 15px #28a745;
   }
 }
+
+/* Contenedor de puzzle */
+.container__puzzle{
+    position: relative;
+    background-color: var(--white-smoke-clr);
+    box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 1em;
+    height: 100%;
+    width: 100%;
+    padding: 15px;
+
+    display: grid;
+    grid-template-columns: 600px auto;
+    justify-items: center;
+    align-items: center;
+
+    .game__puzzle{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .puzzle__canvas{
+        position: relative;
+        background-color: transparent;
+        border: none;
+        flex-shrink: 0;
+    }
+
+    .game__details{
+        position: relative;
+        height: 100%;
+        width: 100%;
+        padding-left: 15px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .details__container{    
+        height: 10vmin;
+        display: grid;
+        grid-template-rows: 2vmax 1fr;
+        border-radius: 1em;
+        box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .container__header{
+        border-bottom: rgba(0, 0, 0, 0.03) 1px solid;
+        border-radius: 1em 1em 0em 0em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        h3{
+            color: var(--blue-royal-clr);
+            font-size: 2vmin;
+        }
+    }
+
+    .container__body{    
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        span{
+            font-size: 1.7vmin;
+            font-weight: 400;
+            text-align: center;
+            line-height: normal;
+        }
+    }
+
+    .details__container:last-child{
+        position: absolute;
+        z-index: 1;
+        height: 14vmax;
+        width: 16vw;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        .container__body{
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    .view__image{
+        width: 16vw;
+        height: 12vmax;
+        border-radius: 0em 0em 1em 1em;
+    }
+}
+
+@media (max-height: 730px), (max-width: 1200px){
+  .container__puzzle{
+    grid-template-columns: 480px auto;
+
+    .game__puzzle{
+        height: 480px;
+        width: 480px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.8);
+    }
+  }          
+}
+
+@media (max-height: 620px), (max-width: 1000px){
+  .container__puzzle{
+    grid-template-columns: 360px auto;
+
+    .game__puzzle{
+        height: 360px;
+        width: 360px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.6);
+    }
+
+  }      
+}
+
+@media (max-height: 580px), (max-width: 800px){
+  .container__puzzle{
+    grid-template-columns: 300px auto;
+
+    .game__puzzle{
+        height: 300px;
+        width: 300px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.5);
+    }
+  }  
+}
+
+.puzzle-piece.correct {
+  border: 2px solid limegreen !important;
+  animation: correctFlash 0.5s ease;
+}
+
+@keyframes correctFlash {
+  0% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
+  50% { box-shadow: 0 0 20px rgba(50, 205, 50, 0.7); }
+  100% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
+}
+
+.puzzle-piece.selected {
+  box-shadow: 0 0 15px gold;
+  transform: scale(1.03);
+  z-index: 20;
+}
+
+/* Media query for very small screens (just in case) */
+@media (max-width: 950px) {
+  .puzzle-game {
+    transform: scale(0.9);
+    transform-origin: top left;
+  }
+}
+
+/* PIEZA SELECCIONADA */
+.puzzle-piece.selected {
+  border: 3px solid gold;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+/* PIEZA BLOQUEADA POR OTRO USUARIO */
+.puzzle-piece.blocked {
+  filter: grayscale(80%) brightness(0.7);
+  animation: pulseBlocked 1s infinite;
+  cursor: not-allowed;
+}
+
+@keyframes pulseBlocked {
+  0% { opacity: 0.9; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.9; }
+}
+
+/* PIEZA CORRECTAMENTE COLOCADA */
+.puzzle-piece.correct {
+  border: 2px solid #28a745;
+  animation: correctGlow 1s ease-in-out infinite;
+}
+
+@keyframes correctGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px #28a745;
+  }
+  50% {
+    box-shadow: 0 0 15px #28a745;
+  }
+}

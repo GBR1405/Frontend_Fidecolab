@@ -221,25 +221,17 @@ const PuzzleGame = ({ gameConfig }) => {
       </div>
 
       <div className="game__details_Rompe">
-        <div className="details__row_Rompe">
-          <div className="details__container_Rompe">
-            <div className="container__header_Rompe">
-              <h3>Movimientos</h3>
-            </div>
-            <div className="container__body_Rompe">
-              <span>{swapsLeft}</span>
-            </div>
+        {/* Progreso arriba */}
+        <div className="details__container_Rompe">
+          <div className="container__header_Rompe">
+            <h3>Progreso</h3>
           </div>
-          <div className="details__container_Rompe">
-            <div className="container__header_Rompe">
-              <h3>Progreso</h3>
-            </div>
-            <div className="container__body_Rompe">
-              <span>{progress}%</span>
-            </div>
+          <div className="container__body_Rompe">
+            <span>{progress}%</span>
           </div>
         </div>
 
+        {/* Referencia + Movimientos */}
         <div className="reference__container_Rompe">
           <div className="container__header_Rompe">
             <h3>Referencia</h3>
@@ -249,13 +241,13 @@ const PuzzleGame = ({ gameConfig }) => {
             alt="Referencia"
             className="view__image_Rompe"
           />
+          <div className="moves__info_Rompe">
+            Movimientos restantes: {swapsLeft}
+          </div>
         </div>
       </div>
     </div>
   );
-
-
-
 
 };
 

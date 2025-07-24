@@ -202,42 +202,42 @@ html{
   position: relative;
 }
 
+/* Canvas escalado y anclado */
 .game__puzzle_Rompe {
   display: flex;
   justify-content: center;
   align-items: center;
   transform-origin: top left;
   padding: 15px;
+  margin-left: auto;
+  margin-right: auto;
   scale: 1;
+  position: relative;
 }
 
+/* No cambia nunca su tamaño lógico */
 .puzzle__canvas_Rompe {
   background-color: transparent;
   border: none;
   flex-shrink: 0;
 }
 
+/* Panel lateral derecho */
 .game__details_Rompe {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   gap: 20px;
-  width: 18vw;
-  max-width: 270px;
-  min-width: 200px;
+  width: 20vw;
+  max-width: 300px;
+  min-width: 220px;
   height: 100%;
 }
 
-.details__row_Rompe {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
+/* Progreso arriba */
 .details__container_Rompe {
-  flex: 1;
+  width: 100%;
   height: 10vmax;
   display: grid;
   grid-template-rows: 2.2vmax 1fr;
@@ -246,6 +246,7 @@ html{
   box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
 }
 
+/* Título */
 .container__header_Rompe {
   display: flex;
   justify-content: center;
@@ -260,6 +261,7 @@ html{
   font-size: 1.9vmin;
 }
 
+/* Contenido de tarjetas */
 .container__body_Rompe {
   display: flex;
   justify-content: center;
@@ -273,52 +275,71 @@ html{
   text-align: center;
 }
 
+/* Contenedor de referencia y movimientos juntos */
 .reference__container_Rompe {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 1em;
+  box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
 }
 
 .view__image_Rompe {
   width: 100%;
   max-height: 15vmax;
-  border-radius: 0 0 1em 1em;
   object-fit: contain;
+  border-radius: 1em;
 }
 
-/* 🔁 MEDIA QUERIES para scale progresivo */
-@media (max-width: 1600px) {
+/* Movimientos debajo de imagen */
+.moves__info_Rompe {
+  font-size: 1.6vmin;
+  font-weight: bold;
+  color: var(--blue-royal-clr);
+  text-align: center;
+}
+
+/* Media Queries para escalar */
+@media (max-width: 1800px) {
   .game__puzzle_Rompe {
     scale: 0.95;
   }
 }
+@media (max-width: 1600px) {
+  .game__puzzle_Rompe {
+    scale: 0.88;
+  }
+}
 @media (max-width: 1400px) {
   .game__puzzle_Rompe {
-    scale: 0.85;
+    scale: 0.8;
   }
 }
 @media (max-width: 1200px) {
   .game__puzzle_Rompe {
-    scale: 0.75;
+    scale: 0.7;
   }
 }
 @media (max-width: 1000px) {
   .game__puzzle_Rompe {
-    scale: 0.65;
+    scale: 0.6;
   }
 }
 @media (max-width: 800px) {
   .game__puzzle_Rompe {
-    scale: 0.55;
+    scale: 0.5;
   }
 }
 @media (max-width: 600px) {
   .game__puzzle_Rompe {
-    scale: 0.45;
+    scale: 0.4;
   }
 }
+
 
 
 /* Mantener margen fijo del canvas sin importar resolución */

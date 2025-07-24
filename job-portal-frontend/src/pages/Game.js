@@ -17,6 +17,9 @@ import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
 import DrawingDemoModal from '../games/DrawingDemoModal';
 
+const LOGICAL_WIDTH = 1920;
+const LOGICAL_HEIGHT = 1080;
+
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
@@ -248,7 +251,7 @@ function randomHSL() {
 }
 
   // Actualizar cursor remoto
-  const updateCursor = (userId, normalizedX, normalizedY) => {
+  const updateCursor = (userId, logicalX, logicalY) => {
     if (userId === localStorage.getItem('userId')) return;
 
     const container = cursorContainerRef.current;
@@ -256,17 +259,20 @@ function randomHSL() {
 
     const rect = container.getBoundingClientRect();
 
-    // Multiplicamos por el tamaño real del contenedor, no de la ventana
-    const x = normalizedX * rect.width;
-    const y = normalizedY * rect.height;
+    const scaleX = rect.width / LOGICAL_WIDTH;
+    const scaleY = rect.height / LOGICAL_HEIGHT;
+
+    const x = logicalX * scaleX;
+    const y = logicalY * scaleY;
 
     let cursor = document.getElementById(`cursor-${userId}`);
+
     if (!cursor) {
       cursor = document.createElement('div');
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
 
-      const color = randomHSL();
+      const color = randomHSL(); // Debes tener definida esta función
       cursor.style.setProperty('--cursor-color', color);
 
       const nameSpan = document.createElement('span');
@@ -296,22 +302,24 @@ function randomHSL() {
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
     const container = cursorContainerRef.current;
-    if (!container) return;
+    if (!container || !socket) return;
 
     const rect = container.getBoundingClientRect();
 
-    // Usamos coordenadas relativas al contenedor, que es el área visible real
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
 
-    const normalizedX = x / rect.width;
-    const normalizedY = y / rect.height;
+    const scaleX = LOGICAL_WIDTH / rect.width;
+    const scaleY = LOGICAL_HEIGHT / rect.height;
+
+    const logicalX = offsetX * scaleX;
+    const logicalY = offsetY * scaleY;
 
     socket.emit('SendMousePosition', {
       roomId: `team-${partidaId}-${equipoNumero}`,
       userId,
-      x: normalizedX,
-      y: normalizedY,
+      x: logicalX,
+      y: logicalY,
     });
   };
 

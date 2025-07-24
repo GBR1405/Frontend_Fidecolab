@@ -187,23 +187,27 @@ html{
 
 /* Contenedor de puzzle */
 .container__puzzle_Rompe {
+  position: relative;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  gap: 40px;
   background-color: var(--white-smoke-clr);
   box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
   border-radius: 1em;
   height: 100%;
   width: 100%;
-  padding: 15px;
-  gap: 30px;
-  position: relative;
+  padding: 30px;
+  overflow: hidden;
 }
 
 .game__puzzle_Rompe {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  padding: 10px 15px;
+  background-color: white;
+  border-radius: 1em;
+  box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
 }
 
 .puzzle__canvas_Rompe {
@@ -217,18 +221,25 @@ html{
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 15px;
-  height: 100%;
-  width: 16vw;
+  gap: 20px;
+  width: 18vw;
+  min-width: 200px;
+  max-width: 260px;
+}
+
+.details__row_Rompe {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
 }
 
 .details__container_Rompe {
+  flex: 1;
   display: grid;
   grid-template-rows: 2vmax 1fr;
   border-radius: 1em;
   box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
   background-color: white;
-  overflow: hidden;
 }
 
 .container__header_Rompe {
@@ -237,35 +248,41 @@ html{
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 5px;
 }
 
 .container__header_Rompe h3 {
   color: var(--blue-royal-clr);
-  font-size: 2vmin;
+  font-size: 1.9vmin;
 }
 
 .container__body_Rompe {
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 10px;
 }
 
 .container__body_Rompe span {
-  font-size: 1.7vmin;
+  font-size: 1.6vmin;
   font-weight: 400;
   text-align: center;
-  line-height: normal;
 }
 
 .view__image_Rompe {
   width: 100%;
   height: auto;
-  max-height: 12vmax;
+  max-height: 15vmax;
   border-radius: 0em 0em 1em 1em;
   object-fit: contain;
 }
+
+/* Mantener margen fijo del canvas sin importar resolución */
+.game__puzzle_Rompe {
+  margin-top: 10px;
+  margin-left: 15px;
+}
+
 
 
 /* Contenedor de dibujo */

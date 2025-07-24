@@ -263,9 +263,8 @@ function randomHSL() {
     const relativeX = logicalX / LOGICAL_WIDTH;
     const relativeY = logicalY / LOGICAL_HEIGHT;
 
-    const x = Math.round(relativeX * rect.width * window.devicePixelRatio) / window.devicePixelRatio;
-    const y = Math.round(relativeY * rect.height * window.devicePixelRatio) / window.devicePixelRatio;
-
+    const x = relativeX * rect.width;
+    const y = relativeY * rect.height;
 
     let cursor = document.getElementById(`cursor-${userId}`);
 

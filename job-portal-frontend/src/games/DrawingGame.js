@@ -20,6 +20,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const [tinta, setTinta] = useState(5000);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [lastColor, setLastColor] = useState('#000000');
+  const [currentGameInfo, setCurrentGameInfo] = useState(null);
   
   // Referencias y constantes
   const userId = localStorage.getItem('userId');
@@ -38,6 +39,23 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 ];
 
  socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
+
+  useEffect(() => {
+    if (!socket || !partidaId) return;
+    socket.emit('getGameConfig', partidaId, (response) => {
+      if (response.error) {
+        console.error('Error al obtener configuración:', response.error);
+        return;
+      }
+      if (response.juegos?.length > 0) {
+        const initialIndex = response.currentIndex || 0;
+        const currentGame = response.juegos[initialIndex];
+        if (currentGame && currentGame.tema) {
+          setCurrentGameInfo({ tema: currentGame.tema });
+        }
+      }
+    });
+  }, [socket, partidaId]);
 
   // Cargar estado inicial desde localStorage
   useEffect(() => {
@@ -605,165 +623,167 @@ const clearLocalDrawing = () => {
 
   // Renderizado
   return (
-    <div className="drawing-game-container">
-      {/* Barra de herramientas */}
-      <div className="drawing-tools-horizontal-extended">
-        {/* Sección de colores */}
-        <div className="colors-section-extended">
-          <div className="color-palette-wide">
-            <div className="color-rows-container">
-              <div className="color-row">
-                {colorPalette.map((colorHex, index) => (
-                  <button
-                    key={`color-${index}`}
-                    className={`color-chip ${color === colorHex ? 'active' : ''}`}
-                    style={{ backgroundColor: colorHex }}
-                    onClick={() => handleColorSelect(colorHex)}
-                    title={`Color ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="custom-color-container">
-              <button 
-                className="color-picker-toggle"
-                onClick={toggleColorPicker}
-                style={{ backgroundColor: color }}
-                title="Seleccionar color"
+    <div className="drawing__container">
+      <div className="container__canvas">
+        {/* Área de dibujo */}
+        <div className="canvas__drawing">
+          <Stage
+             width={800}
+            height={600}
+            ref={stageRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp} 
+            onTouchStart={handleMouseDown}
+            onTouchMove={handleMouseMove}
+            onTouchEnd={handleMouseUp}
+            onTouchCancel={handleMouseUp} 
+          >
+            <Layer>
+              {/* Fondo blanco */}
+              <Rect 
+                width={800} 
+                height={600} 
+                fill="#ffffff" 
+                listening={false} 
               />
-              {showColorPicker && (
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => handleColorSelect(e.target.value)}
-                  className="custom-color-picker-large"
-                  onBlur={() => setShowColorPicker(false)}
-                />
+
+              {/* Líneas remotas */}
+              {Object.entries(remoteLines).flatMap(([userId, userLines]) =>
+                Array.isArray(userLines)
+                  ? userLines
+                      .filter(line => line?.points?.length > 1)
+                      .map(line => (
+                        <Line
+                          key={`remote-${userId}-${line.id}`}
+                          points={line.points}
+                          stroke={line.color}
+                          strokeWidth={line.strokeWidth}
+                          tension={0.5}
+                          lineCap="round"
+                          lineJoin="round"
+                          listening={false}
+                          globalCompositeOperation={
+                            line.color === '#ffffff' ? 'destination-out' : 'source-over'
+                          }
+                        />
+                      ))
+                  : []
               )}
-            </div>
-          </div>
+
+
+              {/* Líneas locales */}
+              {lines.map((line) => (
+                line?.points?.length > 1 && (
+                  <Line
+                    key={`local-${line.id}`}
+                    points={line.points}
+                    stroke={line.color}
+                    strokeWidth={line.strokeWidth}
+                    tension={0.5}
+                    lineCap="round"
+                    lineJoin="round"
+                    listening={false}
+                    globalCompositeOperation={
+                      line.color === '#ffffff' ? 'destination-out' : 'source-over'
+                    }
+                  />
+                )
+              ))}
+            </Layer>
+          </Stage>
         </div>
-        
-        {/* Sección de herramientas */}
-        <div className="tools-section-extended">                    
-          <div className="tool-row">
-            <button 
-              className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
-              onClick={() => handleToolSelect('brush')}
-              title="Pincel"
-            >
-              <i className="fas fa-paint-brush"></i>
-            </button>
-            <button 
-              className="tool-btn"
-              onClick={clearUserDrawing}
-              title="Limpiar mi dibujo"
-            >
-              <i className="fas fa-trash-alt"></i>
-            </button>
-            
-            {/* Indicador de tinta */}
-            <div className="tinta-indicator">
-              <div className="tinta-tank-vertical" style={{ height: '100px', width: '30px' }}>
-                <div
-                  className={`tinta-tank-fill ${
-                    tinta <= 1000 ? 'tinta-tank-critical' : 
-                    tinta <= 3000 ? 'tinta-tank-low' : ''
-                  }`}
-                  style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
+      </div>
+      <div className="container__details">
+        <div className="details__container">                    
+            <div className="container__header">
+                <h3>Tema:</h3>
+            </div>
+            <div className="container__body">
+                <span>{currentGameInfo?.tema || 'Sin tema'}</span>
+            </div>
+        </div>
+        {/* Barra de herramientas */}
+        <div className="drawing__tools">
+          {/* Sección de colores */}
+          <div className="colors-section-extended">
+            <div className="color-palette-wide">
+              <div className="color-rows-container">
+                <div className="color-row">
+                  {colorPalette.map((colorHex, index) => (
+                    <button
+                      key={`color-${index}`}
+                      className={`color-chip ${color === colorHex ? 'active' : ''}`}
+                      style={{ backgroundColor: colorHex }}
+                      onClick={() => handleColorSelect(colorHex)}
+                      title={`Color ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="custom-color-container">
+                <button 
+                  className="color-picker-toggle"
+                  onClick={toggleColorPicker}
+                  style={{ backgroundColor: color }}
+                  title="Seleccionar color"
                 />
+                {showColorPicker && (
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => handleColorSelect(e.target.value)}
+                    className="custom-color-picker-large"
+                    onBlur={() => setShowColorPicker(false)}
+                  />
+                )}
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Control de tamaño */}
-        <div className="size-section">
-          <div className="size-controls-horizontal">
-            <div className="size-indicator">
-              <input
-                type="range"
-                min="1"
-                max="30"
-                value={brushSize}
-                onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                className="size-slider-horizontal"
+              
+          {/* Sección de herramientas */}
+          <div className="tools__section">                    
+            <button 
+                className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
+                onClick={() => handleToolSelect('brush')}
+                title="Pincel"
+              >
+                <i className="fas fa-paint-brush"></i>
+            </button>
+            <button 
+                className="tool-btn"
+                onClick={clearUserDrawing}
+                title="Limpiar mi dibujo"
+              >
+                <i className="fas fa-trash-alt"></i>
+            </button>              
+            {/* Indicador de tinta */}
+            <div className="ink__tank">
+              <div
+                className={`tank__fill ${
+                  tinta <= 1000 ? 'tank__critical' : 
+                  tinta <= 3000 ? 'tank__low' : ''
+                }`}
+                style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
               />
             </div>
+          </div>
+                  
+          {/* Control de tamaño */}
+          <div className="size__controls">
+            <input
+              type="range"
+              min="1"
+              max="30"
+              value={brushSize}
+              onChange={(e) => setBrushSize(parseInt(e.target.value))}
+              className="size__slider"
+            />
             <span className="brush-size-label">{brushSize}px</span>
           </div>
         </div>
-      </div>
-      
-      {/* Área de dibujo */}
-      <div className="canvas-container">
-        <Stage
-          width={800}
-          height={600}
-          ref={stageRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp} // Agregar este evento
-          onTouchStart={handleMouseDown}
-          onTouchMove={handleMouseMove}
-          onTouchEnd={handleMouseUp}
-          onTouchCancel={handleMouseUp} // Agregar este evento
-        >
-          <Layer>
-            {/* Fondo blanco */}
-            <Rect 
-              width={800} 
-              height={600} 
-              fill="#ffffff" 
-              listening={false} 
-            />
-            
-            {/* Líneas remotas */}
-            {Object.entries(remoteLines).flatMap(([userId, userLines]) =>
-              Array.isArray(userLines)
-                ? userLines
-                    .filter(line => line?.points?.length > 1)
-                    .map(line => (
-                      <Line
-                        key={`remote-${userId}-${line.id}`}
-                        points={line.points}
-                        stroke={line.color}
-                        strokeWidth={line.strokeWidth}
-                        tension={0.5}
-                        lineCap="round"
-                        lineJoin="round"
-                        listening={false}
-                        globalCompositeOperation={
-                          line.color === '#ffffff' ? 'destination-out' : 'source-over'
-                        }
-                      />
-                    ))
-                : []
-            )}
-
-            
-            {/* Líneas locales */}
-            {lines.map((line) => (
-              line?.points?.length > 1 && (
-                <Line
-                  key={`local-${line.id}`}
-                  points={line.points}
-                  stroke={line.color}
-                  strokeWidth={line.strokeWidth}
-                  tension={0.5}
-                  lineCap="round"
-                  lineJoin="round"
-                  listening={false}
-                  globalCompositeOperation={
-                    line.color === '#ffffff' ? 'destination-out' : 'source-over'
-                  }
-                />
-              )
-            ))}
-          </Layer>
-        </Stage>
-      </div>
+      </div>      
     </div>
   );
 };

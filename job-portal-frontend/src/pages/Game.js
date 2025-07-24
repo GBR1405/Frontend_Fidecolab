@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import LayoutSimulation from '../components/LayoutSimulation';
 import "../styles/simulationComponents.css";
 import { games } from '../games/GameConfiguration';
-import "../styles/TeamRoom.css";
+
 import Swal from 'sweetalert2';
 import "../styles/TransicionesSimulacion.css";
 import ErrorBoundary from '../LN/ErrorBundary';

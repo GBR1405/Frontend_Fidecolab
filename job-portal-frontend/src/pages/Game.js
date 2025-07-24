@@ -259,11 +259,13 @@ function randomHSL() {
 
     const rect = container.getBoundingClientRect();
 
-    const scaleX = rect.width / LOGICAL_WIDTH;
-    const scaleY = rect.height / LOGICAL_HEIGHT;
+    // Escalamos la coordenada lógica al tamaño real del contenedor
+    const relativeX = logicalX / LOGICAL_WIDTH;
+    const relativeY = logicalY / LOGICAL_HEIGHT;
 
-    const x = logicalX * scaleX;
-    const y = logicalY * scaleY;
+    const x = Math.round(relativeX * rect.width * window.devicePixelRatio) / window.devicePixelRatio;
+    const y = Math.round(relativeY * rect.height * window.devicePixelRatio) / window.devicePixelRatio;
+
 
     let cursor = document.getElementById(`cursor-${userId}`);
 
@@ -272,7 +274,7 @@ function randomHSL() {
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
 
-      const color = randomHSL(); // Debes tener definida esta función
+      const color = randomHSL(); // puedes usar hash para que sea consistente
       cursor.style.setProperty('--cursor-color', color);
 
       const nameSpan = document.createElement('span');
@@ -286,6 +288,7 @@ function randomHSL() {
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
   };
+
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
@@ -306,14 +309,13 @@ function randomHSL() {
 
     const rect = container.getBoundingClientRect();
 
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+    // Posición del mouse relativa al contenedor
+    const relativeX = (e.clientX - rect.left) / rect.width;
+    const relativeY = (e.clientY - rect.top) / rect.height;
 
-    const scaleX = LOGICAL_WIDTH / rect.width;
-    const scaleY = LOGICAL_HEIGHT / rect.height;
-
-    const logicalX = offsetX * scaleX;
-    const logicalY = offsetY * scaleY;
+    // Escalamos al espacio lógico
+    const logicalX = relativeX * LOGICAL_WIDTH;
+    const logicalY = relativeY * LOGICAL_HEIGHT;
 
     socket.emit('SendMousePosition', {
       roomId: `team-${partidaId}-${equipoNumero}`,
@@ -322,6 +324,7 @@ function randomHSL() {
       y: logicalY,
     });
   };
+
 
 
   // Configuración inicial y listeners

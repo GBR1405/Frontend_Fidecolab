@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import { Stage, Layer, Line, Rect } from 'react-konva';
 import Swal from 'sweetalert2';
-import '../styles/games.css';
+import '../styles/drawingComponent.css';
 
 const DrawingGame = ({ gameConfig, onGameComplete }) => {
   // Parámetros de la URL y contexto

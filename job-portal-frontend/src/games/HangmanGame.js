@@ -2256,7 +2256,7 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
   }
 
   return (
-  <div className={`hangman-container ${votacionActiva ? 'votacion-activa-bg' : ''}`}>
+  <div className={`hangman__container ${votacionActiva ? 'votacion-activa-bg' : ''}`}>
     {votacionActiva && (
       <div className="votacion-flotante">
         🗳️ Votación activa
@@ -2265,13 +2265,9 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
         </div>
       </div>
     )}
-
-    <div className="hangman-left">
-      <div className="robot-animation-container">
-        <canvas ref={canvasRef} style={{ width: '250px', height: '350px' }}></canvas>
-      </div>
+    <div className="container__canvas">
+        <canvas className="canvas__robot" ref={canvasRef}></canvas>
     </div>      
-
     <div className="hangman-right">
       <div className="hangman-word">
         {renderPalabra()}

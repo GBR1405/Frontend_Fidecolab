@@ -243,39 +243,35 @@ useEffect(() => {
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
     if (userId === localStorage.getItem('userId')) return;
-    
+
     const container = cursorContainerRef.current;
     if (!container) return;
-    
-    // Obtener posición absoluta del contenedor
-    const rect = container.getBoundingClientRect();
-    
-    // Calcular posición absoluta en píxeles
-    const gamePuzzle = document.querySelector('.game__puzzle_Rompe');
-    const scale = parseFloat(getComputedStyle(gamePuzzle).transform.match(/matrix\(([^,]+)/)?.[1] || 1);
 
-    const x = normalizedX * window.innerWidth / scale;
-    const y = normalizedY * window.innerHeight / scale;
-    
+    const rect = container.getBoundingClientRect();
+
+    // Usamos el tamaño del contenedor, no de la ventana
+    const x = normalizedX * rect.width;
+    const y = normalizedY * rect.height;
+
     let cursor = document.getElementById(`cursor-${userId}`);
-    
+
     if (!cursor) {
       cursor = document.createElement('div');
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
-      
+
       const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
       cursor.style.setProperty('--cursor-color', color);
-      
+
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
       nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
-      
+
       container.appendChild(cursor);
     }
-  
-    // Aplicar posición absoluta con transform
+
+    // Ajustar posición relativa al contenedor
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
   };

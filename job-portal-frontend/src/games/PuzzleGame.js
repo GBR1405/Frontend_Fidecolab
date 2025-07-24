@@ -240,21 +240,21 @@ const PuzzleGame = ({ gameConfig }) => {
           </div>
         </div>
 
-        <div className="details__container_Rompe">
+        <div className="reference__container_Rompe">
           <div className="container__header_Rompe">
             <h3>Referencia</h3>
           </div>
-          <div className="container__body_Rompe">
-            <img
-              src={imageUrl}
-              alt="Referencia"
-              className="view__image_Rompe"
-            />
-          </div>
+          <img
+            src={imageUrl}
+            alt="Referencia"
+            className="view__image_Rompe"
+          />
         </div>
       </div>
     </div>
   );
+
+
 
 
 };

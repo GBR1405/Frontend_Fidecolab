@@ -391,28 +391,6 @@ border: 1px dashed #ccc; /* Solo para debug */
   font-weight: bold;
 }
 
-.help__button {
-  background-color: var(--blue-royal-clr);
-  width: 50%;
-  height: 2.5vmax;
-  color: white;
-  border: none;
-  border-radius: 0.5vmax;
-  cursor: pointer;
-  font-size: 0.9vw;
-  font-weight: 600;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: background-color 0.3s;
-  margin-top: auto;
-}
-
-.help-button:hover {
-  background-color: #3a5a9f;
-}
 
 /* Estilos para el modal de ayuda */
 .help-modal-container {

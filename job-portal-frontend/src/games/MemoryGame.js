@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useParams } from 'react-router-dom';
-import '../styles/games.css'; // Archivo de estilos (te lo proporciono después)
+import '../styles/games.css'; 
 
 const MemoryGame = ({ gameConfig, onGameComplete }) => {
   const { partidaId, equipoNumero } = useParams();

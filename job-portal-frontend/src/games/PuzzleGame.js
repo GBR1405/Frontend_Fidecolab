@@ -206,45 +206,52 @@ const PuzzleGame = ({ gameConfig }) => {
     );
   };
 
-  return (    
-    <div className="container__puzzle">   
-      <div className="game__puzzle">
-        <div className="puzzle__canvas"
-          style={{
-              width: `${pieceSize * gridSize}px`,
-              height: `${pieceSize * gridSize}px`
-            }}>
-          {pieces.map(renderPiece)}
-        </div>
-      </div> 
-      <div className="game__details">
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Movimientos</h3>
-            </div>
-            <div className="container__body">
-                <span>{swapsLeft}</span>
-            </div>
-        </div>
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Progreso</h3>
-            </div>
-            <div className="container__body">
-                <span>{progress}%</span>
-            </div>
-        </div>
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Referencia</h3>
-            </div>
-            <div className="container__body">
-                <img src={imageUrl} alt="Referencia" className="view__image" />
-            </div>
-        </div>                    
+  return (
+  <div className="container__puzzle_Rompe">
+    <div className="game__puzzle_Rompe">
+      <div
+        className="puzzle__canvas_Rompe"
+        style={{
+          width: `${pieceSize * gridSize}px`,
+          height: `${pieceSize * gridSize}px`
+        }}
+      >
+        {pieces.map(renderPiece)}
       </div>
     </div>
-  );
+    <div className="game__details_Rompe">
+      <div className="details__container_Rompe">
+        <div className="container__header_Rompe">
+          <h3>Movimientos</h3>
+        </div>
+        <div className="container__body_Rompe">
+          <span>{swapsLeft}</span>
+        </div>
+      </div>
+      <div className="details__container_Rompe">
+        <div className="container__header_Rompe">
+          <h3>Progreso</h3>
+        </div>
+        <div className="container__body_Rompe">
+          <span>{progress}%</span>
+        </div>
+      </div>
+      <div className="details__container_Rompe">
+        <div className="container__header_Rompe">
+          <h3>Referencia</h3>
+        </div>
+        <div className="container__body_Rompe">
+          <img
+            src={imageUrl}
+            alt="Referencia"
+            className="view__image_Rompe"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 };
 
 export default PuzzleGame;

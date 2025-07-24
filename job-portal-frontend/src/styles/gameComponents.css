@@ -186,102 +186,87 @@ html{
 }
 
 /* Contenedor de puzzle */
-.container__puzzle{
-    position: relative;
-    background-color: var(--white-smoke-clr);
-    box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
-    border-radius: 1em;
-    height: 100%;
-    width: 100%;
-    padding: 15px;
-
-    display: grid;
-    grid-template-columns: 600px auto;
-    justify-items: center;
-    align-items: center;
-
-    .game__puzzle{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .puzzle__canvas{
-        position: relative;
-        background-color: transparent;
-        border: none;
-        flex-shrink: 0;
-    }
-
-    .game__details{
-        position: relative;
-        height: 100%;
-        width: 100%;
-        padding-left: 15px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .details__container{    
-        height: 10vmin;
-        display: grid;
-        grid-template-rows: 2vmax 1fr;
-        border-radius: 1em;
-        box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
-    }
-
-    .container__header{
-        border-bottom: rgba(0, 0, 0, 0.03) 1px solid;
-        border-radius: 1em 1em 0em 0em;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        h3{
-            color: var(--blue-royal-clr);
-            font-size: 2vmin;
-        }
-    }
-
-    .container__body{    
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-
-        span{
-            font-size: 1.7vmin;
-            font-weight: 400;
-            text-align: center;
-            line-height: normal;
-        }
-    }
-
-    .details__container:last-child{
-        position: absolute;
-        z-index: 1;
-        height: 14vmax;
-        width: 16vw;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-
-        .container__body{
-            width: 100%;
-            height: 100%;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    }
-
-    .view__image{
-        width: 16vw;
-        height: 12vmax;
-        border-radius: 0em 0em 1em 1em;
-    }
+.container__puzzle_Rompe {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--white-smoke-clr);
+  box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 1em;
+  height: 100%;
+  width: 100%;
+  padding: 15px;
+  gap: 30px;
+  position: relative;
 }
+
+.game__puzzle_Rompe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.puzzle__canvas_Rompe {
+  position: relative;
+  background-color: transparent;
+  border: none;
+  flex-shrink: 0;
+}
+
+.game__details_Rompe {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 15px;
+  height: 100%;
+  width: 16vw;
+}
+
+.details__container_Rompe {
+  display: grid;
+  grid-template-rows: 2vmax 1fr;
+  border-radius: 1em;
+  box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+  background-color: white;
+  overflow: hidden;
+}
+
+.container__header_Rompe {
+  border-bottom: rgba(0, 0, 0, 0.03) 1px solid;
+  border-radius: 1em 1em 0em 0em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container__header_Rompe h3 {
+  color: var(--blue-royal-clr);
+  font-size: 2vmin;
+}
+
+.container__body_Rompe {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.container__body_Rompe span {
+  font-size: 1.7vmin;
+  font-weight: 400;
+  text-align: center;
+  line-height: normal;
+}
+
+.view__image_Rompe {
+  width: 100%;
+  height: auto;
+  max-height: 12vmax;
+  border-radius: 0em 0em 1em 1em;
+  object-fit: contain;
+}
+
 
 /* Contenedor de dibujo */
 .drawing__container {
@@ -1138,4 +1123,12 @@ html{
             transform: scale(0.5);
         }
     }    
+}
+
+.centered-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
 }

@@ -281,51 +281,6 @@ html{
         height: 12vmax;
         border-radius: 0em 0em 1em 1em;
     }
-
-    @media (max-height: 730px), (max-width: 1200px){
-        
-        grid-template-columns: 480px auto;
-
-        .game__puzzle{
-            height: 480px;
-            width: 480px;
-            overflow: hidden;
-        }
-
-        .puzzle__canvas{
-            transform: scale(0.8);
-        }
-    }
-
-    @media (max-height: 620px), (max-width: 1000px){
-
-        grid-template-columns: 360px auto;
-
-        .game__puzzle{
-            height: 360px;
-            width: 360px;
-            overflow: hidden;
-        }
-
-        .puzzle__canvas{
-            transform: scale(0.6);
-        }
-    }
-
-    @media (max-height: 580px), (max-width: 800px){
-
-        grid-template-columns: 300px auto;
-
-        .game__puzzle{
-            height: 300px;
-            width: 300px;
-            overflow: hidden;
-        }
-
-        .puzzle__canvas{
-            transform: scale(0.5);
-        }
-    }
 }
 
 /* Contenedor de dibujo */
@@ -542,10 +497,6 @@ html{
       align-items: center;
     }
 
-    .color-picker-toggle{
-
-    }
-
     .tools__section{
         height: 100%;
         width: 100%;
@@ -583,51 +534,6 @@ html{
     .tank__low {
       background-color: #ffcc00;
     }       
-
-    @media (max-height: 730px), (max-width: 1600px){
-
-        grid-template-columns: 640px auto;
-
-        .container__canvas{
-            width: 640px;
-            height: 480px;
-            overflow: hidden;
-        }
-
-        .canvas__drawing{
-            transform: scale(0.8);
-        }        
-    }
-
-    @media (max-height: 600px), (max-width: 1170px){
-
-        grid-template-columns: 480px auto;
-
-        .container__canvas{
-            width: 480px;
-            height: 360px;
-            overflow: hidden;
-        }
-
-        .canvas__drawing{
-            transform: scale(0.6);
-        }        
-    }
-
-    @media (max-width: 980px){
-
-        grid-template-columns: 400px auto;
-
-        .container__canvas{
-            width: 400px;
-            height: 300px;
-            overflow: hidden;
-        }
-
-        .canvas__drawing{
-            transform: scale(0.5);
-        }        
-    }
 }
 
 /* Contenedor de ahorcado */
@@ -919,43 +825,7 @@ html{
     @keyframes votacionBrillo {
       from { background-color: rgba(30,144,255, 0.03); }
       to   { background-color: rgba(30,144,255, 0.07); }
-    }
-
-    @media (max-height: 500px), (max-width: 1300px){
-        .container__canvas{
-            height: 280px;
-            width: 200px;
-            overflow: hidden;
-        }
-
-        .canvas__robot{
-            transform: scale(0.8);
-        }
-    }
-
-    @media (max-width: 1130px){
-        .container__canvas{
-            height: 210px;
-            width: 150px;
-            overflow: hidden;
-        }
-
-        .canvas__robot{
-            transform: scale(0.6);
-        }
-    }
-
-    @media (max-width: 900px){
-        .container__canvas{
-            height: 180px;
-            width: 130px;
-            overflow: hidden;
-        }
-
-        .canvas__robot{
-            transform: scale(0.5);
-        }
-    }
+    }    
 }
 
 /* MemoryGame.css */
@@ -1141,4 +1011,131 @@ html{
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+}
+
+@media (max-height: 730px), (max-width: 1200px){
+  .container__puzzle{
+    grid-template-columns: 480px auto;
+
+    .game__puzzle{
+        height: 480px;
+        width: 480px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.8);
+    }
+  }          
+}
+
+@media (max-height: 620px), (max-width: 1000px){
+  .container__puzzle{
+    grid-template-columns: 360px auto;
+
+    .game__puzzle{
+        height: 360px;
+        width: 360px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.6);
+    }
+
+  }      
+}
+
+@media (max-height: 580px), (max-width: 800px){
+  .container__puzzle{
+    grid-template-columns: 300px auto;
+
+    .game__puzzle{
+        height: 300px;
+        width: 300px;
+        overflow: hidden;
+    }
+
+    .puzzle__canvas{
+        transform: scale(0.5);
+    }
+  }  
+}
+
+@media (max-height: 730px), (max-width: 1600px){
+  .drawing__container{
+    grid-template-columns: 640px auto;
+    .container__canvas{
+        width: 640px;
+        height: 480px;
+        overflow: hidden;
+    }
+    .canvas__drawing{
+        transform: scale(0.8);
+    }  
+  }       
+}
+
+@media (max-height: 600px), (max-width: 1170px){
+  .drawing__container{
+    grid-template-columns: 480px auto;
+    .container__canvas{
+        width: 480px;
+        height: 360px;
+        overflow: hidden;
+    }
+    .canvas__drawing{
+        transform: scale(0.6);
+    }      
+  }      
+}
+
+@media (max-width: 980px){
+  .drawing__container{
+    grid-template-columns: 400px auto;
+    .container__canvas{
+        width: 400px;
+        height: 300px;
+        overflow: hidden;
+    }
+    .canvas__drawing{
+        transform: scale(0.5);
+    } 
+  }           
+}
+
+@media (max-height: 500px), (max-width: 1300px){
+    .container__canvas{
+        height: 280px;
+        width: 200px;
+        overflow: hidden;
+
+        .canvas__robot{
+            transform: scale(0.8);
+        }
+    }    
+}
+
+@media (max-width: 1130px){
+    .container__canvas{
+        height: 210px;
+        width: 150px;
+        overflow: hidden;
+
+        .canvas__robot{
+            transform: scale(0.6);
+        }
+    }    
+}
+
+@media (max-width: 900px){
+    .container__canvas{
+        height: 180px;
+        width: 130px;
+        overflow: hidden;
+
+        .canvas__robot{
+            transform: scale(0.5);
+        }
+    }    
 }

@@ -206,36 +206,42 @@ const PuzzleGame = ({ gameConfig }) => {
     );
   };
 
-  return (
-    <div className="puzzle-game">
-      <div className="top-bar">
-        <h2 className="game-title">Rompecabezas</h2>
-        <div className="progress-box">
-          <span className="progress-label">Progreso:</span>
-          <span className="progress-value">{progress}%</span>
-        </div>
-      </div>
-
-      <div className="main-layout">
-        <div className="left-panel">
-          <div className="reference-image">
-            <img src={imageUrl} alt="Referencia" className="ref-img" />
-            <p className="ref-label">Imagen de referencia</p>
-          </div>
-          <div className="swaps-box">
-            <p><strong>Swaps restantes:</strong> {swapsLeft}</p>
-          </div>
-        </div>
-
-        <div
-          className="puzzle-container"
+  return (    
+    <div className="container__puzzle">   
+      <div className="game__puzzle">
+        <div className="puzzle__canvas"
           style={{
-            width: `${pieceSize * gridSize}px`,
-            height: `${pieceSize * gridSize}px`
-          }}
-        >
+              width: `${pieceSize * gridSize}px`,
+              height: `${pieceSize * gridSize}px`
+            }}>
           {pieces.map(renderPiece)}
         </div>
+      </div> 
+      <div className="game__details">
+        <div className="details__container">                    
+            <div className="container__header">
+                <h3>Movimientos</h3>
+            </div>
+            <div className="container__body">
+                <span>{swapsLeft}</span>
+            </div>
+        </div>
+        <div className="details__container">                    
+            <div className="container__header">
+                <h3>Progreso</h3>
+            </div>
+            <div className="container__body">
+                <span>{progress}%</span>
+            </div>
+        </div>
+        <div className="details__container">                    
+            <div className="container__header">
+                <h3>Referencia</h3>
+            </div>
+            <div className="container__body">
+                <img src={imageUrl} alt="Referencia" className="view__image" />
+            </div>
+        </div>                    
       </div>
     </div>
   );

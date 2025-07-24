@@ -846,6 +846,7 @@ useEffect(() => {
                       }}
                     />
                   ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
+                    <ErrorBoundary>
                     <PuzzleGame 
                       key={`puzzle-${partidaId}-${equipoNumero}`}
                       gameConfig={currentGameInfo} 
@@ -853,6 +854,7 @@ useEffect(() => {
                         console.log('Rompecabezas completado:', result);
                       }}
                     />
+                    </ErrorBoundary>
                   ) : (
                     <div className="game-not-implemented">
                       <h3>Juego {currentGameInfo.name} en desarrollo</h3>

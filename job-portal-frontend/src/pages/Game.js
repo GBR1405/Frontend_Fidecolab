@@ -253,29 +253,37 @@ function randomHSL() {
   // Actualizar cursor remoto
   const updateCursor = (userId, logicalX, logicalY) => {
     if (userId === localStorage.getItem('userId')) return;
+
     const container = cursorContainerRef.current;
     if (!container) return;
+
     const rect = container.getBoundingClientRect();
 
-    const relX = logicalX / LOGICAL_WIDTH;
-    const relY = logicalY / LOGICAL_HEIGHT;
+    // Escalamos la coordenada lógica al tamaño real del contenedor
+    const relativeX = logicalX / LOGICAL_WIDTH;
+    const relativeY = logicalY / LOGICAL_HEIGHT;
 
-    const x = Math.round(relX * rect.width * window.devicePixelRatio) / window.devicePixelRatio;
-    const y = Math.round(relY * rect.height * window.devicePixelRatio) / window.devicePixelRatio;
+    const x = relativeX * rect.width;
+    const y = relativeY * rect.height;
 
     let cursor = document.getElementById(`cursor-${userId}`);
+
     if (!cursor) {
       cursor = document.createElement('div');
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
-      const color = randomHSL();
+
+      const color = randomHSL(); // puedes usar hash para que sea consistente
       cursor.style.setProperty('--cursor-color', color);
+
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
       nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
+
       container.appendChild(cursor);
     }
+
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
   };
@@ -297,19 +305,22 @@ function randomHSL() {
   const handleMouseMove = (e) => {
     const container = cursorContainerRef.current;
     if (!container || !socket) return;
+
     const rect = container.getBoundingClientRect();
 
-    const relX = (e.clientX - rect.left) / rect.width;
-    const relY = (e.clientY - rect.top) / rect.height;
+    // Posición del mouse relativa al contenedor
+    const relativeX = (e.clientX - rect.left) / rect.width;
+    const relativeY = (e.clientY - rect.top) / rect.height;
 
-    const logicalX = relX * LOGICAL_WIDTH;
-    const logicalY = relY * LOGICAL_HEIGHT;
+    // Escalamos al espacio lógico
+    const logicalX = relativeX * LOGICAL_WIDTH;
+    const logicalY = relativeY * LOGICAL_HEIGHT;
 
     socket.emit('SendMousePosition', {
       roomId: `team-${partidaId}-${equipoNumero}`,
       userId,
       x: logicalX,
-      y: logicalY
+      y: logicalY,
     });
   };
 

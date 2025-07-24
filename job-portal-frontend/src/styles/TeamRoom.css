@@ -280,17 +280,6 @@ border: 1px dashed #ccc; /* Solo para debug */
   justify-items: center;
 }
 
-.game-container {
-  background-color: var(--white-smoke-clr);
-  box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
-  border-radius: 1em;
-  width: 100%;
-
-  display: grid;
-  grid-template-rows: 4vmax auto;
-  padding: 1vmax;
-}
-
 .team-room-header {
   display: flex;
   justify-content: space-between;
@@ -318,79 +307,6 @@ border: 1px dashed #ccc; /* Solo para debug */
   position: relative;
   overflow: hidden;
 }
-
-.info__panel {
-  flex: 1;
-  display: flex;
-  width: 100%;
-  border-radius: 1em;
-  background-color: var(--white-smoke-clr);
-  box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
-  flex-direction: column;
-  align-items: center;
-  padding: 1vmax;
-  gap: 1vmax;
-}
-
-.info__section {
-  text-align: center;
-  background-color: white;
-  box-shadow: 1px 1px 4px 2px rgba(0, 0, 0, 0.02);
-  border-radius: 1em;
-  width: 100%;
-  padding: 2vh;
-
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 1vh;
-}
-
-.section__header{
-  h3{
-    font-size: 1vw;
-    font-weight: bold;
-    color: var(--blue-royal-clr);
-  }  
-}
-
-.game__info {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5vh;
-
-  p{
-    font-size: 0.8vw;
-    font-weight: 400;
-  }
-}
-
-.game__details{
-  display: flex;
-  flex-direction: column;
-  gap: 1vh;
-}
-
-.section__members {
-  list-style-type: none; 
-  display: flex;
-  flex-direction: column;
-  gap: 1vh;
-
-  li {
-    font-style: none;
-    text-align: center;
-
-    font-size: 0.8vw;
-    font-weight: 400;
-  }
-}
-
-.time-display-container{
-  font-size: 0.8vw;
-  font-weight: 400;
-  font-weight: bold;
-}
-
 
 /* Estilos para el modal de ayuda */
 .help-modal-container {
@@ -693,6 +609,7 @@ border: 1px dashed #ccc; /* Solo para debug */
   backface-visibility: hidden;
   perspective: 1000px;
   will-change: filter, opacity;
+  height: 100%;
 }
 
 .finish-overlay {

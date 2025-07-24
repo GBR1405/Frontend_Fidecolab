@@ -251,8 +251,11 @@ useEffect(() => {
     const rect = container.getBoundingClientRect();
     
     // Calcular posición absoluta en píxeles
-    const x = normalizedX * window.innerWidth;
-    const y = normalizedY * window.innerHeight;
+    const gamePuzzle = document.querySelector('.game__puzzle_Rompe');
+    const scale = parseFloat(getComputedStyle(gamePuzzle).transform.match(/matrix\(([^,]+)/)?.[1] || 1);
+
+    const x = normalizedX * window.innerWidth / scale;
+    const y = normalizedY * window.innerHeight / scale;
     
     let cursor = document.getElementById(`cursor-${userId}`);
     

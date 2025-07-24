@@ -240,39 +240,46 @@ useEffect(() => {
   }
 }, [currentGameInfo]);
 
+function randomHSL() {
+  const hue = Math.floor(Math.random() * 360); // 0 a 359 grados
+  const saturation = 70; // porcentaje de saturación (colores vivos)
+  const lightness = 50;  // porcentaje de luminosidad (tono medio)
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
   // Actualizar cursor remoto
   const updateCursor = (userId, normalizedX, normalizedY) => {
-  if (userId === localStorage.getItem('userId')) return;
+    if (userId === localStorage.getItem('userId')) return;
 
-  const container = cursorContainerRef.current;
-  if (!container) return;
+    const container = cursorContainerRef.current;
+    if (!container) return;
 
-  const rect = container.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
 
-  // La posición es el centro del cursor, para coincidir con el transform CSS
-  const x = normalizedX * rect.width;
-  const y = normalizedY * rect.height;
+    // Multiplicamos por el tamaño real del contenedor, no de la ventana
+    const x = normalizedX * rect.width;
+    const y = normalizedY * rect.height;
 
-  let cursor = document.getElementById(`cursor-${userId}`);
+    let cursor = document.getElementById(`cursor-${userId}`);
+    if (!cursor) {
+      cursor = document.createElement('div');
+      cursor.id = `cursor-${userId}`;
+      cursor.className = 'remote-cursor';
 
-  if (!cursor) {
-    cursor = document.createElement('div');
-    cursor.id = `cursor-${userId}`;
-    cursor.className = 'remote-cursor';
+      const color = randomHSL();
+      cursor.style.setProperty('--cursor-color', color);
 
-    // color aleatorio o fijo según prefieras
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cursor-name';
+      nameSpan.textContent = getUserName(userId);
+      cursor.appendChild(nameSpan);
 
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'cursor-name';
-    nameSpan.textContent = getUserName(userId);
-    cursor.appendChild(nameSpan);
+      container.appendChild(cursor);
+    }
 
-    container.appendChild(cursor);
-  }
-
-  cursor.style.left = `${x}px`;
-  cursor.style.top = `${y}px`;
-};
+    cursor.style.left = `${x}px`;
+    cursor.style.top = `${y}px`;
+  };
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
@@ -288,23 +295,26 @@ useEffect(() => {
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
-  if (!cursorContainerRef.current || !socket) return;
+    const container = cursorContainerRef.current;
+    if (!container) return;
 
-  const rect = cursorContainerRef.current.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
 
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+    // Usamos coordenadas relativas al contenedor, que es el área visible real
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-  const normalizedX = x / rect.width;
-  const normalizedY = y / rect.height;
+    const normalizedX = x / rect.width;
+    const normalizedY = y / rect.height;
 
-  socket.emit('SendMousePosition', { 
-    roomId: `team-${partidaId}-${equipoNumero}`,
-    userId,
-    x: normalizedX,
-    y: normalizedY
-  });
-};
+    socket.emit('SendMousePosition', {
+      roomId: `team-${partidaId}-${equipoNumero}`,
+      userId,
+      x: normalizedX,
+      y: normalizedY,
+    });
+  };
+
 
   // Configuración inicial y listeners
   useEffect(() => {

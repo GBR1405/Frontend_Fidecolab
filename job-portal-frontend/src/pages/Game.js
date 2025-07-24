@@ -249,7 +249,7 @@ useEffect(() => {
 
   const rect = container.getBoundingClientRect();
 
-  // Convertir posición normalizada a pixeles relativos al contenedor
+  // La posición es el centro del cursor, para coincidir con el transform CSS
   const x = normalizedX * rect.width;
   const y = normalizedY * rect.height;
 
@@ -260,8 +260,7 @@ useEffect(() => {
     cursor.id = `cursor-${userId}`;
     cursor.className = 'remote-cursor';
 
-    const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
-    cursor.style.setProperty('--cursor-color', color);
+    // color aleatorio o fijo según prefieras
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'cursor-name';
@@ -271,7 +270,6 @@ useEffect(() => {
     container.appendChild(cursor);
   }
 
-  // Posicionamos el cursor dentro del contenedor
   cursor.style.left = `${x}px`;
   cursor.style.top = `${y}px`;
 };
@@ -294,11 +292,9 @@ useEffect(() => {
 
   const rect = cursorContainerRef.current.getBoundingClientRect();
 
-  // Coordenadas relativas dentro del contenedor
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  // Normalizamos con respecto al contenedor (0 a 1)
   const normalizedX = x / rect.width;
   const normalizedY = y / rect.height;
 

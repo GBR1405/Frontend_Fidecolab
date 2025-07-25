@@ -710,8 +710,8 @@ html{
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse {
@@ -921,9 +921,6 @@ html{
   pointer-events: none;
   z-index: 1000;
   transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  flex-direction: row;
 }
 
 .cursor-content {
@@ -944,7 +941,6 @@ html{
   height: 12px;
   border-radius: 50%;
   background: var(--cursor-color);
-  box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
 /* Halo alrededor del punto */
@@ -963,6 +959,7 @@ html{
 .cursor-avatar {
   width: 20px;
   height: 20px;
+  border-radius: 50%;
   background: #fff;
 }
 

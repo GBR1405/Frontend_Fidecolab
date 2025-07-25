@@ -207,7 +207,31 @@ const PuzzleGame = ({ gameConfig }) => {
   };
 
   return (    
-    <div className="container__puzzle">   
+    <div className="container__puzzle">
+      <div className="details__group group--first">
+        <p>Número de grupo</p>
+        <span>{equipoNumero}</span>
+      </div>
+      <div className="details__group group--second">
+        <p>Progreso</p>
+        <span>{progress}%</span>
+      </div>
+      <div className="details__container container--first">                    
+          <div className="container__header">
+              <h3>Referencia</h3>
+          </div>
+          <div className="container__body">
+              <img src={imageUrl} alt="Referencia" className="view__image" />
+          </div>
+      </div>      
+      <div className="details__container container--second">                    
+          <div className="container__header">
+              <h3>Movimientos</h3>
+          </div>
+          <div className="container__body">
+            <span>{swapsLeft}</span>
+          </div>
+      </div>          
       <div className="game__puzzle">
         <div className="puzzle__canvas"
           style={{
@@ -216,33 +240,7 @@ const PuzzleGame = ({ gameConfig }) => {
             }}>
           {pieces.map(renderPiece)}
         </div>
-      </div> 
-      <div className="game__details">
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Movimientos</h3>
-            </div>
-            <div className="container__body">
-                <span>{swapsLeft}</span>
-            </div>
-        </div>
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Progreso</h3>
-            </div>
-            <div className="container__body">
-                <span>{progress}%</span>
-            </div>
-        </div>
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Referencia</h3>
-            </div>
-            <div className="container__body">
-                <img src={imageUrl} alt="Referencia" className="view__image" />
-            </div>
-        </div>                    
-      </div>
+      </div>                       
     </div>
   );
 };

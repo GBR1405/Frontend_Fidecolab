@@ -695,17 +695,20 @@ const clearLocalDrawing = () => {
           </Stage>
         </div>
       </div>
-      <div className="container__details">
-        <div className="details__container">                    
-            <div className="container__header">
-                <h3>Tema:</h3>
-            </div>
-            <div className="container__body">
-                <span>{currentGameInfo?.tema || 'Sin tema'}</span>
-            </div>
-        </div>
-        {/* Barra de herramientas */}
-        <div className="drawing__tools">
+      <div className="details__group">
+        <p>Número de grupo</p>
+        <span>{equipoNumero}</span>
+      </div>      
+      <div className="container__theme">                    
+          <div className="container__header">
+              <h3>Tema:</h3>
+          </div>
+          <div className="container__body">
+              <span>{currentGameInfo?.tema || 'Sin tema'}</span>
+          </div>
+      </div>      
+      {/* Barra de herramientas */}
+      <div className="drawing__tools">
           {/* Sección de colores */}
           <div className="colors-section-extended">
             <div className="color-palette-wide">
@@ -722,22 +725,14 @@ const clearLocalDrawing = () => {
                   ))}
                 </div>
               </div>
-              <div className="custom-color-container">
-                <button 
-                  className="color-picker-toggle"
-                  onClick={toggleColorPicker}
-                  style={{ backgroundColor: color }}
-                  title="Seleccionar color"
+              <div className="custom-color-container">                
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => handleColorSelect(e.target.value)}
+                  className="custom-color-picker-large"
+                  onBlur={() => setShowColorPicker(false)}
                 />
-                {showColorPicker && (
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => handleColorSelect(e.target.value)}
-                    className="custom-color-picker-large"
-                    onBlur={() => setShowColorPicker(false)}
-                  />
-                )}
               </div>
             </div>
           </div>
@@ -782,8 +777,7 @@ const clearLocalDrawing = () => {
             />
             <span className="brush-size-label">{brushSize}px</span>
           </div>
-        </div>
-      </div>      
+      </div>
     </div>
   );
 };

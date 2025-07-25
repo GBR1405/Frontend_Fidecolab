@@ -45,6 +45,8 @@ const Ejemplo = lazy(() => import("./pages/Signup.js"));
 const Canvas = lazy(() => import("./pages/Canvas.js"));
 const PaginSimulacion = lazy(() => import("./pages/FilterPersonalization.js"));
 const Resultados = lazy(() => import("./pages/ResultsTeacher.js"));
+const TeacherHistory = lazy(() => import("./pages/TeacherHistory.js"));
+const StudentHistory = lazy(() => import("./pages/StudentHistory.js"));
 
 // Rutas de administración
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.js"));
@@ -93,6 +95,8 @@ const App = () => {
         <Route path="/test-view" element={<TestView />} />
         <Route path="/ejemplo" element={<Ejemplo />} />
         <Route path="/canvas" element={<Canvas />} />
+        <Route path="/student-history" element={<StudentHistory />} />
+        <Route path="/teacher-history" element={<TeacherHistory />} />
 
         {/* Rutas protegidas para Estudiantes o Profesores */}
         <Route path="/profile" element={<PrivateRoute element={<Profile />} allowedRoles={['Estudiante', 'Profesor']} />} />

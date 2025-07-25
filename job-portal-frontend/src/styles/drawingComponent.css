@@ -13,8 +13,6 @@
   --primary-text-clr: #696F79;
 } 
 
-
-
 /* Contenedor de dibujo */
 .drawing__container {
     position: relative;
@@ -23,19 +21,16 @@
     border-radius: 1em;
     height: 100%;
     width: 100%;
-    padding: 15px;
 
-    display: grid;
-    grid-template-columns: 800px auto;
-    gap: 15px;
-    justify-items: center;
-    align-items: center;
-    
     .container__canvas{
+        position: absolute;
         display: flex;
         justify-content: center;
         align-items: center;
         box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
     }
 
     .canvas__drawing{
@@ -53,14 +48,58 @@
         gap: 15px;
     }
 
-    .details__container{
+    .details__space{
+      display: flex;
+      flex-direction: column;
+      width: 55%;  
+      gap: 15px;
+    }
+
+    .details__group {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 15px;
+        height: 4.5vmax;
+        width: 13vmax;
+        border-radius: 1em;
+        background-color: white;
+        box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+
+        display: grid;
+        grid-template-columns: 1fr 25%;
+        align-items: center;
+        justify-items: center;
+
+        font-size: 0.9vmax;
+        color: var(--blue-royal-clr);
+        font-weight: bold;
+
+        span{
+            width: 100%;
+            height: 100%;
+            border-left: rgba(0, 0, 0, 0.03) 1px solid;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    .container__theme{
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+
+      margin: 15px;
+      height: 12vmax;
+      width: 13vmax;
         background-color: white;
         display: grid;
         grid-template-rows: 2vmax 1fr;
         border-radius: 1em;
         box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
-        height: 15%;
-        width: 60%;  
     }
 
     .container__header{
@@ -72,7 +111,7 @@
 
         h3{
             color: var(--blue-royal-clr);
-            font-size: 2vmin;
+            font-size: 0.9vmax;
         }
     }
 
@@ -84,8 +123,8 @@
         justify-content: center;
 
         span{
-            font-size: 1.7vmin;
-            font-weight: 400;
+            font-size: 0.9vmax;
+            font-weight: 500;
             text-align: center;
             line-height: normal;
         }
@@ -93,6 +132,11 @@
 
     /* Panel de herramientas extendido */
     .drawing__tools {
+      position: absolute;
+      right: 0;
+      top: 0;
+      margin: 15px;
+
       display: grid;
       grid-template-rows: 45% 40% 10%;  
       gap: 0.8vmax;
@@ -100,7 +144,7 @@
       align-items: center;
       padding: 0.5vw;
       background: white;
-      height: 90%;
+      height: 85%;
       width: 5vmax;
       border-radius: 1em;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -268,11 +312,7 @@
     }       
 }
 
-
-
-@media (max-height: 730px), (max-width: 1600px){
-  .drawing__container{
-    grid-template-columns: 640px auto;
+@media (max-height: 725px), (max-width: 1800px){
     .container__canvas{
         width: 640px;
         height: 480px;
@@ -281,12 +321,9 @@
     .canvas__drawing{
         transform: scale(0.8);
     }  
-  }       
 }
 
-@media (max-height: 600px), (max-width: 1170px){
-  .drawing__container{
-    grid-template-columns: 480px auto;
+@media (max-height: 610px), (max-width: 1500px){
     .container__canvas{
         width: 480px;
         height: 360px;
@@ -294,13 +331,10 @@
     }
     .canvas__drawing{
         transform: scale(0.6);
-    }      
-  }      
+    }  
 }
 
-@media (max-width: 980px){
-  .drawing__container{
-    grid-template-columns: 400px auto;
+@media (max-width: 1200px){
     .container__canvas{
         width: 400px;
         height: 300px;
@@ -308,6 +342,27 @@
     }
     .canvas__drawing{
         transform: scale(0.5);
-    } 
-  }           
+    }  
+}
+
+@media (max-width: 1040px){
+    .container__canvas{
+        width: 320px;
+        height: 240px;
+        overflow: hidden;
+    }
+    .canvas__drawing{
+        transform: scale(0.4);
+    }  
+}
+
+@media (max-width: 890px){
+    .container__canvas{
+        width: 240px;
+        height: 180px;
+        overflow: hidden;
+    }
+    .canvas__drawing{
+        transform: scale(0.3);
+    }  
 }

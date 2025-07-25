@@ -54,24 +54,18 @@ const Layout = ({ children }) => {
         </ul>
 
         <div className="sidebar__buttom">
-          <img 
-            className="buttom__img" 
-            src="help.png" 
-            alt="Ayuda" 
-            onClick={() => navigate('/help')} 
-            style={{ cursor: 'pointer' }} 
-          />
           <button className="buttom__btn" onClick={handleRedirect}>
             <i className="fa-solid fa-right-from-bracket"></i>
-            <span className="btn__text">Volver a Login</span>
+            <span className="btn__text">Regresar</span>
           </button>
         </div>
       </nav>
-
       <main className="main">
         {children}
+        <a className="main__float" href='/help'>
+          <i class="fa-solid fa-question"></i>
+        </a>
       </main>
-
       <script src="https://kit.fontawesome.com/fa4744a987.js" crossOrigin="anonymous"></script>
       <script type="text/javascript" src="js/app.js" defer></script>
     </div>

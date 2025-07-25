@@ -9,16 +9,12 @@ import Swal from 'sweetalert2';
 import "../styles/TransicionesSimulacion.css";
 import ErrorBoundary from '../LN/ErrorBundary';
 import Cookies from "js-cookie";
-import "../styles/gameComponents.css";
 
 import MemoryGame from '../games/MemoryGame';
 import HangmanGame from '../games/HangmanGame';
 import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
 import DrawingDemoModal from '../games/DrawingDemoModal';
-
-const LOGICAL_WIDTH = 1920;
-const LOGICAL_HEIGHT = 1080;
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
@@ -243,51 +239,42 @@ useEffect(() => {
   }
 }, [currentGameInfo]);
 
-function randomHSL() {
-  const hue = Math.floor(Math.random() * 360); // 0 a 359 grados
-  const saturation = 70; // porcentaje de saturación (colores vivos)
-  const lightness = 50;  // porcentaje de luminosidad (tono medio)
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
-
   // Actualizar cursor remoto
-  const updateCursor = (userId, logicalX, logicalY) => {
+  const updateCursor = (userId, normalizedX, normalizedY) => {
     if (userId === localStorage.getItem('userId')) return;
-
+    
     const container = cursorContainerRef.current;
     if (!container) return;
-
+    
+    // Obtener posición absoluta del contenedor
     const rect = container.getBoundingClientRect();
-
-    // Escalamos la coordenada lógica al tamaño real del contenedor
-    const relativeX = logicalX / LOGICAL_WIDTH;
-    const relativeY = logicalY / LOGICAL_HEIGHT;
-
-    const x = relativeX * rect.width;
-    const y = relativeY * rect.height;
-
+    
+    // Calcular posición absoluta en píxeles
+    const x = normalizedX * window.innerWidth;
+    const y = normalizedY * window.innerHeight;
+    
     let cursor = document.getElementById(`cursor-${userId}`);
-
+    
     if (!cursor) {
       cursor = document.createElement('div');
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
-
-      const color = randomHSL(); // puedes usar hash para que sea consistente
+      
+      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
       cursor.style.setProperty('--cursor-color', color);
-
+      
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
       nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
-
+      
       container.appendChild(cursor);
     }
-
+  
+    // Aplicar posición absoluta con transform
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
   };
-
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
@@ -303,28 +290,18 @@ function randomHSL() {
 
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
-    const container = cursorContainerRef.current;
-    if (!container || !socket) return;
+    if (!cursorContainerRef.current || !socket) return;
 
-    const rect = container.getBoundingClientRect();
+    const normalizedX = e.clientX / window.innerWidth;
+    const normalizedY = e.clientY / window.innerHeight;
 
-    // Posición del mouse relativa al contenedor
-    const relativeX = (e.clientX - rect.left) / rect.width;
-    const relativeY = (e.clientY - rect.top) / rect.height;
-
-    // Escalamos al espacio lógico
-    const logicalX = relativeX * LOGICAL_WIDTH;
-    const logicalY = relativeY * LOGICAL_HEIGHT;
-
-    socket.emit('SendMousePosition', {
+    socket.emit('SendMousePosition', { 
       roomId: `team-${partidaId}-${equipoNumero}`,
       userId,
-      x: logicalX,
-      y: logicalY,
+      x: normalizedX,
+      y: normalizedY
     });
   };
-
-
 
   // Configuración inicial y listeners
   useEffect(() => {
@@ -940,7 +917,7 @@ function randomHSL() {
               </div>
               <div className="info__panel">                    
                   <div className="panel__header">
-                      <h3>Grupo: {equipoNumero}</h3>
+                      <h3>Miembros</h3>
                   </div>
                   <div className="panel__body">
                       {teamMembers.map((member, index) => (

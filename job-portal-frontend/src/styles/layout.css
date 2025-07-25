@@ -90,7 +90,7 @@ html{
     text-wrap: nowrap; /* Hace que el contenido se desborde hacia afuera */
 
     display: grid;
-    grid-template-rows: 10vh 50vh 40vh;
+    grid-template-rows: 10vh 76vh 14vh;
   }
   
   .sidebar i{
@@ -149,16 +149,9 @@ html{
   }
   
   .sidebar__buttom{
-    height: 40vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3vh;
-  }
-  
-  .buttom__img{
-    max-width: 100%;
-    height: 25vh;
   }
   
   .buttom__btn{
@@ -384,5 +377,27 @@ html{
     margin-left: 10px;
     font-size: 16px;
   }  
+  
+  .main__float{
+    text-decoration: none;
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 40px;
+    right: 40px;
+    background-color: var(--blue-royal-clr);
+    color: white;
+    border-radius: 50px;
+    font-size: 30px;
+    box-shadow: 2px 2px 3px #999;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .main__float:hover{
+    background-color: var(--dark-royal-clr);
+  }
 }
 

@@ -12,6 +12,184 @@
   --primary-text-clr: #696F79;
 }
 
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html{
+    font-family: "Poppins", serif;
+    line-height: 1.5rem;
+    color: var(--primary-text-clr);
+    background-color: var(--white-smoke-clr);
+}
+
+.body__teamroom{
+    height: 100vh;
+    width: 100vw;
+    padding: 15px;
+}
+
+.game-container{
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.teamroom__container{
+    border-radius: 1em;
+    padding: 30px;
+    background-color: var(--white-clr);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 20%;
+    gap: 30px;
+}
+
+.container__info{
+    width: 100%;
+    height: 100%;
+    border-radius: 1em;
+    background-color: var(--white-smoke-clr);
+    box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
+    display: grid;
+    grid-template-rows: 6% 9% 14% 11% 11% 23% 11%;
+    padding: 15px;
+    gap: 2.5%; /*15%*/
+}
+
+.info__game{
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 25% 1fr;
+    border-radius: 1em;
+    box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+}
+
+.game__icon{
+    width: 100%;
+    height: 100%;
+    background-color: var(--blue-royal-clr);
+    border-radius: 1em;    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    span{
+        font-size: 3.5vmin;
+    }
+}
+
+.game__title{
+    width: 100%;
+    height: 100%;
+    color: var(--blue-royal-clr);
+    font-size: 2vmin;
+    font-weight: bold;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info__panel{    
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 2vmax 1fr;
+    border-radius: 1em;
+    box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
+}
+
+.panel__header{
+    border-bottom: rgba(0, 0, 0, 0.03) 1px solid;
+    border-radius: 1em 1em 0em 0em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    h3{
+        color: var(--blue-royal-clr);
+        font-size: 2vmin;
+    }
+}
+
+.panel__body{    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 1.7vmin;
+    font-weight: 400;
+    text-align: center;
+    line-height: normal;
+    padding-inline: 10%;
+}
+
+.body__row{
+    height: 100%;  
+    width: 100%;  
+    border-bottom: rgba(0, 0, 0, 0.03) 1px solid;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.body__row:last-child{
+    border-bottom: none;
+}
+
+.info__logo{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.logo__source {
+    width: 6.5vmin;
+}
+
+.logo__text{
+    color: var(--blue-royal-clr);
+    font-size: 2.4vmin;
+    font-weight: bold;
+}
+
+.help__button{
+    all: unset;
+    position: absolute;
+    background-color: var(--blue-royal-clr);
+    width: 8vmax;
+    height: 3vmax;
+    color: white;
+    border-radius: 0.5vmax;
+    cursor: pointer;
+    font-size: 0.9vw;
+    font-weight: 600;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 15px;
+    margin-right: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.time-display-container{
+  font-size: 1.1vmax;
+  font-weight: bold;
+  line-height: normal;
+}
 
 .group-name {
   color: #4a6baf;
@@ -19,12 +197,12 @@
 }
 
 .cursor-container {
-  width: 100%;
-  height: 70vh;
-  min-height: 400px;
-  padding: 10px;             
-  box-sizing: border-box;    
-  border: 1px dashed #ccc;
+position: relative;
+width: 100%;
+height: 70vh; /* Ajusta según necesidad */
+min-height: 400px; /* Altura mínima */
+overflow: hidden; /* Evita desbordamiento */
+border: 1px dashed #ccc; /* Solo para debug */
 }
   
 .remote-cursor {
@@ -33,7 +211,7 @@
   height: 24px;
   pointer-events: none;
   z-index: 1000;
-  transform: translate(-50%, -50%);
+  transform: translate(-12px, -12px);
 }
 
 /* Círculo externo */

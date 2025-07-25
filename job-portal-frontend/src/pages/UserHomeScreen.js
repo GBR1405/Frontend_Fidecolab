@@ -2,13 +2,10 @@ import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import Cookies from "js-cookie";
 import "../styles/HomeScreen.css";
-import useDebugMode from './debug';
 
 function UserHomeScreen() {
   const [error, setError] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
-
-  useDebugMode();
 
   useEffect(() => {
     const token = Cookies.get("IFUser_Info");
@@ -23,8 +20,6 @@ function UserHomeScreen() {
   }, []);
 
   if (error) return <Layout userData={null} />;
-
-  
 
   return (
     <Layout>
@@ -117,21 +112,20 @@ function UserHomeScreen() {
                   <div className="notification-icon">🚧</div>
                   <div className="notification-text">
                     <h3>En desarrollo</h3>
-                    <p>El sistema esta aun en fase Beta, cualquier error por favor comunicarlo lo antes posible</p>
+                    <p>Cualquier error por favor comunicarlo lo antes posible</p>
                   </div>
                 </div>
                 <div className="notification">
                   <div className="notification-icon">🎓</div>
                   <div className="notification-text">
-                    <h3>Sistema hecho para estudiantes</h3>
-                    <p>Hecho por y para estudiantes, trabaja en equipo y mejora en tus habilidades</p>
+                    <h3>Sistema hecho por y para estudiantes</h3>
+                    <p>Trabaja en equipo y mejora en tus habilidades</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        
+        </div>        
       </div>
     </Layout>
   );

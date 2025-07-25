@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useParams } from 'react-router-dom';
-import '../styles/games.css'; 
+import '../styles/games.css'; // Archivo de estilos (te lo proporciono después)
 
 const MemoryGame = ({ gameConfig, onGameComplete }) => {
   const { partidaId, equipoNumero } = useParams();
@@ -171,6 +171,10 @@ const MemoryGame = ({ gameConfig, onGameComplete }) => {
   return (
     <div className="memory__container">
       <div className="memory-game-header">
+        <div className="memory-game-stats">
+          <p>Número de grupo</p>
+          <span>{equipoNumero}</span>
+        </div>
         <div className="memory-game-stats">
           <p>Pares encontrados</p>
           <span>{gameState.matchedPairs}/{gameState.cards.length / 2}</span>

@@ -2230,16 +2230,18 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
         className={`letra-btn 
           ${intentada ? 'intentada' : ''} 
           ${esCorrecta ? 'correcta' : ''}
-          ${deshabilitada ? 'deshabilitada' : ''}
+          ${deshabilitada || intentada ? 'deshabilitada' : ''}
         `}
         onClick={() => votarLetra(letra)}
-        disabled={deshabilitada}
+        disabled={deshabilitada || intentada}
       >
         {letra}
       </button>
-      {votosLetra > 0 && (
+      <div className="voto__container">
+        {votosLetra > 0 && (
         <div className="voto-punto">{'•'.repeat(votosLetra)}</div>
-      )}
+        )}
+      </div>   
     </div>
   );
 });
@@ -2265,18 +2267,20 @@ const HangmanGame = ({ gameConfig, onGameComplete }) => {
         </div>
       </div>
     )}
+    <div className="details__group">
+      <p>Número de grupo</p>
+      <span>{equipoNumero}</span>
+    </div>
     <div className="container__canvas">
         <canvas className="canvas__robot" ref={canvasRef}></canvas>
     </div>      
-    <div className="hangman-right">
+    <div className="hangman__gameplay">
       <div className="hangman-word">
         {renderPalabra()}
-      </div>
-      
+      </div>  
       <div className="hangman-keyboard">
         {renderTeclado()}
-      </div>
-      
+      </div>  
       {gameState.juegoTerminado && (
         <div className={`hangman-result ${gameState.ganado ? 'ganado' : 'perdido'}`}>
           <h3>{gameState.ganado ? '¡Ganaron!' : '¡Perdieron!'}</h3>

@@ -3,7 +3,7 @@ import "../styles/historyComponents.css";
 import Layout from "../components/Layout";
 import Cookies from "js-cookie";
 import axios from "axios";
-import "../styles/modal.css";
+import "../styles/modal.css"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
 
@@ -46,6 +46,7 @@ const StudentHistory = () => {
     fetchHistorial();
   }, [apiURL, token]);
 
+  // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = historial.slice(indexOfFirstItem, indexOfLastItem);
@@ -95,11 +96,7 @@ const StudentHistory = () => {
                     <td className="table__data_H">{item.curso}</td>
                     <td className="table__data_H">{item.equipo}</td>
                     <td className="table__data_H">
-                      <button
-                        className="ver__btn_H"
-                        onClick={() => openModal(item.id)}
-                        title="Ver Resultados"
-                      >
+                      <button className="ver__btn_H" onClick={() => openModal(item.id)} title="Ver Resultados">
                         <FontAwesomeIcon icon={faEye} />
                       </button>
                     </td>
@@ -143,7 +140,7 @@ const StudentHistory = () => {
             >
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
               <iframe
-                src={`${apiURL}/resultados/${selectedResultId}`}
+                src={`/resultados/${selectedResultId}`}
                 title="Resultados"
                 style={{ width: "100%", height: "100%", border: "none" }}
               ></iframe>

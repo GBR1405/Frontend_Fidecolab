@@ -113,104 +113,104 @@ const EditarPerfil = ({ setShowModal }) => {
   width: '800px', // ← AUMENTA EL ANCHO DEL MODAL
   html: `
     <style>
-      .edit-container {
-        display: flex;
-        gap: 30px;
-        margin-top: 20px;
-      }
-      .section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-      }
-      .section-title {
-        font-weight: bold;
-        margin-bottom: 15px;
-        font-size: 1.15rem;
-        text-align: center;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 5px;
-      }
-      .swal2-input-custom {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        margin-bottom: 15px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      .password-row {
-        display: flex;
-        gap: 10px;
-      }
-      .swal2-eye {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        transform: translateY(-50%);
-        cursor: pointer;
-        font-size: 1rem;
-        color: #555;
-      }
-      .swal2-password-container {
-        position: relative;
-        flex: 1;
-      }
-      .divider {
-        width: 1px;
-        background-color: #ccc;
-        margin: 0 10px;
-      }
-      .btn-final {
-        width: 100%;
-        padding: 12px;
-        background: #2a40bf;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: bold;
-        margin-top: 25px;
-      }
-    </style>
+    .edit-container_Profile {
+      display: flex;
+      gap: 30px;
+      margin-top: 20px;
+    }
+    .section_Profile {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .section-title_Profile {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 1.15rem;
+      text-align: center;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 5px;
+    }
+    .swal2-input-custom_Profile {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .password-row_Profile {
+      display: flex;
+      gap: 10px;
+    }
+    .swal2-eye_Profile {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1rem;
+      color: #555;
+    }
+    .swal2-password-container_Profile {
+      position: relative;
+      flex: 1;
+    }
+    .divider_Profile {
+      width: 1px;
+      background-color: #ccc;
+      margin: 0 10px;
+    }
+    .btn-final_Profile {
+      width: 100%;
+      padding: 12px;
+      background: #2a40bf;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 25px;
+    }
+  </style>
 
-    <div class="edit-container">
-      <div class="section">
-        <div class="section-title">Actualizar Género</div>
-        <label>Seleccionar Género:</label>
-        <select id="generoSelect" class="swal2-input-custom">
-          <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>
-          <option value="Mujer" ${genero === "Mujer" ? "selected" : ""}>Mujer</option>
-          <option value="Indefinido" ${genero === "Indefinido" ? "selected" : ""}>Indefinido</option>
-        </select>
+  <div class="edit-container_Profile">
+    <div class="section_Profile">
+      <div class="section-title_Profile">Actualizar Género</div>
+      <label>Seleccionar Género:</label>
+      <select id="generoSelect" class="swal2-input-custom_Profile">
+        <option value="Hombre" ${genero === "Hombre" ? "selected" : ""}>Hombre</option>
+        <option value="Mujer" ${genero === "Mujer" ? "selected" : ""}>Mujer</option>
+        <option value="Indefinido" ${genero === "Indefinido" ? "selected" : ""}>Indefinido</option>
+      </select>
+    </div>
+
+    <div class="divider_Profile"></div>
+
+    <div class="section_Profile">
+      <div class="section-title_Profile">Actualizar Contraseña</div>
+      <label>Contraseña actual:</label>
+      <div class="swal2-password-container_Profile">
+        <input id="passActual" type="password" class="swal2-input-custom_Profile" />
+        <i class="fa fa-eye swal2-eye_Profile" id="eyeActual"></i>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="section">
-        <div class="section-title">Actualizar Contraseña</div>
-        <label>Contraseña actual:</label>
-        <div class="swal2-password-container">
-          <input id="passActual" type="password" class="swal2-input-custom" />
-          <i class="fa fa-eye swal2-eye" id="eyeActual"></i>
+      <div class="password-row_Profile">
+        <div class="swal2-password-container_Profile">
+          <label>Nueva:</label>
+          <input id="passNueva" type="password" class="swal2-input-custom_Profile" />
+          <i class="fa fa-eye swal2-eye_Profile" id="eyeNueva"></i>
         </div>
-
-        <div class="password-row">
-          <div class="swal2-password-container">
-            <label>Nueva:</label>
-            <input id="passNueva" type="password" class="swal2-input-custom" />
-            <i class="fa fa-eye swal2-eye" id="eyeNueva"></i>
-          </div>
-          <div class="swal2-password-container">
-            <label>Confirmar:</label>
-            <input id="passConfirm" type="password" class="swal2-input-custom" />
-            <i class="fa fa-eye swal2-eye" id="eyeConfirm"></i>
-          </div>
+        <div class="swal2-password-container_Profile">
+          <label>Confirmar:</label>
+          <input id="passConfirm" type="password" class="swal2-input-custom_Profile" />
+          <i class="fa fa-eye swal2-eye_Profile" id="eyeConfirm"></i>
         </div>
       </div>
     </div>
+  </div>
 
-    <button id="btnFinal" class="btn-final">Guardar Cambios</button>
+  <button id="btnFinal" class="btn-final_Profile">Guardar Cambios</button>
   `,
   showConfirmButton: false,
   showCloseButton: true,

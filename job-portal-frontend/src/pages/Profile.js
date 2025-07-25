@@ -52,79 +52,79 @@ function Profile() {
 
   return (
     <Layout>
-      <section className="main__container">
-        <div className="container__top">
-          <div className="top__image">
+      <section className="main__container_PF">
+        <div className="container__top_PF">
+          <div className="top__image_PF">
             <img
-              className="image__user"
+              className="image__user_PF"
               src={`https://api.dicebear.com/7.x/identicon/svg?seed=${user.nombre}`}
               alt="User Avatar"
             />
           </div>
-          <div className="top__info">
-            <div className="info__box">
-              <h1 className="info__title">{`${user.nombre} ${user.apellido1} ${user.apellido2}`}</h1>
+          <div className="top__info_PF">
+            <div className="info__box_PF">
+              <h1 className="info__title_PF">{`${user.nombre} ${user.apellido1} ${user.apellido2}`}</h1>
               <span>{user.rol}</span>
             </div>
-            <div className="info__stats">
-              <div className="stats__group">
-                <div className="stats__icon">
+            <div className="info__stats_PF">
+              <div className="stats__group_PF">
+                <div className="stats__icon_PF">
                   <i className="fa-solid fa-flag"></i>
                 </div>
-                <div className="stats__text">
+                <div className="stats__text_PF">
                   <h3>0</h3>
                   <span>Simulaciones realizadas</span>
                 </div>
               </div>
-              <div className="stats__group">
-                <div className="stats__icon">
+              <div className="stats__group_PF">
+                <div className="stats__icon_PF">
                   <i className="fa-solid fa-circle-check"></i>
                 </div>
-                <div className="stats__text">
+                <div className="stats__text_PF">
                   <h3>0</h3>
                   <span>Logros</span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="top__edit">
-            <button className="edit__btn" onClick={() => setShowModal(true)}>
+          <div className="top__edit_PF">
+            <button className="edit__btn_PF" onClick={() => setShowModal(true)}>
               Editar Perfil
             </button>
           </div>
         </div>
-        <div className="container__middle">
-          <div className="container__heading">
+        <div className="container__middle_PF">
+          <div className="container__heading_PF">
             <h3>Información personal</h3>
           </div>
-          <div className="middle__content">
-            <div className="content__info">
-              <label className="info__label">Nombre completo:</label>
-              <input className="info__input" type="text" value={`${user.nombre} ${user.apellido1} ${user.apellido2}`} readOnly />
+          <div className="middle__content_PF">
+            <div className="content__info_PF">
+              <label className="info__label_PF">Nombre completo:</label>
+              <input className="info__input_PF" type="text" value={`${user.nombre} ${user.apellido1} ${user.apellido2}`} readOnly />
             </div>
-            <div className="content__info">
-              <label className="info__label">Curso:</label>
-              <input className="info__input" type="text" value={user.groupName || "N/A"} readOnly />
+            <div className="content__info_PF">
+              <label className="info__label_PF">Curso:</label>
+              <input className="info__input_PF" type="text" value={user.groupName || "N/A"} readOnly />
             </div>
-            <div className="content__info">
-              <label className="info__label">Correo electrónico:</label>
-              <input className="info__input" type="text" value={user.correo} readOnly />
+            <div className="content__info_PF">
+              <label className="info__label_PF">Correo electrónico:</label>
+              <input className="info__input_PF" type="text" value={user.correo} readOnly />
             </div>
-            <div className="content__info">
-              <label className="info__label">Género:</label>
-              <input className="info__input" type="text" value={user.genero} readOnly />
+            <div className="content__info_PF">
+              <label className="info__label_PF">Género:</label>
+              <input className="info__input_PF" type="text" value={user.genero} readOnly />
             </div>
           </div>
         </div>
-        <div className="container__bottom">
-          <div className="container__heading">
+        <div className="container__bottom_PF">
+          <div className="container__heading_PF">
             <h3>Simulaciones recientes</h3>
-            <a className="bottom__text" href="/">
+            <a className="bottom__text_PF" href="/">
               Ver historial completo
             </a>
           </div>
-          <div className="bottom__content">
-            <span className="bottom__text">¡Todavía no has hecho una simulación!</span>
+          <div className="bottom__content_PF">
+            <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
           </div>
         </div>
       </section>

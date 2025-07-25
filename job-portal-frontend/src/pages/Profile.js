@@ -96,15 +96,15 @@ function Profile() {
   }
 
   if (!user || !stats) {
-    return (
-      <Layout>
-        <section className="main__container">
-          <div className="loader"></div>
-          <p className="loading-text">Cargando datos del usuario...</p>
-        </section>
-      </Layout>
-    );
-  }
+  return (
+    <Layout>
+      <section className="main__container_L">
+        <div className="loader_L"></div>
+        <p className="loading-text_L">Cargando datos del usuario...</p>
+      </section>
+    </Layout>
+  );
+}
 
   return (
     <Layout>

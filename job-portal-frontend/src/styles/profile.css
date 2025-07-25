@@ -473,30 +473,50 @@ html{
   transform: translateY(-1px);
 }
 
-/* Contenedor principal (se mantiene igual) */
+/* Contenedor principal */
 .bottom__content_PF {
-  align-items: center;
   background-color: var(--white-smoke-clr);
   border-radius: 1em;
   box-shadow: 0 4px 5px 2px #0000000a;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
   width: 100%;
+  padding: 0;
+  overflow: hidden;
 }
 
-/* Contenedor de la tabla */
-.profile-table-container {
+/* Envoltorio de la tabla */
+.profile-table-wrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 400px;
+  padding: 15px;
+}
+
+/* Scrollbar personalizada */
+.profile-table-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.profile-table-wrapper::-webkit-scrollbar-track {
+  background: var(--white-smoke-clr);
+  border-radius: 5px;
+}
+
+.profile-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--blue-royal-clr);
+  border-radius: 5px;
+}
+
+.profile-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-royal-clr);
 }
 
 /* Estilos de la tabla */
 .profile-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 10px;
-  min-width: 600px;
+  border-spacing: 0 8px;
+  min-width: 100%;
 }
 
 .profile-table th {
@@ -506,22 +526,26 @@ html{
   font-size: 0.9rem;
   font-weight: 600;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .profile-table th:first-child {
-  border-radius: 10px 0 0 10px;
+  border-radius: 8px 0 0 8px;
 }
 
 .profile-table th:last-child {
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 8px 8px 0;
 }
 
 .profile-table-row {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-table-row:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-table td {
@@ -532,11 +556,28 @@ html{
 }
 
 .profile-table td:first-child {
-  border-radius: 10px 0 0 10px;
+  border-radius: 8px 0 0 8px;
 }
 
 .profile-table td:last-child {
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Botones */
+.bottom__link_PF {
+  background: none;
+  border: none;
+  color: var(--blue-royal-clr);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0;
+  margin: 0;
+}
+
+.bottom__link_PF:hover {
+  color: var(--dark-royal-clr);
 }
 
 .profile-table-button {
@@ -560,4 +601,13 @@ html{
 
 .profile-table-button i {
   font-size: 14px;
+}
+
+/* Mensaje cuando no hay simulaciones */
+.bottom__text_PF {
+  display: block;
+  text-align: center;
+  padding: 20px;
+  color: var(--primary-text-clr);
+  font-size: 0.9rem;
 }

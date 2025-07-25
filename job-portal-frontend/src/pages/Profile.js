@@ -32,7 +32,7 @@ function Profile() {
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         setUser(decryptedData);
 
-        const response = await fetch(`${apiUrl}/getFullUserGames`, {
+        const response = await fetch(`${apiUrl}/get-user-games`, {
           method: 'GET',
           credentials: 'include',
           headers: {

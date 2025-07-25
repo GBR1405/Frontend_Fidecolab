@@ -96,7 +96,13 @@ const StudentHistory = () => {
                     <td className="table__data_H">{item.curso}</td>
                     <td className="table__data_H">{item.equipo}</td>
                     <td className="table__data_H">
-                      <button className="ver__btn_H" onClick={() => openModal(item.id)} title="Ver Resultados">
+                      <button
+                        className="ver__btn_H"
+                        onClick={() => {
+                          console.log("Item que se envía al modal:", item); // 👈
+                          openModal(item.id);
+                        }}
+                      >
                         <FontAwesomeIcon icon={faEye} />
                       </button>
                     </td>

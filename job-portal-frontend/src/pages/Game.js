@@ -258,7 +258,6 @@ function randomHSL() {
 
     const rect = container.getBoundingClientRect();
 
-    // Escalamos la coordenada lógica al tamaño real del contenedor
     const relativeX = logicalX / LOGICAL_WIDTH;
     const relativeY = logicalY / LOGICAL_HEIGHT;
 
@@ -272,13 +271,28 @@ function randomHSL() {
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
 
-      const color = randomHSL(); // puedes usar hash para que sea consistente
+      const color = randomHSL();
       cursor.style.setProperty('--cursor-color', color);
 
+      // Crear el contenedor para el avatar y nombre
+      const cursorContent = document.createElement('div');
+      cursorContent.className = 'cursor-content';
+
+      // Añadir el avatar
+      const avatar = document.createElement('img');
+      avatar.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${userId}`;
+      avatar.className = 'cursor-avatar';
+      avatar.width = 20;
+      avatar.height = 20;
+
+      // Añadir el nombre
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
       nameSpan.textContent = getUserName(userId);
-      cursor.appendChild(nameSpan);
+
+      cursorContent.appendChild(avatar);
+      cursorContent.appendChild(nameSpan);
+      cursor.appendChild(cursorContent);
 
       container.appendChild(cursor);
     }
@@ -943,9 +957,19 @@ function randomHSL() {
                   </div>
                   <div className="panel__body">
                       {teamMembers.map((member, index) => (
-                        <p className="body__row" key={index}>
-                          {member.fullName.split(' ').slice(0, 2).join(' ')} {member.userId === userId && "(Tú)"}
-                        </p>
+                        <div className="body__row member-row" key={index}>
+                          <img 
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${member.userId}`}
+                            alt="Avatar"
+                            className="member-avatar"
+                            width="24"
+                            height="24"
+                          />
+                          <span>
+                            {member.fullName.split(' ').slice(0, 2).join(' ')} 
+                            {member.userId === userId && "(Tú)"}
+                          </span>
+                        </div>
                       ))}
                   </div>
               </div>              

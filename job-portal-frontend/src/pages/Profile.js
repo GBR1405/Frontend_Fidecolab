@@ -87,14 +87,7 @@ function Profile() {
   const totalPages = Math.ceil(stats.ultimasPartidas.length / itemsPerPage);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // formateo de curso
-  const cursoReducido = stats.cursoActual
-    ? stats.cursoActual
-        .split(",")
-        .map(c => c.trim().slice(0, 6))
-        .filter(c => c !== "")
-        .join(", ")
-    : "N/A";
+  const cursoReducido = stats.cursoActual ? stats.cursoActual.slice(0, 6) : "N/A";
 
   return (
     <Layout>
@@ -171,10 +164,9 @@ function Profile() {
             <h3>Simulaciones recientes</h3>
             <a className="bottom__text_PF" href="/">Ver historial completo</a>
           </div>
-
           <div className="historial__view_H">
             {stats.ultimasPartidas.length === 0 ? (
-              <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
+              <span>¡Todavía no has hecho una simulación!</span>
             ) : (
               <table className="left__table_H">
                 <thead className="table__head_H">
@@ -189,7 +181,7 @@ function Profile() {
                   {currentItems.map((item, index) => (
                     <tr className="table__row_H" key={index}>
                       <td className="table__data_H">{new Date(item.fecha).toLocaleDateString()}</td>
-                      <td className="table__data_H">{item.curso?.slice(0, 6)}</td>
+                      <td className="table__data_H">{item.curso.slice(0, 6)}</td>
                       <td className="table__data_H">{item.equipo || "-"}</td>
                       <td className="table__data_H">
                         <button className="ver-mas-btn">

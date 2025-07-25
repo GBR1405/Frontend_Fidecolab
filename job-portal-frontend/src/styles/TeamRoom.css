@@ -868,29 +868,31 @@ html{
   background: #fff;
 }
 
-.remote-cursor {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1000;
-  transform: translate(-50%, -50%);
-}
-
-.cursor-content {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 4px 8px;
-  border-radius: 12px;
-  white-space: nowrap;
-}
-
 .cursor-avatar {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #fff;
+  object-fit: cover;
+  border: 2px solid var(--cursor-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cursor-name {
+  padding: 2px 6px;
+  background-color: var(--cursor-color);
   color: white;
+  border-radius: 12px;
   font-size: 12px;
+  white-space: nowrap;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo para cuando solo hay imagen (sin nombre) */
+.cursor-content:only-child .cursor-avatar {
+  position: absolute;
+  top: -32px;
+  left: -12px;
+  width: 24px;
+  height: 24px;
 }

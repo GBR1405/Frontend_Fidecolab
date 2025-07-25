@@ -19,6 +19,9 @@ import DrawingDemoModal from '../games/DrawingDemoModal';
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
+const LOGICAL_WIDTH = 1920;
+const LOGICAL_HEIGHT = 1080;
+
 const TeamRoom = () => {
   const { partidaId, equipoNumero } = useParams();
   const socket = useSocket();
@@ -239,42 +242,51 @@ useEffect(() => {
   }
 }, [currentGameInfo]);
 
+function randomHSL() {
+  const hue = Math.floor(Math.random() * 360); // 0 a 359 grados
+  const saturation = 70; // porcentaje de saturación (colores vivos)
+  const lightness = 50;  // porcentaje de luminosidad (tono medio)
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
   // Actualizar cursor remoto
-  const updateCursor = (userId, normalizedX, normalizedY) => {
+  const updateCursor = (userId, logicalX, logicalY) => {
     if (userId === localStorage.getItem('userId')) return;
-    
+
     const container = cursorContainerRef.current;
     if (!container) return;
-    
-    // Obtener posición absoluta del contenedor
+
     const rect = container.getBoundingClientRect();
-    
-    // Calcular posición absoluta en píxeles
-    const x = normalizedX * window.innerWidth;
-    const y = normalizedY * window.innerHeight;
-    
+
+    // Escalamos la coordenada lógica al tamaño real del contenedor
+    const relativeX = logicalX / LOGICAL_WIDTH;
+    const relativeY = logicalY / LOGICAL_HEIGHT;
+
+    const x = relativeX * rect.width;
+    const y = relativeY * rect.height;
+
     let cursor = document.getElementById(`cursor-${userId}`);
-    
+
     if (!cursor) {
       cursor = document.createElement('div');
       cursor.id = `cursor-${userId}`;
       cursor.className = 'remote-cursor';
-      
-      const color = `hsl(${hashCode(userId) % 360}, 70%, 50%)`;
+
+      const color = randomHSL(); // puedes usar hash para que sea consistente
       cursor.style.setProperty('--cursor-color', color);
-      
+
       const nameSpan = document.createElement('span');
       nameSpan.className = 'cursor-name';
       nameSpan.textContent = getUserName(userId);
       cursor.appendChild(nameSpan);
-      
+
       container.appendChild(cursor);
     }
-  
-    // Aplicar posición absoluta con transform
+
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
   };
+
 
   // Obtener nombre de usuario
   const getUserName = (userId) => {
@@ -288,20 +300,30 @@ useEffect(() => {
     return `Usuario ${userId}`; // Nombre genérico temporal
   };
 
+
   // Manejar movimiento del mouse
   const handleMouseMove = (e) => {
-    if (!cursorContainerRef.current || !socket) return;
+    const container = cursorContainerRef.current;
+    if (!container || !socket) return;
 
-    const normalizedX = e.clientX / window.innerWidth;
-    const normalizedY = e.clientY / window.innerHeight;
+    const rect = container.getBoundingClientRect();
 
-    socket.emit('SendMousePosition', { 
+    // Posición del mouse relativa al contenedor
+    const relativeX = (e.clientX - rect.left) / rect.width;
+    const relativeY = (e.clientY - rect.top) / rect.height;
+
+    // Escalamos al espacio lógico
+    const logicalX = relativeX * LOGICAL_WIDTH;
+    const logicalY = relativeY * LOGICAL_HEIGHT;
+
+    socket.emit('SendMousePosition', {
       roomId: `team-${partidaId}-${equipoNumero}`,
       userId,
-      x: normalizedX,
-      y: normalizedY
+      x: logicalX,
+      y: logicalY,
     });
   };
+
 
   // Configuración inicial y listeners
   useEffect(() => {

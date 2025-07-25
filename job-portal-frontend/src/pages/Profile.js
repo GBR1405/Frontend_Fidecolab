@@ -16,18 +16,15 @@ function Profile() {
   const [showModal, setShowModal] = useState(false);
 
   const formatCourseName = (courseString) => {
-  if (!courseString) return "";
-  
-  return courseString.split(',').map(course => {
-    // Eliminar espacios y dividir por guiones
-    const trimmed = course.trim();
-    // Obtener los primeros 6 caracteres (SC-403)
-    const prefix = trimmed.substring(0, 6);
-    // Obtener los últimos 2 caracteres (G1)
-    const group = trimmed.split(' ').pop();
-    return `${prefix} ${group}`;
-  }).join(', ');
-};
+    if (!courseString) return "";
+    
+    return courseString.split(',').map(course => {
+      const trimmed = course.trim();
+      const prefix = trimmed.substring(0, 6);
+      const group = trimmed.split(' ').pop();
+      return `${prefix} ${group}`;
+    }).join(', ');
+  };
 
   useEffect(() => {
     fetchUserDetails();
@@ -47,7 +44,6 @@ function Profile() {
       const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
       setUser(decryptedData);
 
-      // Petición al backend para obtener estadísticas del perfil
       const response = await fetch(`${apiUrl}/get-user-games`, {
         method: "GET",
         credentials: "include",
@@ -172,44 +168,37 @@ function Profile() {
             <a className="bottom__text_PF" href="/">Ver historial completo</a>
           </div>
 
-          <div className="container__bottom_PF">
-            <div className="container__heading_PF">
-              <h3>Simulaciones recientes</h3>
-              <a className="bottom__text_PF" href="/">Ver historial completo</a>
-            </div>
-
-            <div className="bottom__content_PF">
-              {stats.ultimasPartidas.length === 0 ? (
-                <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
-              ) : (
-                <div className="results-table-container">
-                  <table className="results-table">
-                    <thead>
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Curso</th>
-                        <th>Equipo</th>
-                        <th>Acción</th>
+          <div className="bottom__content_PF">
+            {stats.ultimasPartidas.length === 0 ? (
+              <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
+            ) : (
+              <div className="results-table-container">
+                <table className="results-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Curso</th>
+                      <th>Equipo</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.ultimasPartidas.map((partida, index) => (
+                      <tr key={index} className="results-table-row">
+                        <td className="results-table-cell">{new Date(partida.fecha).toLocaleDateString()}</td>
+                        <td className="results-table-cell">{formatCourseName(partida.curso)}</td>
+                        <td className="results-table-cell">{partida.equipo || "-"}</td>
+                        <td className="results-table-cell">
+                          <button className="results-table-button">
+                            <i className="fa-solid fa-eye"></i>
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {stats.ultimasPartidas.map((partida, index) => (
-                        <tr key={index} className="results-table-row">
-                          <td className="results-table-cell">{new Date(partida.fecha).toLocaleDateString()}</td>
-                          <td className="results-table-cell">{formatCourseName(partida.curso)}</td>
-                          <td className="results-table-cell">{partida.equipo || "-"}</td>
-                          <td className="results-table-cell">
-                            <button className="results-table-button">
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </section>

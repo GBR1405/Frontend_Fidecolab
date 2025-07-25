@@ -32,66 +32,66 @@ const StudentHistory = () => {
     return (
       <>
         <Layout>
-          <section className="student__container">
-              <div className="historial__title">
-            <h3>Historial</h3>
+          <section className="student__container_H">
+            <div className="historial__title_H">
+              <h3>Historial</h3>
+            </div>
+            <div className="historial__view_H">
+              <div className="left__title_H">
+                <h3>Historial de Partidas</h3>
               </div>
-              <div className="historial__view">
-                  <div className="left__title">
-                      <h3>Historial de Partidas</h3>
-                  </div>
-                  {loading ? (
-                      <span>Cargando historial de descargas...</span>
-                  ) : History.length === 0 ? (
-                      <span>Por ahora no has descargado reportes</span>
-                  ) : (                  
-                    <table className="left__table">
-                      <thead className="table__head">
-                        <th className="table__header">ID</th>
-                        <th className="table__header">Nombre</th>
-                      </thead>
-                      <tbody className="table__body">
-                          {currentItems.map((item, index) => (
-                              <tr className="table__row" key={index}>
-                                  <td className="table__data">{item.id}</td>
-                                  <td className="table__data">{item.nombre}</td>
-                              </tr>
+              {loading ? (
+                <span>Cargando historial de descargas...</span>
+              ) : History.length === 0 ? (
+                <span>Por ahora no has descargado reportes</span>
+              ) : (                  
+                <table className="left__table_H">
+                  <thead className="table__head_H">
+                    <th className="table__header_H">ID</th>
+                    <th className="table__header_H">Nombre</th>
+                  </thead>
+                  <tbody className="table__body_H">
+                    {currentItems.map((item, index) => (
+                      <tr className="table__row_H" key={index}>
+                        <td className="table__data_H">{item.id}</td>
+                        <td className="table__data_H">{item.nombre}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="table__foot_H">
+                    {/* Paginación centrada debajo de la tabla */}
+                    {totalPages > 1 && (
+                      <div className="foot__buttons_H">                            
+                        {/* Mostrar páginas alrededor de la página actual */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(number => {
+                            let pageNumber;
+                            if (currentPage === 1 || currentPage === 2) {
+                              pageNumber = currentPage === 1? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                            }
+                            if (currentPage > 2 && currentPage < totalPages -1) {
+                              pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                            }  
+                            if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                              pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                            }                                                 
+                            return pageNumber;                            
+                          })
+                          .map(number => (
+                            <button 
+                              className={`button__page_H ${currentPage === number ? "active" : ""}`}
+                              key={number}
+                              onClick={() => paginate(number)}
+                            >
+                              {number}
+                            </button>
                           ))}
-                      </tbody>
-                      <tfoot className="table__foot">
-                        {/* Paginación centrada debajo de la tabla */}
-                        {totalPages > 1 && (
-                            <div className="foot__buttons">                            
-                                {/* Mostrar páginas alrededor de la página actual */}
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(number => {
-                                      let pageNumber;
-                                      if (currentPage === 1 || currentPage === 2) {
-                                        pageNumber = currentPage === 1? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                      }
-                                      if (currentPage > 2 && currentPage < totalPages -1) {
-                                        pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                      }  
-                                      if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                        pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                      }                                                 
-                                      return pageNumber;                            
-                                    })
-                                    .map(number => (
-                                        <button 
-                                            className={`button__page ${currentPage === number ? "active" : ""}`}
-                                            key={number}
-                                            onClick={() => paginate(number)}
-                                        >
-                                            {number}
-                                        </button>
-                                    ))}
-                            </div>
-                        )}
-                      </tfoot>
-                    </table>                              
-                  )}
-              </div>
+                      </div>
+                    )}
+                  </tfoot>
+                </table>                              
+              )}
+            </div>
           </section>
         </Layout>
       </>

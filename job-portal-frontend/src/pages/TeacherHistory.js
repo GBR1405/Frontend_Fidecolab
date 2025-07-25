@@ -32,13 +32,13 @@ const TeacherHistory = () => {
     return (
       <>
         <Layout>
-          <section className="teacher__container">
-              <div className="historial__title">
+          <section className="teacher__container_H">
+              <div className="historial__title_H">
                 <h3>Historial</h3>
               </div>
-              <div className="historial__options">
-                <div className="options__top">
-                  <div className="option__box">
+              <div className="historial__options_H">
+                <div className="options__top_H">
+                  <div className="option__box_H">
                     <select>
                       <option value="0" disabled selected>
                         Curso:
@@ -48,7 +48,7 @@ const TeacherHistory = () => {
                       <option value="3">Opción 3</option>
                     </select>
                   </div>
-                  <div className="option__box">
+                  <div className="option__box_H">
                     <select>
                       <option value="0" disabled selected>
                         Grupo:
@@ -58,13 +58,13 @@ const TeacherHistory = () => {
                       <option value="3">Opción 3</option>
                     </select>
                   </div>
-                  <div className="option__box">
+                  <div className="option__box_H">
                     <input type="date" id="fecha" />
                   </div>
                 </div>
               </div>
-              <div className="historial__view">
-                  <div className="left__title">
+              <div className="historial__view_H">
+                  <div className="left__title_H">
                       <h3>Historial de Partidas</h3>
                   </div>
                   {loading ? (
@@ -72,23 +72,23 @@ const TeacherHistory = () => {
                   ) : History.length === 0 ? (
                       <span>Por ahora no has descargado reportes</span>
                   ) : (                  
-                    <table className="left__table">
-                      <thead className="table__head">
-                        <th className="table__header">ID</th>
-                        <th className="table__header">Nombre</th>
+                    <table className="left__table_H">
+                      <thead className="table__head_H">
+                        <th className="table__header_H">ID</th>
+                        <th className="table__header_H">Nombre</th>
                       </thead>
-                      <tbody className="table__body">
+                      <tbody className="table__body_H">
                           {currentItems.map((item, index) => (
-                              <tr className="table__row" key={index}>
-                                  <td className="table__data">{item.id}</td>
-                                  <td className="table__data">{item.nombre}</td>
+                              <tr className="table__row_H" key={index}>
+                                  <td className="table__data_H">{item.id}</td>
+                                  <td className="table__data_H">{item.nombre}</td>
                               </tr>
                           ))}
                       </tbody>
-                      <tfoot className="table__foot">
+                      <tfoot className="table__foot_H">
                         {/* Paginación centrada debajo de la tabla */}
                         {totalPages > 1 && (
-                            <div className="foot__buttons">                            
+                            <div className="foot__buttons_H">                            
                                 {/* Mostrar páginas alrededor de la página actual */}
                                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                                     .filter(number => {
@@ -106,7 +106,7 @@ const TeacherHistory = () => {
                                     })
                                     .map(number => (
                                         <button 
-                                            className={`button__page ${currentPage === number ? "active" : ""}`}
+                                            className={`button__page_H ${currentPage === number ? "active" : ""}`}
                                             key={number}
                                             onClick={() => paginate(number)}
                                         >

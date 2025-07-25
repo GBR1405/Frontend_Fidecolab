@@ -16,13 +16,25 @@ function Profile() {
   const [showModal, setShowModal] = useState(false);
 
   const formatCourseName = (courseString) => {
-    if (!courseString) return "";
+    if (!courseString) return "N/A";
     
+    // Si ya está en el formato correcto, no hacer nada
+    if (/^[A-Z]{2}-\d{3} G\d$/.test(courseString.trim())) {
+      return courseString;
+    }
+    
+    // Procesar cada curso si hay múltiples
     return courseString.split(',').map(course => {
       const trimmed = course.trim();
-      const prefix = trimmed.substring(0, 6);
-      const group = trimmed.split(' ').pop();
-      return `${prefix} ${group}`;
+      // Buscar el patrón SC-403
+      const codeMatch = trimmed.match(/[A-Z]{2}-\d{3}/);
+      // Buscar el grupo G1, G2, etc.
+      const groupMatch = trimmed.match(/G\d+/);
+      
+      const code = codeMatch ? codeMatch[0] : trimmed.substring(0, 6);
+      const group = groupMatch ? groupMatch[0] : trimmed.split(' ').pop();
+      
+      return `${code} ${group}`;
     }).join(', ');
   };
 
@@ -147,7 +159,7 @@ function Profile() {
               <input
                 className="info__input_PF"
                 type="text"
-                value={stats.cursoActual || "N/A"}
+                value={formatCourseName(stats.cursoActual)}
                 readOnly
               />
             </div>
@@ -172,8 +184,8 @@ function Profile() {
             {stats.ultimasPartidas.length === 0 ? (
               <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
             ) : (
-              <div className="results-table-container">
-                <table className="results-table">
+              <div className="profile-table-container">
+                <table className="profile-table">
                   <thead>
                     <tr>
                       <th>Fecha</th>
@@ -184,12 +196,12 @@ function Profile() {
                   </thead>
                   <tbody>
                     {stats.ultimasPartidas.map((partida, index) => (
-                      <tr key={index} className="results-table-row">
-                        <td className="results-table-cell">{new Date(partida.fecha).toLocaleDateString()}</td>
-                        <td className="results-table-cell">{formatCourseName(partida.curso)}</td>
-                        <td className="results-table-cell">{partida.equipo || "-"}</td>
-                        <td className="results-table-cell">
-                          <button className="results-table-button">
+                      <tr key={index} className="profile-table-row">
+                        <td>{new Date(partida.fecha).toLocaleDateString()}</td>
+                        <td>{formatCourseName(partida.curso)}</td>
+                        <td>{partida.equipo || "-"}</td>
+                        <td>
+                          <button className="profile-table-button">
                             <i className="fa-solid fa-eye"></i>
                           </button>
                         </td>

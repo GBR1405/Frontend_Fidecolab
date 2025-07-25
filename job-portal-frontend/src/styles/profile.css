@@ -473,57 +473,79 @@ html{
   transform: translateY(-1px);
 }
 
+/* Contenedor principal (se mantiene igual) */
+.bottom__content_PF {
+  align-items: center;
+  background-color: var(--white-smoke-clr);
+  border-radius: 1em;
+  box-shadow: 0 4px 5px 2px #0000000a;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  width: 100%;
+}
 
+/* Contenedor de la tabla */
+.profile-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
 
-.results-table th {
+/* Estilos de la tabla */
+.profile-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  min-width: 600px;
+}
+
+.profile-table th {
   background-color: var(--blue-royal-clr);
   color: white;
-  padding: 1.5vmin;
-  font-size: 1vmax;
+  padding: 12px 15px;
+  font-size: 0.9rem;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
 }
 
-.results-table th:first-child {
-  border-radius: 1em 0 0 1em;
+.profile-table th:first-child {
+  border-radius: 10px 0 0 10px;
 }
 
-.results-table th:last-child {
-  border-radius: 0 1em 1em 0;
+.profile-table th:last-child {
+  border-radius: 0 10px 10px 0;
 }
 
-.results-table-row {
+.profile-table-row {
   transition: all 0.3s ease;
 }
 
-.results-table-row:hover {
+.profile-table-row:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.results-table-cell {
-  background-color: var(--white-smoke-clr);
-  padding: 1.5vmin;
-  text-align: center;
-  font-size: 0.9vmax;
-  font-weight: 500;
+.profile-table td {
+  background-color: white;
+  padding: 12px 15px;
+  font-size: 0.9rem;
+  border: none;
 }
 
-.results-table-cell:first-child {
-  border-radius: 1em 0 0 1em;
+.profile-table td:first-child {
+  border-radius: 10px 0 0 10px;
 }
 
-.results-table-cell:last-child {
-  border-radius: 0 1em 1em 0;
+.profile-table td:last-child {
+  border-radius: 0 10px 10px 0;
 }
 
-.results-table-button {
-  all: unset;
+.profile-table-button {
   background-color: var(--orange-clr);
   color: white;
-  width: 3vmax;
-  height: 3vmax;
+  border: none;
   border-radius: 50%;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -531,11 +553,11 @@ html{
   transition: all 0.3s ease;
 }
 
-.results-table-button:hover {
+.profile-table-button:hover {
   background-color: var(--dark-orange-clr);
   transform: scale(1.1);
 }
 
-.results-table-button i {
-  font-size: 1.2vmax;
+.profile-table-button i {
+  font-size: 14px;
 }

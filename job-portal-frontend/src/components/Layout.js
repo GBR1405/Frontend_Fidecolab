@@ -240,8 +240,8 @@ const Layout = ({ children }) => {
           {/* Opciones para Estudiantes */}
           {userData?.rol === 'Estudiante' && (
     <>
-              <li className={`list__item ${location.pathname === '/history' ? 'list__item--active' : ''}`}>
-                  <a className="item__area" onClick={() => navigate('/history')} style={{ cursor: 'pointer' }}>
+              <li className={`list__item ${location.pathname === '/student-history' ? 'list__item--active' : ''}`}>
+                  <a className="item__area" onClick={() => navigate('/student-history')} style={{ cursor: 'pointer' }}>
                       <i className="fa-solid fa-clock-rotate-left"></i>
                       <span className="area__text">Historial</span>
                   </a>
@@ -271,8 +271,8 @@ const Layout = ({ children }) => {
                   <span className="area__text">Empezar Simulación</span>
                 </a>
               </li>
-              <li className={`list__item ${location.pathname === '/history' ? 'list__item--active' : ''}`}>
-                  <a className="item__area" onClick={() => navigate('/history')} style={{ cursor: 'pointer' }}>
+              <li className={`list__item ${location.pathname === '/teacher-history' ? 'list__item--active' : ''}`}>
+                  <a className="item__area" onClick={() => navigate('/teacher-history')} style={{ cursor: 'pointer' }}>
                       <i className="fa-solid fa-clock-rotate-left"></i>
                       <span className="area__text">Historial Profesor</span>
                   </a>

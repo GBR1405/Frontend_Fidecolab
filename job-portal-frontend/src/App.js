@@ -95,8 +95,6 @@ const App = () => {
         <Route path="/test-view" element={<TestView />} />
         <Route path="/ejemplo" element={<Ejemplo />} />
         <Route path="/canvas" element={<Canvas />} />
-        <Route path="/student-history" element={<StudentHistory />} />
-        <Route path="/teacher-history" element={<TeacherHistory />} />
 
         {/* Rutas protegidas para Estudiantes o Profesores */}
         <Route path="/profile" element={<PrivateRoute element={<Profile />} allowedRoles={['Estudiante', 'Profesor']} />} />
@@ -107,6 +105,8 @@ const App = () => {
         <Route path="/team-room/:partidaId/:equipoNumero" element={<PrivateRoute element={<SalasDeGrupo />} allowedRoles={['Estudiante', 'Profesor']} />} />
         <Route path="/professor-dashboard/:partidaId" element={<PrivateRoute element={<PanelProfesor />} allowedRoles={['Estudiante', 'Profesor']} />} />
         <Route path="/resultados/:partidaId" element={<PrivateRoute element={<Resultados />} allowedRoles={['Estudiante', 'Profesor']} />} />
+        <Route path="/student-history" element={<PrivateRoute element={<StudentHistory />} allowedRoles={['Estudiante', 'Profesor']} />} />
+        <Route path="/teacher-history" element={<PrivateRoute element={<TeacherHistory />} allowedRoles={['Estudiante', 'Profesor']} />} />
 
         {/* Rutas para Profesor */}
         <Route path="/simulations" element={<PrivateRoute element={<PaginSimulacion />} allowedRoles={['Profesor']} />} />

@@ -195,7 +195,7 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
     const intervalId = setInterval(() => {
       console.log('Periodic update for team:', selectedTeam);
       fetchAndDrawTeamDrawing();
-    }, 30000); // 30 segundos
+    }, 8000); // 30 segundos
 
     return () => clearInterval(intervalId);
   }, [selectedTeam]);

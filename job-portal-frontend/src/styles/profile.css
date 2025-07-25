@@ -485,10 +485,10 @@ html{
 
 /* Envoltorio de la tabla */
 .profile-table-wrapper {
-  width: 100%;
-  overflow: auto;
-  max-height: 400px;
-  padding: 15px;
+   max-height: 278px;
+   overflow: auto;
+    padding: 3px;
+    width: 100%;
 }
 
 /* Scrollbar personalizada */

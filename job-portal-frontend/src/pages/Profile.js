@@ -109,12 +109,54 @@ function Profile() {
   return (
     <Layout>
       <section className="main__container_PF">
-        {/* Sección superior */}
+        {/* Sección superior - Información del usuario */}
         <div className="container__top_PF">
-          {/* ... contenido existente ... */}
+          <div className="top__image_PF">
+            <img
+              className="image__user_PF"
+              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${user.nombre}`}
+              alt="User Avatar"
+            />
+          </div>
+          <div className="top__info_PF">
+            <div className="info__box_PF">
+              <h1 className="info__title_PF">{`${user.nombre} ${user.apellido1} ${user.apellido2}`}</h1>
+              <span className="info__role_PF">{user.rol}</span>
+            </div>
+            <div className="info__stats_PF">
+              <div className="stats__group_PF">
+                <div className="stats__icon_PF">
+                  <i className="fa-solid fa-flag"></i>
+                </div>
+                <div className="stats__text_PF">
+                  <h3>{stats.simulaciones}</h3>
+                  <span>Simulaciones realizadas</span>
+                </div>
+              </div>
+              {user.rol === "Estudiante" && (
+                <div className="stats__group_PF">
+                  <div className="stats__icon_PF">
+                    <i className="fa-solid fa-circle-check"></i>
+                  </div>
+                  <div className="stats__text_PF">
+                    <h3>{stats.logros}</h3>
+                    <span>Logros</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="top__edit_PF">
+            <button 
+              className="edit__btn_PF" 
+              onClick={() => setShowModal(true)}
+            >
+              Editar Perfil
+            </button>
+          </div>
         </div>
 
-        {/* Sección de información personal */}
+        {/* Sección media - Información personal */}
         <div className="container__middle_PF">
           <div className="container__heading_PF">
             <h3>Información personal</h3>
@@ -122,7 +164,12 @@ function Profile() {
           <div className="middle__content_PF">
             <div className="content__info_PF">
               <label className="info__label_PF">Nombre completo:</label>
-              <input className="info__input_PF" type="text" value={`${user.nombre} ${user.apellido1} ${user.apellido2}`} readOnly />
+              <input 
+                className="info__input_PF" 
+                type="text" 
+                value={`${user.nombre} ${user.apellido1} ${user.apellido2}`} 
+                readOnly 
+              />
             </div>
             <div className="content__info_PF">
               <label className="info__label_PF">Curso:</label>
@@ -135,16 +182,26 @@ function Profile() {
             </div>
             <div className="content__info_PF">
               <label className="info__label_PF">Correo electrónico:</label>
-              <input className="info__input_PF" type="text" value={user.correo} readOnly />
+              <input 
+                className="info__input_PF" 
+                type="text" 
+                value={user.correo} 
+                readOnly 
+              />
             </div>
             <div className="content__info_PF">
               <label className="info__label_PF">Género:</label>
-              <input className="info__input_PF" type="text" value={user.genero} readOnly />
+              <input 
+                className="info__input_PF" 
+                type="text" 
+                value={user.genero} 
+                readOnly 
+              />
             </div>
           </div>
         </div>
 
-        {/* Sección de simulaciones recientes */}
+        {/* Sección inferior - Simulaciones recientes */}
         <div className="container__bottom_PF">
           <div className="container__heading_PF">
             <h3>Simulaciones recientes</h3>

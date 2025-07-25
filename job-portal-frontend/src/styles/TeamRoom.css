@@ -207,22 +207,25 @@ html{
   
 .remote-cursor {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--cursor-color);
+  border: 2px solid white;
+  transform: translate(-50%, -50%) rotate(45deg);
   pointer-events: none;
   z-index: 1000;
-  transform: translate(-50%, -50%);
 }
 
 /* Círculo externo */
 .remote-cursor::before {
   content: '';
   position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--cursor-color);
-  opacity: 0.3;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 /* Círculo interno */
@@ -249,6 +252,10 @@ html{
   padding: 1px 6px;
   border-radius: 8px;
   white-space: nowrap;
+}
+
+.cursor-name[data-name^="usuario"] {
+  display: none;
 }
 
 .user-role {
@@ -871,7 +878,7 @@ html{
 .cursor-avatar {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: 4px; /* Bordes ligeramente redondeados */
   object-fit: cover;
   border: 2px solid var(--cursor-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -881,7 +888,7 @@ html{
   padding: 2px 6px;
   background-color: var(--cursor-color);
   color: white;
-  border-radius: 12px;
+  border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
   font-weight: bold;
@@ -889,10 +896,13 @@ html{
 }
 
 /* Estilo para cuando solo hay imagen (sin nombre) */
-.cursor-content:only-child .cursor-avatar {
+.cursor-content {
   position: absolute;
-  top: -32px;
-  left: -12px;
-  width: 24px;
-  height: 24px;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }

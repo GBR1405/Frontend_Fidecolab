@@ -274,26 +274,24 @@ function randomHSL() {
       const color = randomHSL();
       cursor.style.setProperty('--cursor-color', color);
 
-      // Crear el contenedor para el avatar y nombre
       const cursorContent = document.createElement('div');
       cursorContent.className = 'cursor-content';
 
-      // Añadir el avatar
+      // Avatar siempre visible
       const avatar = document.createElement('img');
       avatar.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${userId}`;
       avatar.className = 'cursor-avatar';
-      avatar.alt = ''; // Para accesibilidad
+      avatar.alt = '';
 
-      // Añadir el nombre solo si existe
+      // Nombre condicional
       const userName = getUserName(userId);
-      if (userName && !userName.includes('usuario') && !userName.includes('id')) {
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'cursor-name';
-        nameSpan.textContent = userName;
-        cursorContent.appendChild(nameSpan);
-      }
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cursor-name';
+      nameSpan.textContent = userName;
+      nameSpan.dataset.name = userName.toLowerCase(); // Para identificar "usuario [ID]"
 
-      cursorContent.prepend(avatar); // Añadir avatar primero
+      cursorContent.appendChild(avatar);
+      cursorContent.appendChild(nameSpan);
       cursor.appendChild(cursorContent);
       container.appendChild(cursor);
     }

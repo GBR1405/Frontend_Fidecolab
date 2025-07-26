@@ -1,128 +1,198 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import "../styles/historyComponents.css";
 import Layout from "../components/Layout";
+import Cookies from "js-cookie";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
+import "../styles/modal.css";
 
 const TeacherHistory = () => {
   const [loading, setLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5); 
+  const [historial, setHistorial] = useState([]);
+  const [filtroCurso, setFiltroCurso] = useState("");
+  const [filtroFecha, setFiltroFecha] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedResultId, setSelectedResultId] = useState(null);
 
-    const History = [
-      { id: 1, nombre: "Historial 1" },
-      { id: 1, nombre: "Historial 1" },
-      { id: 1, nombre: "Historial 1" },
-      { id: 1, nombre: "Historial 1" },
-      { id: 1, nombre: "Historial 1" },
-      { id: 2, nombre: "Historial 2" },
-      { id: 2, nombre: "Historial 2" },
-      { id: 2, nombre: "Historial 2" },
-      { id: 2, nombre: "Historial 2" },
-      { id: 2, nombre: "Historial 2" }
-    ];
+  const itemsPerPage = 5;
+  const apiURL = process.env.REACT_APP_API_URL;
+  const token = Cookies.get("authToken");
 
-    // Calcular índices para la paginación
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = History.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(History.length / itemsPerPage);
+  useEffect(() => {
+    const fetchHistorial = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${apiURL}/result-teacher`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-    // Cambiar página
+        if (res.data.success) {
+          setHistorial(res.data.data);
+        } else {
+          console.error("Error: La respuesta de la API no es exitosa");
+        }
+      } catch (error) {
+        console.error("Error al obtener historial del profesor:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistorial();
+  }, [apiURL, token]);
+
+  // Filtro
+  const filtrarHistorial = () => {
+    return historial.filter((item) => {
+      const cursoMatch = item.curso
+        ?.toLowerCase()
+        .includes(filtroCurso.toLowerCase());
+
+      const fechaMatch = filtroFecha
+        ? item.fecha?.split("T")[0] === filtroFecha
+        : true;
+
+      return cursoMatch && fechaMatch;
+    });
+  };
+
+  const historialFiltrado = filtrarHistorial();
+
+  // Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = historialFiltrado.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(historialFiltrado.length / itemsPerPage);
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    return (
-      <>
-        <Layout>
-          <section className="teacher__container_H">
-              <div className="historial__title_H">
-                <h3>Historial</h3>
-              </div>
-              <div className="historial__options_H">
-                <div className="options__top_H">
-                  <div className="option__box_H">
-                    <select>
-                      <option value="0" disabled selected>
-                        Curso:
-                      </option>
-                      <option value="1">Opción 1</option>
-                      <option value="2">Opción 2</option>
-                      <option value="3">Opción 3</option>
-                    </select>
+  const openModal = (id) => {
+    setSelectedResultId(id);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedResultId(null);
+  };
+
+  return (
+    <Layout>
+      <section className="teacher__container_H">
+        <div className="historial__title_H">
+          <h3>Historial</h3>
+        </div>
+
+        {/* Filtros */}
+        <div className="historial__options_H">
+          <div className="options__top_H">
+            <div className="option__box_H">
+              <input
+                type="text"
+                placeholder="Buscar curso..."
+                value={filtroCurso}
+                onChange={(e) => setFiltroCurso(e.target.value)}
+              />
+            </div>
+            <div className="option__box_H">
+              <input
+                type="date"
+                value={filtroFecha}
+                onChange={(e) => setFiltroFecha(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div className="historial__view_H">
+          <div className="left__title_H">
+            <h3>Historial de Partidas</h3>
+          </div>
+
+          {loading ? (
+            <span>Cargando historial...</span>
+          ) : historialFiltrado.length === 0 ? (
+            <span>No hay partidas registradas.</span>
+          ) : (
+            <table className="left__table_H">
+              <thead className="table__head_H">
+                <tr>
+                  <th className="table__header_H">Fecha</th>
+                  <th className="table__header_H">Curso</th>
+                  <th className="table__header_H">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="table__body_H">
+                {currentItems.map((item, index) => (
+                  <tr className="table__row_H" key={index}>
+                    <td className="table__data_H">{item.fecha?.split("T")[0]}</td>
+                    <td className="table__data_H">{item.curso}</td>
+                    <td className="table__data_H">
+                      <button className="ver__btn_H" onClick={() => openModal(item.id)}>
+                        <FontAwesomeIcon icon={faEye} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="table__foot_H">
+                {totalPages > 1 && (
+                  <div className="foot__buttons_H">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((number) => {
+                        let show = false;
+                        if (currentPage <= 2) show = number <= 5;
+                        else if (currentPage >= totalPages - 1)
+                          show = number >= totalPages - 4;
+                        else show = number >= currentPage - 2 && number <= currentPage + 2;
+                        return show;
+                      })
+                      .map((number) => (
+                        <button
+                          key={number}
+                          className={`button__page_H ${currentPage === number ? "active" : ""}`}
+                          onClick={() => paginate(number)}
+                        >
+                          {number}
+                        </button>
+                      ))}
                   </div>
-                  <div className="option__box_H">
-                    <select>
-                      <option value="0" disabled selected>
-                        Grupo:
-                      </option>
-                      <option value="1">Opción 1</option>
-                      <option value="2">Opción 2</option>
-                      <option value="3">Opción 3</option>
-                    </select>
-                  </div>
-                  <div className="option__box_H">
-                    <input type="date" id="fecha" />
-                  </div>
-                </div>
-              </div>
-              <div className="historial__view_H">
-                  <div className="left__title_H">
-                      <h3>Historial de Partidas</h3>
-                  </div>
-                  {loading ? (
-                      <span>Cargando historial de descargas...</span>
-                  ) : History.length === 0 ? (
-                      <span>Por ahora no has descargado reportes</span>
-                  ) : (                  
-                    <table className="left__table_H">
-                      <thead className="table__head_H">
-                        <th className="table__header_H">ID</th>
-                        <th className="table__header_H">Nombre</th>
-                      </thead>
-                      <tbody className="table__body_H">
-                          {currentItems.map((item, index) => (
-                              <tr className="table__row_H" key={index}>
-                                  <td className="table__data_H">{item.id}</td>
-                                  <td className="table__data_H">{item.nombre}</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                      <tfoot className="table__foot_H">
-                        {/* Paginación centrada debajo de la tabla */}
-                        {totalPages > 1 && (
-                            <div className="foot__buttons_H">                            
-                                {/* Mostrar páginas alrededor de la página actual */}
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(number => {
-                                      let pageNumber;
-                                      if (currentPage === 1 || currentPage === 2) {
-                                        pageNumber = currentPage === 1? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                      }
-                                      if (currentPage > 2 && currentPage < totalPages -1) {
-                                        pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                      }  
-                                      if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                        pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                      }                                                 
-                                      return pageNumber;                            
-                                    })
-                                    .map(number => (
-                                        <button 
-                                            className={`button__page_H ${currentPage === number ? "active" : ""}`}
-                                            key={number}
-                                            onClick={() => paginate(number)}
-                                        >
-                                            {number}
-                                        </button>
-                                    ))}
-                            </div>
-                        )}
-                      </tfoot>
-                    </table>                              
-                  )}
-              </div>
-          </section>
-        </Layout>
-      </>
-    );
+                )}
+              </tfoot>
+            </table>
+          )}
+        </div>
+
+        {/* MODAL */}
+        {modalVisible && (
+          <div className="modal-overlay show" onClick={closeModal}>
+            <div
+              className="modal-content animated slideIn"
+              style={{ width: "80%", height: "80%" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="modal-close-btn" onClick={closeModal}>
+                ✕
+              </button>
+              <iframe
+                src={`/resultados/${selectedResultId}`}
+                title="Resultados"
+                style={{ width: "100%", height: "100%", border: "none" }}
+              ></iframe>
+            </div>
+          </div>
+        )}
+      </section>
+    </Layout>
+  );
 };
 
 export default TeacherHistory;

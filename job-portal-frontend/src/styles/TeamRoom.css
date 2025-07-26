@@ -856,18 +856,18 @@ html{
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  justify-content: flex-start; /* Alinea los elementos al inicio (izquierda) */
+  width: 100%;
 }
 
 .member-avatar {
   background: #fff;
   flex-shrink: 0; /* Evita que el avatar se encoja */
-  margin-right: auto; /* Empuja el contenido siguiente hacia la derecha */
 }
 
 .member-name {
   flex-grow: 1; /* Permite que el nombre ocupe el espacio restante */
   text-align: center; /* Centra el texto del nombre */
+  margin-right: 30px; /* Compensa el espacio del avatar para mantener el nombre centrado */
 }
 
 .cursor-avatar {

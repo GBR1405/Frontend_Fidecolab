@@ -2276,3 +2276,169 @@ body, html {
   background-color: #cacaca !important; /* más oscuro que hover normal */
   transition: background-color 0.2s;
 }
+
+/* system-clean__container */
+.system-clean__container {
+  padding: 20px;
+}
+
+.system-clean__warning {
+  background-color: #fff3cd;
+  border-left: 5px solid #ffc107;
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.system-clean__warning i {
+  color: #ffc107;
+  font-size: 1.5rem;
+}
+
+.system-clean__buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.clean-button {
+  padding: 15px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.clean-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.clean-button--customizations {
+  background-color: #6c757d;
+}
+
+.clean-button--logs {
+  background-color: #17a2b8;
+}
+
+.clean-button--history {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.clean-button--students {
+  background-color: #28a745;
+}
+
+.clean-button--professors {
+  background-color: #007bff;
+}
+
+.system-clean__reset {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.reset-button {
+  padding: 15px 25px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: #c82333;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Estilos para la tabla de usuarios */
+.table__data--actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.button__edit {
+  color: #007bff;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.button__ban {
+  color: #ffc107;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.button__ban.inactive {
+  color: #6c757d;
+}
+
+.button__delete {
+  color: #dc3545;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.button__view {
+  color: #17a2b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Estilo para el botón de volver */
+.button--back {
+  padding: 8px 15px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 15px;
+}
+
+.button--back:hover {
+  background-color: #5a6268;
+}
+
+/* Estilo para el box de limpieza del sistema */
+.left__box--danger {
+  border-left: 4px solid #dc3545;
+}
+
+.shape--danger {
+  background-color: #dc3545;
+}
+
+.depuration__empty {
+  text-align: center;
+  padding: 50px;
+  color: #6c757d;
+}
+
+.depuration__empty i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}

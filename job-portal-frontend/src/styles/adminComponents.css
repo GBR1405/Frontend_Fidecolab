@@ -528,6 +528,7 @@
 
 /* Pantalla de Depuracion */
 .depuration__container{
+    position: relative;
     border: 1px solid var(--line-clr);
     border-radius: 1em;
     padding: 20px 40px;
@@ -668,23 +669,53 @@
     
     .option__search{
         height: 80%;
-        width: 80%;
+        width: 50%;
         background-color: white;  
         box-shadow: 0px 4px 4px 1px rgba(0, 0, 0, 0.06);
         border-radius: 5px;
         cursor: text;
     
         color: var(--primary-text-clr);
-        font-size: 1vw;
+        font-size: 0.9vmax;
         font-weight: 500;
     
         display: flex;
         align-items: center;
         justify-content: space-evenly;
     }
+
+    .option__filter{
+        all: unset;
+        display: flex;    
+        height: 80%;
+        width: 30%; 
+        box-shadow: 0px 4px 4px 1px rgba(0, 0, 0, 0.06);
+        border-radius: 5px;
+        cursor: pointer;
+    
+        color: var(--primary-text-clr);
+    
+        select, input{
+            appearance: none;
+            all: unset;
+            appearance: none;
+            border: none;
+            background: none;
+            outline: none;
+            width: 90%;
+            height: 100%;
+            padding-inline: 10%;    
+    
+            display: grid;
+            align-items: center;
+            font-size: 0.9vmax;
+            font-weight: 500;
+        }    
+    }
     
     .option__button{
         height: 80%;
+        width: 30%;
         background-color: var(--blue-royal-clr);
         box-shadow: 0px 4px 4px 1px rgba(0, 0, 0, 0.06);
         border-radius: 5px;
@@ -752,12 +783,14 @@
         display: flex;
         justify-content: space-evenly;
         align-items: center;
+        width: 100%;
     }
     
     .table__header{
         width: 100%;
         font-size: 0.9vw;
         font-weight: 600;
+        width: 100%;
     }
     
     .table__body{
@@ -784,14 +817,11 @@
         transition: 0.2s ease-in-out
     }
 
-    button{
-        all: unset;
-    }
-
     .table__data{
         height: 100%;
         width: 100%;
         overflow-x: auto;
+        overflow-y: hidden;
         display: flex;
         justify-content: space-evenly;
         align-items: center;   
@@ -800,7 +830,7 @@
 
         i{
             cursor: pointer;
-            font-size: 1.2vw;
+            font-size: 1vmax;
         }
 
         .button__edit i{
@@ -2279,7 +2309,10 @@ body, html {
 
 /* system-clean__container */
 .system-clean__container {
-  padding: 20px;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .system-clean__warning {
@@ -2299,23 +2332,37 @@ body, html {
 
 .system-clean__buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-  margin-bottom: 30px;
+  grid-template-columns: 1fr 1fr;
+  gap: 6vmax;
+  align-items: center;
+  justify-items: center;
+  padding-top: 2.5vmax;
+  grid-template-areas:
+    "btn1 btn2"
+    "btn3 btn4"
+    "btn5 btn5";
+}
+
+.system-clean__buttons button:nth-child(5) {
+  grid-area: btn5;
+  justify-self: center;
 }
 
 .clean-button {
-  padding: 15px;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.3s ease;
+    width: 25vmax;
+    height: 3vmax;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9vmax;
+    font-weight: bold;
+    cursor: pointer;
+
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    align-items: center;
+    justify-items: center;
+    transition: all 0.3s ease;
 }
 
 .clean-button:hover {
@@ -2342,25 +2389,37 @@ body, html {
 
 .clean-button--professors {
   background-color: #007bff;
+  grid-column: 1 / span 2;
+  justify-self: center;
 }
 
 .system-clean__reset {
-  text-align: center;
-  margin-top: 30px;
+    
 }
 
 .reset-button {
-  padding: 15px 25px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.3s ease;
+    position: absolute;
+    text-align: center;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%);
+    margin-bottom: 2vmax;
+
+    width: 25vmax;
+    height: 3vmax;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9vmax;
+    font-weight: bold;
+    cursor: pointer;
+
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    align-items: center;
+    justify-items: center;
+    transition: all 0.3s ease;
 }
 
 .reset-button:hover {
@@ -2372,8 +2431,8 @@ body, html {
 /* Estilos para la tabla de usuarios */
 .table__data--actions {
   display: flex;
-  gap: 5px;
   justify-content: center;
+  align-items: center;
 }
 
 .button__edit {
@@ -2409,23 +2468,24 @@ body, html {
 }
 
 /* Estilo para el botón de volver */
-.button--back {
-  padding: 8px 15px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 15px;
+.button__back {
+    position: absolute;
+    background-color: var(--blue-royal-clr);
+    bottom: 0;
+    left: 0;
+    margin: 2vmax;
+    width: 7vmax;    
+    height: 3vmax;
+    font-size: 1vmax;
+    font-weight: 500;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .button--back:hover {
   background-color: #5a6268;
-}
-
-/* Estilo para el box de limpieza del sistema */
-.left__box--danger {
-  border-left: 4px solid #dc3545;
 }
 
 .shape--danger {

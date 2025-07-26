@@ -366,20 +366,12 @@ const Depuration = () => {
         <section className="depuration__container">
           <div className="depuration__title">
             <h3>Limpieza del Sistema</h3>
-            <button 
-              className="button--back"
-              onClick={() => setShowSystemClean(false)}
-            >
-              Volver
-            </button>
-          </div>
-          
+          </div>          
           <div className="system-clean__container">
             <div className="system-clean__warning">
               <i className="fa-solid fa-triangle-exclamation"></i>
               <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
-            </div>
-            
+            </div>            
             <div className="system-clean__buttons">
               <button 
                 className="clean-button clean-button--customizations"
@@ -387,32 +379,28 @@ const Depuration = () => {
               >
                 <i className="fa-solid fa-paint-roller"></i>
                 Limpiar todas las personalizaciones
-              </button>
-              
+              </button>              
               <button 
                 className="clean-button clean-button--logs"
                 onClick={() => handleSystemClean('logs')}
               >
                 <i className="fa-solid fa-clipboard-list"></i>
                 Limpiar la Bitácora
-              </button>
-              
+              </button>              
               <button 
                 className="clean-button clean-button--history"
                 onClick={() => handleSystemClean('history')}
               >
                 <i className="fa-solid fa-clock-rotate-left"></i>
                 Limpiar Historial
-              </button>
-              
+              </button>              
               <button 
                 className="clean-button clean-button--students"
                 onClick={() => handleSystemClean('students')}
               >
                 <i className="fa-solid fa-user-graduate"></i>
                 Eliminar todos los Estudiantes
-              </button>
-              
+              </button>              
               <button 
                 className="clean-button clean-button--professors"
                 onClick={() => handleSystemClean('professors')}
@@ -422,7 +410,6 @@ const Depuration = () => {
               </button>
             </div>
             
-            <div className="system-clean__reset">
               <button 
                 className="reset-button"
                 onClick={() => handleSystemClean('reset')}
@@ -430,8 +417,13 @@ const Depuration = () => {
                 <i className="fa-solid fa-bomb"></i>
                 REINICIAR SISTEMA FIDECOLAB
               </button>
-            </div>
           </div>
+          <button 
+            className="button__back"
+            onClick={() => setShowSystemClean(false)}
+          >
+            Regresar
+          </button>
         </section>
       </LayoutAdmin>
     );
@@ -553,35 +545,36 @@ const Depuration = () => {
                       value={searchQuery}
                       onChange={handleSearchChange}
                     />
-                  </div>
-                  
+                  </div> 
+                  <div className="option__button button--search">
+                    <button type="button">Buscar</button>
+                  </div>                 
                   {selectedTab === 'users' && (
                     <>
-                      <select 
-                        className="option__filter"
-                        value={roleFilter}
-                        onChange={handleRoleFilterChange}
-                      >
-                        <option value="all">Todos los roles</option>
-                        <option value="Profesor">Profesores</option>
-                        <option value="Estudiante">Estudiantes</option>
-                      </select>
-                      
-                      <select 
-                        className="option__filter"
-                        value={statusFilter}
-                        onChange={handleStatusFilterChange}
-                      >
-                        <option value="all">Todos los estados</option>
-                        <option value="Activo">Activos</option>
-                        <option value="Inactivo">Inactivos</option>
-                      </select>
+                      <div className="option__filter">
+                        <select 
+                          value={roleFilter}
+                          onChange={handleRoleFilterChange}
+                        >
+                          <option value="all">Todos los roles</option>
+                          <option value="Profesor">Profesores</option>
+                          <option value="Estudiante">Estudiantes</option>
+                        </select>
+                      </div>                      
+                      <div className="option__filter">
+                        <select 
+                          value={statusFilter}
+                          onChange={handleStatusFilterChange}
+                        >
+                          <option value="all">Todos los estados</option>
+                          <option value="Activo">Activos</option>
+                          <option value="Inactivo">Inactivos</option>
+                        </select>
+                      </div>                      
                     </>
                   )}
                   
-                  <div className="option__button button--search">
-                    <button type="button">Buscar</button>
-                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -595,14 +588,12 @@ const Depuration = () => {
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
-                      <tr>
-                        <th className="table__header">Nombre</th>
-                        <th className="table__header">Apellidos</th>
-                        <th className="table__header">Cursos Vinculados</th>
-                        <th className="table__header">Rol</th>
-                        <th className="table__header">Estado</th>
-                        <th className="table__header">Acciones</th>
-                      </tr>
+                      <th className="table__header">Nombre</th>
+                      <th className="table__header">Apellidos</th>
+                      <th className="table__header">Cursos</th>
+                      <th className="table__header">Rol</th>
+                      <th className="table__header">Estado</th>
+                      <th className="table__header">Acciones</th>
                     </thead>
                     <tbody className="table__body">
                       {currentItems.map((item, index) => (
@@ -647,35 +638,31 @@ const Depuration = () => {
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
-                        <tr>
-                          <td colSpan="6">
-                            <div className="foot__buttons">                            
-                              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter(number => {
-                                  let pageNumber;
-                                  if (currentPage === 1 || currentPage === 2) {
-                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                  }
-                                  if (currentPage > 2 && currentPage < totalPages - 1) {
-                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                  }  
-                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                  }                                                 
-                                  return pageNumber;                            
-                                })
-                                .map(number => (
-                                  <button 
-                                    className={`button__page ${currentPage === number ? "active" : ""}`}
-                                    key={number}
-                                    onClick={() => paginate(number)}
-                                  >
-                                    {number}
-                                  </button>
-                                ))}
-                            </div>
-                          </td>
-                        </tr>
+                        <div className="foot__buttons">                            
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(number => {
+                              let pageNumber;
+                              if (currentPage === 1 || currentPage === 2) {
+                                pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                              }
+                              if (currentPage > 2 && currentPage < totalPages - 1) {
+                                pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                              }  
+                              if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                              }                                                 
+                              return pageNumber;                            
+                            })
+                            .map(number => (
+                              <button 
+                                className={`button__page ${currentPage === number ? "active" : ""}`}
+                                key={number}
+                                onClick={() => paginate(number)}
+                              >
+                                {number}
+                              </button>
+                            ))}
+                        </div>
                       )}
                     </tfoot>
                   </table>

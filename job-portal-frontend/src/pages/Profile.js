@@ -10,6 +10,7 @@ const secretKey = process.env.REACT_APP_SECRET_KEY;
 const apiUrl = process.env.REACT_APP_API_URL;
 
 function Profile() {
+
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
@@ -158,7 +159,7 @@ function Profile() {
 
         {/* Sección media - Información personal */}
         <div className="container__middle_PF">
-          <div className="container__heading_PF">
+          <div className="container__heading">
             <h3>Información personal</h3>
           </div>
           <div className="middle__content_PF">
@@ -202,40 +203,38 @@ function Profile() {
         </div>
 
         {/* Sección inferior - Simulaciones recientes */}
-        <div className="container__bottom_PF">
-          <div className="container__heading_PF">
+        <div className="container__simulations">
+          <div className="simulations__heading">
             <h3>Simulaciones recientes</h3>
             <button 
-              className="bottom__link_PF"
+              className="bottom__link"
               onClick={handleHistoryClick}
             >
               Ver historial completo
             </button>
           </div>
 
-          <div className="bottom__content_PF">
+          <div className="simulations__content">
             {stats.ultimasPartidas.length === 0 ? (
-              <span className="bottom__text_PF">¡Todavía no has hecho una simulación!</span>
+              <span className="simulations__empty">¡Todavía no has hecho una simulación!</span>
             ) : (
-              <div className="profile-table-wrapper">
-                <table className="profile-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Curso</th>
-                      <th>Equipo</th>
-                      <th>Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <table className="simulations__table">
+                <thead className="table__head">
+                  <th className="table__header">Fecha</th>
+                  <th className="table__header">Curso</th>
+                  <th className="table__header">Equipo</th>
+                  <th className="table__header">Acción</th>
+                </thead>
+                <tbody className="table__body">
+                  <div className="body__list">
                     {stats.ultimasPartidas.map((partida, index) => (
-                      <tr key={index} className="profile-table-row">
-                        <td>{new Date(partida.fecha).toLocaleDateString()}</td>
-                        <td>{formatCourseName(partida.curso)}</td>
-                        <td>{partida.equipo || "-"}</td>
-                        <td>
+                      <tr className="table__row" key={index}>
+                        <td className="table__data">{new Date(partida.fecha).toLocaleDateString()}</td>
+                        <td className="table__data">{formatCourseName(partida.curso)}</td>
+                        <td className="table__data">{partida.equipo || "-"}</td>
+                        <td className="table__data">
                           <button 
-                            className="profile-table-button"
+                            className="table__button"
                             onClick={() => handleViewClick(partida.id)}
                           >
                             <i className="fa-solid fa-eye"></i>
@@ -243,9 +242,9 @@ function Profile() {
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </div>                  
+                </tbody>
+              </table>
             )}
           </div>
         </div>

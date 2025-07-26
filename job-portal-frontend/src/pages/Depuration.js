@@ -107,8 +107,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                   <i className="fa-solid fa-user-tie"></i>
                 </div>
                 <div className="right__text">
-                  <p className="text__title">Depurar Profesores</p>
-                  <p className="text__description">Desde acá podrás depurar, agregar, editar o eliminar profesores.</p>
+                  <p className="text__title">Administrar Profesores</p>
+                  <p className="text__description">Este modulo contenpla todo el apartado de profesores, su edicion, eliminacion y revision de su actividad</p>
                 </div>
               </div>
               <div className="left__box" onClick={() => handleTabChange('students')}>
@@ -116,8 +116,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                   <i className="fa-solid fa-user-graduate"></i>
                 </div>
                 <div className="right__text">
-                  <p className="text__title">Depurar Estudiantes</p>
-                  <p className="text__description">Desde acá podrás depurar, agregar, editar o eliminar estudiantes.</p>
+                  <p className="text__title">Administrar Estudiantes</p>
+                  <p className="text__description">Este modulo contenpla todo el apartado de estudiantes, su edicion, eliminacion y revision de su actividad</p>
                 </div>
               </div>
               <div className="left__box" onClick={() => handleTabChange('history')}>
@@ -125,8 +125,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                   <i className="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <div className="right__text">
-                  <p className="text__title">Depurar Historial</p>
-                  <p className="text__description">Desde acá podrás depurar el historial de las partidas.</p>
+                  <p className="text__title">Administrar Historial</p>
+                  <p className="text__description">Desde acá se administrara todo el historial de cada partida al igual que la opcion de una limpieza total o parcial.</p>
                 </div>
               </div>
               <div className="left__box" onClick={() => handleTabChange('log')}>
@@ -134,8 +134,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                   <i className="fa-solid fa-pen-ruler"></i>
                 </div>
                 <div className="right__text">
-                  <p className="text__title">Depurar Bitácora</p>
-                  <p className="text__description">Se eliminará información de acciones hechas por el backend.</p>
+                  <p className="text__title">Administrar Otros Apartados</p>
+                  <p className="text__description">Desde este apartado veras todas las acciones internar y algunas opciones para el reincio del sistema o seguridad</p>
                 </div>
               </div>
             </div>

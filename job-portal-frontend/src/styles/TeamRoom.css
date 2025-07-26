@@ -228,19 +228,6 @@ html{
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-/* Círculo interno */
-.remote-cursor::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--cursor-color);
-  top: 6px;
-  left: 6px;
-  box-shadow: 0 0 2px rgba(0,0,0,0.5);
-}
-
 /* Nombre en diagonal inferior derecha */
 .cursor-name {
   position: absolute;
@@ -876,8 +863,8 @@ html{
 }
 
 .cursor-avatar {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px; /* Bordes ligeramente redondeados */
   object-fit: cover;
   border: 2px solid var(--cursor-color);

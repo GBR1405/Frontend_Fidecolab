@@ -1027,6 +1027,12 @@ const stopDrawingDemonstration = () => {
                         <span>{currentGame.tema || 'No especificado'}</span>
                       </div>
                     )}
+                    {currentGame.tipo.toLowerCase() === 'ahorcado' && (
+                      <div className="information__text">
+                        <span>Tema: </span>
+                        <span>{currentGame.tema || 'No especificado'}</span>
+                      </div>
+                    )}
                     <div className="timer-section">
                       <h4>Tiempo restante:</h4>
                       <TimerDisplay />

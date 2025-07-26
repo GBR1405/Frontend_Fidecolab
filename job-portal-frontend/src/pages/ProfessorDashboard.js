@@ -1029,7 +1029,7 @@ const stopDrawingDemonstration = () => {
                     )}
                     {currentGame.tipo.toLowerCase() === 'ahorcado' && (
                       <div className="information__text">
-                        <span>Tema: </span>
+                        <span>Palabra: </span>
                         <span>{currentGame.tema || 'No especificado'}</span>
                       </div>
                     )}

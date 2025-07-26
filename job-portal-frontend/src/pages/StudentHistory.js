@@ -99,7 +99,7 @@ const StudentHistory = () => {
                       <button
                         className="ver__btn_H"
                         onClick={() => {
-                          console.log("Item que se envía al modal:", item); // 👈
+                          console.log("Item que se envía al modal:", item.id); // 👈
                           openModal(item.id);
                         }}
                       >

@@ -477,7 +477,6 @@ function randomHSL() {
     };
   
     const handleTimeUp = (gameType) => {
-      // No mostrar el modal si hay una demo activa
       if (demoActive) return;
   
       setTimer(prev => ({
@@ -486,8 +485,8 @@ function randomHSL() {
         active: false
       }));
       
-      // Guardar referencia al modal actual
-      const timeUpModal = Swal.fire({
+      // Mostrar el modal
+      Swal.fire({
         title: '¡Tiempo terminado!',
         text: `Se ha acabado el tiempo para el juego ${gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
         icon: 'info',
@@ -495,24 +494,61 @@ function randomHSL() {
         allowOutsideClick: false,
         willOpen: () => {
           window.timeUpAlert = Swal.getPopup();
-        },
-        willClose: () => {
-          window.timeUpAlert = null;
+          
+          // Verificar cada 5 segundos si el modo demo está activo
+          const checkDemoInterval = setInterval(() => {
+            if (demoActive && window.timeUpAlert) {
+              Swal.close();
+              window.timeUpAlert = null;
+              clearInterval(checkDemoInterval);
+            }
+          }, 5000);
+
+          // Limpiar el intervalo cuando se cierre el modal
+          window.timeUpAlert.addEventListener('close', () => {
+            clearInterval(checkDemoInterval);
+          });
         }
       });
+    };
   
-      // Si se activa una demo mientras el modal está abierto, cerrarlo
-      return timeUpModal;
+    // Verificación inicial al cargar el componente
+    const checkInitialTimerState = () => {
+      // Si el timer ya está en 0 (por ejemplo, al recargar la página)
+      if (timer.remaining <= 0 && timer.gameType) {
+        handleTimeUp(timer.gameType);
+      }
+      // Si no hay datos del timer (estado inicial)
+      else if (!timer.gameType) {
+        // Esperar un momento para recibir la actualización del servidor
+        setTimeout(() => {
+          if (timer.remaining <= 0 && timer.gameType) {
+            handleTimeUp(timer.gameType);
+          }
+        }, 1000);
+      }
     };
   
     socket.on('timerUpdate', handleTimerUpdate);
     socket.on('timeUp', handleTimeUp);
   
+    // Solicitar sincronización del tiempo al conectarse
+    socket.emit('RequestTimeSync', partidaId);
+  
+    // Ejecutar la verificación inicial
+    checkInitialTimerState();
+  
     return () => {
       socket.off('timerUpdate', handleTimerUpdate);
       socket.off('timeUp', handleTimeUp);
+      
+      // Limpiar el alert al desmontar
+      if (window.timeUpAlert) {
+        Swal.close();
+        window.timeUpAlert = null;
+      }
     };
-  }, [socket, demoActive]);
+  }, [socket, partidaId, timer.remaining, timer.gameType]);
 
   // Temporizador
   const resetTimer = () => {
@@ -718,14 +754,13 @@ function randomHSL() {
 
   return (
     <LayoutSimulation>
-      <div className="drawing-demo-modal">
       <DrawingDemoModal 
         partidaId={partidaId} 
         equipoNumero={equipoNumero}
         userId={userId}
         isProfessor={false} // O puedes determinar esto basado en el rol del usuario
       />
-      </div>
+      
       <div className="teamroom__container">
         {/* Overlay de transición */}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>

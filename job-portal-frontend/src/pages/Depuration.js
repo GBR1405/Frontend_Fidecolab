@@ -38,8 +38,13 @@ const Depuration = () => {
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
-      setFilteredUsers(data.users || []);
+      console.log("Users data received:", data);
+      const normalizedUsers = data.users.map(user => ({
+        ...user,
+        id: user.Usuario_ID_PK || user.id 
+      }));
+      setUsers(normalizedUsers || []);
+      setFilteredUsers(normalizedUsers || []);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       Swal.fire('Error', 'No se pudieron obtener los usuarios', 'error');
@@ -250,7 +255,7 @@ const Depuration = () => {
     let userCourses = [];
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -321,7 +326,7 @@ const Depuration = () => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -403,7 +408,7 @@ const Depuration = () => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}/desactivar`, {
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}/desactivar`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -445,7 +450,8 @@ const Depuration = () => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+      console.log("User ID being sent:", user.id || user.Usuario_ID_PK);
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -470,7 +476,7 @@ const Depuration = () => {
   const viewUserDetails = async (user) => {
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -978,7 +984,7 @@ const Depuration = () => {
                                   {user.Rol !== 'Administrador' && (
                                     <button 
                                       className="button__password"
-                                      onClick={() => handleRestorePassword(user.Usuario_ID_PK)}
+                                      onClick={() => handleRestorePassword(user.id)}
                                       title="Restaurar contraseña"
                                     >
                                       <i className="fa-solid fa-key"></i>

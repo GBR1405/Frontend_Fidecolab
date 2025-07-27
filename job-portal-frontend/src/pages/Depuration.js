@@ -1871,40 +1871,40 @@ const Depuration = () => {
                     <tbody className="table__body">
                       {loading ? (
                         <tr>
-                          <td colSpan="4" className="table__data table__data--loading">
+                          <td colSpan="5" className="table__data table__data--loading">
                             <div className="loading-spinner"></div>
                             Cargando historial...
                           </td>
                         </tr>
                       ) : filteredHistorial.length > 0 ? (
-                        currentItems.map((item, index) => (
+                        filteredHistorial.slice(indexOfFirstItem, indexOfLastItem).map((item, index) => (
                           <tr className="table__row" key={index}>
-                          <td className="table__data">
-                            {item.fecha || 'Sin fecha'}
-                          </td>
-                          <td className="table__data">{item.curso || 'Curso no disponible'}</td>
-                          <td className="table__data">{item.profesor || 'Profesor no disponible'}</td>
-                          <td className="table__data">{item.total_estudiantes}</td>
-                          <td className="table__data table__data--actions">
-                            <button 
-                              className="button__view"
-                              title="Ver detalles"
-                            >
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                            <button 
-                              className="button__delete"
-                              onClick={() => handleDeleteHistorial(item.id)}
-                              title="Eliminar"
-                            >
-                              <i className="fa-solid fa-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
+                            <td className="table__data">
+                              {item.fecha ? new Date(item.fecha).toLocaleString() : 'Fecha no disponible'}
+                            </td>
+                            <td className="table__data">{item.curso}</td>
+                            <td className="table__data">{item.profesor}</td>
+                            <td className="table__data">{item.total_estudiantes}</td>
+                            <td className="table__data table__data--actions">
+                              <button 
+                                className="button__view"
+                                title="Ver detalles"
+                              >
+                                <i className="fa-solid fa-eye"></i>
+                              </button>
+                              <button 
+                                className="button__delete"
+                                onClick={() => handleDeleteHistorial(item.id)}
+                                title="Eliminar"
+                              >
+                                <i className="fa-solid fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
                         ))
                       ) : (
                         <tr className="table__row">
-                          <td colSpan="4" className="table__data table__data--empty">
+                          <td colSpan="5" className="table__data table__data--empty">
                             No se encontraron registros de historial
                           </td>
                         </tr>

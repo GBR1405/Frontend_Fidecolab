@@ -78,16 +78,6 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
         if (!isNaN(parsedTinta)) {
           setTinta(parsedTinta);
           tintaConsumida.current = MAX_TINTA - parsedTinta;
-          
-          // Emitir al servidor el estado de la tinta al cargar
-          if (socket) {
-            socket.emit('updateTintaState', {
-              partidaId,
-              equipoNumero,
-              userId,
-              tinta: parsedTinta
-            });
-          }
         }
       }
     } catch (error) {
@@ -96,7 +86,7 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   };
 
   loadSavedState();
-}, [partidaId, equipoNumero, userId, socket]);
+}, [partidaId, equipoNumero, userId]);
 
 
   useEffect(() => {
@@ -477,26 +467,22 @@ const clearLocalDrawing = () => {
   const clearUserDrawing = () => {
   isResetting.current = true;
   
-  // 1. Limpiar estado local
+  // 1. Limpiar estados inmediatamente
   setLines([]);
-  
-  // 2. Limpiar localStorage
   localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
   localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
 
-  // 3. Resetear contadores locales
+  // 2. Resetear contadores
   tintaConsumida.current = 0;
   setTinta(MAX_TINTA);
 
-  // 4. Emitir dos eventos separados:
-  // - Uno para limpiar trazos visuales (para todos)
+  // 3. Notificar al servidor
   socket.emit('clearDrawingPaths', { 
     partidaId, 
     equipoNumero, 
     userId 
   });
 
-  // - Otro para actualizar la tinta (solo para este usuario)
   socket.emit('updateTintaState', {
     partidaId,
     equipoNumero,
@@ -504,7 +490,7 @@ const clearLocalDrawing = () => {
     tinta: MAX_TINTA
   });
 
-  // 5. Feedback visual
+  // 4. Feedback visual
   Swal.fire({
     title: 'Dibujo borrado',
     text: 'Tu tinta ha sido recargada',
@@ -522,12 +508,15 @@ useEffect(() => {
   if (!socket) return;
 
   const handleClearRemotePaths = ({ userId: clearedUserId }) => {
-    if (clearedUserId !== userId) { // No es nuestro usuario
-      setRemoteLines(prev => {
-        const updated = { ...prev };
-        delete updated[clearedUserId];
-        return updated;
-      });
+    setRemoteLines(prev => {
+      const updated = { ...prev };
+      delete updated[clearedUserId];
+      return updated;
+    });
+
+    // Si soy yo quien borró, también limpio mis líneas locales
+    if (clearedUserId === userId) {
+      setLines([]);
     }
   };
 

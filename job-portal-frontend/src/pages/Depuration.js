@@ -413,6 +413,11 @@ const Depuration = () => {
     const { value: formValues, isConfirmed } = await Swal.fire({
       title: `Editar Usuario ${user.Nombre}`,
       html: `
+            <style>
+          .swal2-input, .swal2-select {
+            margin: 0 !important;
+          }
+        </style>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
           <div>
             <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Nombre</label>

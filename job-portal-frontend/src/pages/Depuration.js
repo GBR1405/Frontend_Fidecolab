@@ -661,7 +661,7 @@ const Depuration = () => {
                 <>
                   <div className="bottom__title">
                     <h3>Lista de Usuarios</h3>
-                    <p>Mostrando {Math.min(itemsPerPage, currentItems.length)} de {filteredUsers.length} usuarios</p>
+                    <p> - Mostrando {Math.min(itemsPerPage, currentItems.length)} de {filteredUsers.length} usuarios</p>
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">

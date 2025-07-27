@@ -1202,83 +1202,82 @@ const Depuration = () => {
 
   // Fetch historial from API
   const fetchHistorial = async () => {
-  setLoading(true);
-  try {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/historial_partidas_D`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
+    setLoading(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/historial_partidas_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener historial de partidas');
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Error al obtener historial de partidas');
+      const data = await response.json();
+      console.log("Datos crudos del backend:", data);
+
+      // Normalización simplificada y precisa
+      const normalizedHistorial = data.map(item => ({
+        id: item.id || item.Partida_ID_PK || item.id_partida, // Todos los posibles nombres de id
+        fecha: item.fecha || item.FechaInicio,
+        profesor: item.profesor || 'Profesor no disponible',
+        curso: item.curso || item.curso_grupo || 'Curso no disponible', // <-- Aquí está el cambio clave
+        total_estudiantes: item.total_estudiantes || 0
+      }));
+
+      console.log("Datos normalizados:", normalizedHistorial);
+
+      setHistorial(normalizedHistorial);
+      setFilteredHistorial(normalizedHistorial);
+    } catch (error) {
+      console.error("Error al obtener historial de partidas:", error);
+      Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    console.log("Datos crudos del backend:", data); // <-- Añade esto para depuración
-
-    // Normalización más robusta
-    const normalizedHistorial = data.map(item => ({
-      id: item.id_partida || item.Partida_ID_PK || item.id,
-      fecha: item.fecha || item.FechaInicio,
-      profesor: item.profesor || (item.Nombre && item.Apellido1 ? `${item.Nombre} ${item.Apellido1}` : 'Profesor no disponible'),
-      curso: item.curso_grupo || (item.Codigo_Curso && item.Nombre_Curso && item.Codigo_Grupo ? 
-             `${item.Codigo_Curso}-${item.Nombre_Curso} G${item.Codigo_Grupo}` : 'Curso no disponible'),
-      total_estudiantes: item.total_estudiantes || 0
-    }));
-
-    console.log("Datos normalizados:", normalizedHistorial); // <-- Verifica la normalización
-    
-    setHistorial(normalizedHistorial);
-    setFilteredHistorial(normalizedHistorial);
-  } catch (error) {
-    console.error("Error al obtener historial de partidas:", error);
-    Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   // Fetch logs from API
   const fetchLogs = async () => {
-  setLoading(true);
-  try {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/bitacora_D`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
+    setLoading(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener logs');
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Error al obtener logs');
+      const data = await response.json();
+      const normalizedLogs = data.logs.map(log => ({
+        ...log,
+        id: log.Bitacora_ID_PK || log.id,
+        usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
+        Accion: log.Accion || 'Acción no especificada',
+        Error: log.Error || 'No aplica',
+        Fecha: log.Fecha ? new Date(log.Fecha).toISOString() : new Date().toISOString()
+      })).reverse();
+
+      setLogs(normalizedLogs || []);
+      setFilteredLogs(normalizedLogs || []);
+    } catch (error) {
+      console.error("Error al obtener logs:", error);
+      Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    const normalizedLogs = data.logs.map(log => ({
-      ...log,
-      id: log.Bitacora_ID_PK || log.id,
-      usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
-      Accion: log.Accion || 'Acción no especificada',
-      Error: log.Error || 'No aplica',
-      Fecha: log.Fecha ? new Date(log.Fecha).toISOString() : new Date().toISOString()
-    })).reverse();
-    
-    setLogs(normalizedLogs || []);
-    setFilteredLogs(normalizedLogs || []);
-  } catch (error) {
-    console.error("Error al obtener logs:", error);
-    Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Filter historial based on search
   useEffect(() => {
@@ -1886,13 +1885,13 @@ const Depuration = () => {
                             <td className="table__data">{item.profesor}</td>
                             <td className="table__data">{item.total_estudiantes}</td>
                             <td className="table__data table__data--actions">
-                              <button 
+                              <button
                                 className="button__view"
                                 title="Ver detalles"
                               >
                                 <i className="fa-solid fa-eye"></i>
                               </button>
-                              <button 
+                              <button
                                 className="button__delete"
                                 onClick={() => handleDeleteHistorial(item.id)}
                                 title="Eliminar"

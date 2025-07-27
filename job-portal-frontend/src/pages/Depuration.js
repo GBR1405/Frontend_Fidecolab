@@ -1135,18 +1135,11 @@ const Depuration = () => {
                                   >
                                     <i className="fa-solid fa-trash"></i>
                                   </button>
-                                  <button 
-                                    className="button__view"
-                                    onClick={() => viewUserDetails(user)}
-                                    title="Ver detalles"
-                                  >
-                                    <i className="fa-solid fa-eye"></i>
-                                  </button>
                                   {user.Rol !== 'Administrador' && (
                                     <button 
-                                      className="button__password"
-                                      onClick={() => handleRestorePassword(user.id)}
-                                      title="Restaurar contraseña"
+                                      className="button__view"
+                                      onClick={() => viewUserDetails(user)}
+                                      title="Ver detalles"
                                     >
                                       <i className="fa-solid fa-key"></i>
                                     </button>

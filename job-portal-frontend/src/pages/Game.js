@@ -477,7 +477,7 @@ function randomHSL() {
     };
   
     const handleTimeUp = (gameType) => {
-      if (demoActive) return;
+      if (window.timeUpAlert || demoActive) return;
   
       setTimer(prev => ({
         ...prev,
@@ -485,7 +485,6 @@ function randomHSL() {
         active: false
       }));
       
-      // Mostrar el modal
       Swal.fire({
         title: '¡Tiempo terminado!',
         text: `Se ha acabado el tiempo para el juego ${gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
@@ -494,20 +493,6 @@ function randomHSL() {
         allowOutsideClick: false,
         willOpen: () => {
           window.timeUpAlert = Swal.getPopup();
-          
-          // Verificar cada 5 segundos si el modo demo está activo
-          const checkDemoInterval = setInterval(() => {
-            if (demoActive && window.timeUpAlert) {
-              Swal.close();
-              window.timeUpAlert = null;
-              clearInterval(checkDemoInterval);
-            }
-          }, 5000);
-
-          // Limpiar el intervalo cuando se cierre el modal
-          window.timeUpAlert.addEventListener('close', () => {
-            clearInterval(checkDemoInterval);
-          });
         }
       });
     };
@@ -760,7 +745,6 @@ function randomHSL() {
         userId={userId}
         isProfessor={false} // O puedes determinar esto basado en el rol del usuario
       />
-      
       <div className="teamroom__container">
         {/* Overlay de transición */}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>

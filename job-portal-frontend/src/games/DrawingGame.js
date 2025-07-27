@@ -475,7 +475,7 @@ const clearLocalDrawing = () => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-  isResetting.current = true; // Activamos flag de reset
+  isResetting.current = true;
   
   // 1. Limpiar estado local
   setLines([]);
@@ -488,27 +488,23 @@ const clearLocalDrawing = () => {
   tintaConsumida.current = 0;
   setTinta(MAX_TINTA);
 
-  // 4. Notificar al servidor con bandera explícita
-  socket.emit('drawingAction', {
+  // 4. Emitir dos eventos separados:
+  // - Uno para limpiar trazos visuales (para todos)
+  socket.emit('clearDrawingPaths', { 
+    partidaId, 
+    equipoNumero, 
+    userId 
+  });
+
+  // - Otro para actualizar la tinta (solo para este usuario)
+  socket.emit('updateTintaState', {
     partidaId,
     equipoNumero,
     userId,
-    action: {
-      type: 'clear',
-      userId,
-      isLocalReset: true, // BANDERA CLAVE
-      tinta: MAX_TINTA
-    }
+    tinta: MAX_TINTA
   });
 
-  // 5. Limpiar trazos remotos del usuario (opcional)
-  setRemoteLines(prev => {
-    const updated = { ...prev };
-    delete updated[userId];
-    return updated;
-  });
-
-  // 6. Feedback visual
+  // 5. Feedback visual
   Swal.fire({
     title: 'Dibujo borrado',
     text: 'Tu tinta ha sido recargada',
@@ -518,9 +514,29 @@ const clearLocalDrawing = () => {
   });
 
   setTimeout(() => {
-    isResetting.current = false; // Desactivamos flag después de 1seg
+    isResetting.current = false;
   }, 1000);
 };
+
+useEffect(() => {
+  if (!socket) return;
+
+  const handleClearRemotePaths = ({ userId: clearedUserId }) => {
+    if (clearedUserId !== userId) { // No es nuestro usuario
+      setRemoteLines(prev => {
+        const updated = { ...prev };
+        delete updated[clearedUserId];
+        return updated;
+      });
+    }
+  };
+
+  socket.on('clearRemotePaths', handleClearRemotePaths);
+
+  return () => {
+    socket.off('clearRemotePaths', handleClearRemotePaths);
+  };
+}, [socket, userId]);
 
 useEffect(() => {
   if (!socket) return;

@@ -465,51 +465,51 @@ const clearLocalDrawing = () => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-  // Limpiar estado local
+  // 1. Limpiar estado local del usuario
   setLines([]);
   
-  // Limpiar localStorage completamente
+  // 2. Limpiar localStorage del usuario
   localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
   localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
 
-  // Notificar al servidor para borrado permanente
+  // 3. Notificar al servidor para borrado permanente (solo este usuario)
   socket.emit('drawingAction', {
     partidaId,
     equipoNumero,
     userId,
     action: {
       type: 'clear',
-      userId,
+      userId, // Enviamos explícitamente el userId actual
       tinta: MAX_TINTA,
       permanent: true
     }
   });
 
-// Limpiar trazos remotos del usuario borrado (por seguridad)
+  // 4. Limpiar trazos remotos solo del usuario actual (opcional)
+  // Esto es para limpieza local en caso de reconexión
   setRemoteLines(prev => {
     const updated = { ...prev };
     delete updated[userId];
     return updated;
   });
 
-  // Reiniciar el canvas como si se hubiera recargado
-  socket.emit('initDrawingGame', {
-    partidaId,
-    equipoNumero,
-    userId
-  });
-
-  // Resetear estado de tinta
+  // 5. Resetear estado de tinta local
   tintaConsumida.current = 0;
   setTinta(MAX_TINTA);
 
-  // Feedback visual
+  // 6. Feedback visual solo para este usuario
   Swal.fire({
     title: 'Dibujo borrado',
     text: 'Todos tus trazos han sido eliminados permanentemente',
     icon: 'success',
     timer: 1500,
     showConfirmButton: false
+  });
+
+  socket.emit('initDrawingGame', {
+    partidaId,
+    equipoNumero,
+    userId
   });
 };
 

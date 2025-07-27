@@ -11,6 +11,8 @@ const Depuration = () => {
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
+  const [systemCleanCode, setSystemCleanCode] = useState('');
+  const [showSystemClean, setShowSystemClean] = useState(false);
 
   // Calcular índices para la paginación
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -140,22 +142,6 @@ const Depuration = () => {
     });
   };
 
-  // Función para desvincular curso de un usuario
-  const handleUnlinkCourse = (user) => {
-    Swal.fire({
-      title: 'Desvincular Curso',
-      text: `¿Estás seguro que deseas desvincular los cursos de ${user.nombre}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, desvincular',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('Desvinculado', `Los cursos de ${user.nombre} han sido desvinculados`, 'success');
-      }
-    });
-  };
-
   // Función para agregar usuario
   const handleAddUser = () => {
     Swal.fire({
@@ -241,33 +227,41 @@ const Depuration = () => {
         return;
     }
 
-    // Código encriptado (base64 de "fidecolab")
-    const encryptedCode = btoa('fidecolab');
-    
-    Swal.fire({
-      title: title,
-      text: text,
-      icon: 'warning',
-      input: 'text',
-      inputPlaceholder: 'Ingresa el código de seguridad',
-      showCancelButton: true,
-      confirmButtonText: 'Confirmar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: action === 'reset' ? '#d33' : '#3085d6',
-      timer: 10000,
-      timerProgressBar: true,
-      preConfirm: (input) => {
-        if (btoa(input) !== encryptedCode) {
-          Swal.showValidationMessage('Código incorrecto');
+    if (action === 'reset') {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        input: 'text',
+        inputPlaceholder: 'Ingresa "fidecolab" para confirmar',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        preConfirm: (input) => {
+          if (input.toLowerCase() !== 'fidecolab') {
+            Swal.showValidationMessage('Código incorrecto');
+          }
         }
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('Completado', `La acción "${title}" se ha realizado con éxito`, 'success');
-      } else if (result.dismiss === Swal.DismissReason.timer) {
-        Swal.fire('Cancelado', 'El tiempo para confirmar ha expirado', 'error');
-      }
-    });
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire('Sistema Reiniciado', 'El sistema ha sido reiniciado completamente', 'success');
+        }
+      });
+    } else {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire('Completado', `La acción "${title}" se ha realizado con éxito`, 'success');
+        }
+      });
+    }
   };
 
   // Función para ver detalles de usuario
@@ -343,6 +337,106 @@ const Depuration = () => {
     });
   };
 
+  // Función para acceder a la limpieza del sistema
+  const accessSystemClean = () => {
+    Swal.fire({
+      title: 'Acceso a Limpieza del Sistema',
+      text: 'Ingrese el código de seguridad para continuar',
+      input: 'text',
+      inputPlaceholder: 'Código',
+      showCancelButton: true,
+      confirmButtonText: 'Continuar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: (input) => {
+        if (input.toLowerCase() !== 'fidecolab') {
+          Swal.showValidationMessage('Código incorrecto');
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setShowSystemClean(true);
+      }
+    });
+  };
+
+  // Si estamos en modo limpieza del sistema, mostrar esa interfaz
+  if (showSystemClean) {
+    return (
+      <LayoutAdmin>
+        <section className="depuration__container">
+          <div className="depuration__title">
+            <h3>Limpieza del Sistema</h3>
+            <button 
+              className="button--back"
+              onClick={() => setShowSystemClean(false)}
+            >
+              Volver
+            </button>
+          </div>
+          
+          <div className="system-clean__container">
+            <div className="system-clean__warning">
+              <i className="fa-solid fa-triangle-exclamation"></i>
+              <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
+            </div>
+            
+            <div className="system-clean__buttons">
+              <button 
+                className="clean-button clean-button--customizations"
+                onClick={() => handleSystemClean('customizations')}
+              >
+                <i className="fa-solid fa-paint-roller"></i>
+                Limpiar todas las personalizaciones
+              </button>
+              
+              <button 
+                className="clean-button clean-button--logs"
+                onClick={() => handleSystemClean('logs')}
+              >
+                <i className="fa-solid fa-clipboard-list"></i>
+                Limpiar la Bitácora
+              </button>
+              
+              <button 
+                className="clean-button clean-button--history"
+                onClick={() => handleSystemClean('history')}
+              >
+                <i className="fa-solid fa-clock-rotate-left"></i>
+                Limpiar Historial
+              </button>
+              
+              <button 
+                className="clean-button clean-button--students"
+                onClick={() => handleSystemClean('students')}
+              >
+                <i className="fa-solid fa-user-graduate"></i>
+                Eliminar todos los Estudiantes
+              </button>
+              
+              <button 
+                className="clean-button clean-button--professors"
+                onClick={() => handleSystemClean('professors')}
+              >
+                <i className="fa-solid fa-user-tie"></i>
+                Eliminar todos los Profesores
+              </button>
+            </div>
+            
+            <div className="system-clean__reset">
+              <button 
+                className="reset-button"
+                onClick={() => handleSystemClean('reset')}
+              >
+                <i className="fa-solid fa-bomb"></i>
+                REINICIAR SISTEMA FIDECOLAB
+              </button>
+            </div>
+          </div>
+        </section>
+      </LayoutAdmin>
+    );
+  }
+
   return (
     <LayoutAdmin>
       <section className="depuration__container">
@@ -392,8 +486,8 @@ const Depuration = () => {
             </div>
             
             <div 
-              className={`left__box ${selectedTab === 'clean' ? 'active' : ''}`} 
-              onClick={() => handleTabChange('clean')}
+              className="left__box left__box--danger"
+              onClick={accessSystemClean}
             >
               <div className="box__shape shape--danger">
                 <i className="fa-solid fa-broom"></i>
@@ -416,7 +510,6 @@ const Depuration = () => {
                       {selectedTab === 'users' && 'Administrar Usuarios'}
                       {selectedTab === 'history' && 'Administrar Historial'}
                       {selectedTab === 'logs' && 'Administrar Logs'}
-                      {selectedTab === 'clean' && 'Limpieza del Sistema'}
                     </h3>
                   </div>
                   
@@ -451,47 +544,45 @@ const Depuration = () => {
                   )}
                 </div>
                 
-                {selectedTab !== 'clean' && (
-                  <div className="options__bottom">
-                    <div className="option__search">
-                      <i className="fa-solid fa-magnifying-glass"></i>
-                      <input 
-                        type="search" 
-                        placeholder="Buscar elemento"
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                      />
-                    </div>
-                    
-                    {selectedTab === 'users' && (
-                      <>
-                        <select 
-                          className="option__filter"
-                          value={roleFilter}
-                          onChange={handleRoleFilterChange}
-                        >
-                          <option value="all">Todos los roles</option>
-                          <option value="Profesor">Profesores</option>
-                          <option value="Estudiante">Estudiantes</option>
-                        </select>
-                        
-                        <select 
-                          className="option__filter"
-                          value={statusFilter}
-                          onChange={handleStatusFilterChange}
-                        >
-                          <option value="all">Todos los estados</option>
-                          <option value="Activo">Activos</option>
-                          <option value="Inactivo">Inactivos</option>
-                        </select>
-                      </>
-                    )}
-                    
-                    <div className="option__button button--search">
-                      <button type="button">Buscar</button>
-                    </div>
+                <div className="options__bottom">
+                  <div className="option__search">
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                    <input 
+                      type="search" 
+                      placeholder="Buscar elemento"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                    />
                   </div>
-                )}
+                  
+                  {selectedTab === 'users' && (
+                    <>
+                      <select 
+                        className="option__filter"
+                        value={roleFilter}
+                        onChange={handleRoleFilterChange}
+                      >
+                        <option value="all">Todos los roles</option>
+                        <option value="Profesor">Profesores</option>
+                        <option value="Estudiante">Estudiantes</option>
+                      </select>
+                      
+                      <select 
+                        className="option__filter"
+                        value={statusFilter}
+                        onChange={handleStatusFilterChange}
+                      >
+                        <option value="all">Todos los estados</option>
+                        <option value="Activo">Activos</option>
+                        <option value="Inactivo">Inactivos</option>
+                      </select>
+                    </>
+                  )}
+                  
+                  <div className="option__button button--search">
+                    <button type="button">Buscar</button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -535,13 +626,6 @@ const Depuration = () => {
                               title={item.estado === 'Activo' ? 'Desactivar' : 'Activar'}
                             >
                               <i className="fa-solid fa-ban"></i>
-                            </button>
-                            <button 
-                              className="button__unlink"
-                              onClick={() => handleUnlinkCourse(item)}
-                              title="Desvincular cursos"
-                            >
-                              <i className="fa-solid fa-link-slash"></i>
                             </button>
                             <button 
                               className="button__delete"
@@ -731,70 +815,6 @@ const Depuration = () => {
                       )}
                     </tfoot>
                   </table>
-                </>
-              ) : selectedTab === 'clean' ? (
-                <>
-                  <div className="bottom__title">
-                    <h3>Limpieza del Sistema</h3>
-                  </div>
-                  <div className="system-clean__container">
-                    <div className="system-clean__warning">
-                      <i className="fa-solid fa-triangle-exclamation"></i>
-                      <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
-                    </div>
-                    
-                    <div className="system-clean__buttons">
-                      <button 
-                        className="clean-button clean-button--customizations"
-                        onClick={() => handleSystemClean('customizations')}
-                      >
-                        <i className="fa-solid fa-paint-roller"></i>
-                        Limpiar todas las personalizaciones
-                      </button>
-                      
-                      <button 
-                        className="clean-button clean-button--logs"
-                        onClick={() => handleSystemClean('logs')}
-                      >
-                        <i className="fa-solid fa-clipboard-list"></i>
-                        Limpiar la Bitácora
-                      </button>
-                      
-                      <button 
-                        className="clean-button clean-button--history"
-                        onClick={() => handleSystemClean('history')}
-                      >
-                        <i className="fa-solid fa-clock-rotate-left"></i>
-                        Limpiar Historial
-                      </button>
-                      
-                      <button 
-                        className="clean-button clean-button--students"
-                        onClick={() => handleSystemClean('students')}
-                      >
-                        <i className="fa-solid fa-user-graduate"></i>
-                        Eliminar todos los Estudiantes
-                      </button>
-                      
-                      <button 
-                        className="clean-button clean-button--professors"
-                        onClick={() => handleSystemClean('professors')}
-                      >
-                        <i className="fa-solid fa-user-tie"></i>
-                        Eliminar todos los Profesores
-                      </button>
-                    </div>
-                    
-                    <div className="system-clean__reset">
-                      <button 
-                        className="reset-button"
-                        onClick={() => handleSystemClean('reset')}
-                      >
-                        <i className="fa-solid fa-bomb"></i>
-                        REINICIAR SISTEMA FIDECOLAB
-                      </button>
-                    </div>
-                  </div>
                 </>
               ) : (
                 <div className="depuration__empty">

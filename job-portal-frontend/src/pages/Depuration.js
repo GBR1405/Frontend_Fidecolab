@@ -269,28 +269,106 @@ const Depuration = () => {
 
   // Edit user
   const handleEditUser = async (user) => {
-    // Get user's current courses
-    let userCourses = [];
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.id}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
+    // Verificar si el usuario es administrador
+    const isAdmin = user.Rol === 'Administrador';
+    
+    // Obtener grupos del usuario si no es admin
+    let userGroups = [];
+    if (!isAdmin) {
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/usuarios_D/${user.id}/grupos`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data && data.data.cursos) {
-          userCourses = data.data.cursos.split(',').map(c => c.trim());
+        if (response.ok) {
+          const data = await response.json();
+          userGroups = data.grupos || [];
         }
+      } catch (error) {
+        console.error("Error al obtener grupos del usuario:", error);
       }
-    } catch (error) {
-      console.error("Error al obtener cursos del usuario:", error);
     }
+
+    // Verificar si se debe mostrar el botón de agregar curso
+    const showAddCourseBtn = !isAdmin && (
+      user.Rol === 'Profesor' || 
+      (user.Rol === 'Estudiante' && userGroups.length === 0)
+    );
+
+    // Crear el HTML para la tabla de grupos
+    const groupsTableHtml = !isAdmin ? `
+      <div style="margin: 15px 0;">
+        <h4 style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+          <span>Cursos Vinculados</span>
+          ${showAddCourseBtn ? `
+            <button id="add-course-btn" class="swal2-button swal2-confirm" style="padding: 4px 10px; font-size: 12px;">
+              <i class="fa-solid fa-plus"></i> Agregar Curso
+            </button>
+          ` : ''}
+        </h4>
+        <div style="max-height: 200px; overflow-y: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f5f5f5;">
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Código</th>
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Nombre</th>
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Grupo</th>
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userGroups.length > 0 ? 
+                userGroups.map(group => `
+                  <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${group.codigo}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${group.nombre}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">G${group.grupo}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                      <button 
+                        data-group-id="${group.id}"
+                        class="unlink-course-btn swal2-button swal2-cancel" 
+                        style="padding: 2px 6px; background-color: #ff6b6b; color: white;">
+                        <i class="fa-solid fa-link-slash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('') : `
+                  <tr>
+                    <td colspan="4" style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">
+                      No hay cursos vinculados
+                    </td>
+                  </tr>
+                `}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ` : '';
+
+    // Crear el HTML para los botones de acciones especiales
+    const specialActionsHtml = !isAdmin ? `
+      <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+        ${user.Rol === 'Profesor' ? `
+          <button id="delete-customizations-btn" class="swal2-button swal2-cancel" style="width: 48%;">
+            <i class="fa-solid fa-trash"></i> Eliminar Personalizaciones
+          </button>
+          <button id="delete-matches-btn" class="swal2-button swal2-cancel" style="width: 48%;">
+            <i class="fa-solid fa-gamepad"></i> Eliminar Partidas
+          </button>
+        ` : ''}
+        ${user.Rol === 'Estudiante' ? `
+          <button id="reset-achievements-btn" class="swal2-button swal2-cancel" style="width: 100%;">
+            <i class="fa-solid fa-trophy"></i> Reiniciar Logros
+          </button>
+        ` : ''}
+      </div>
+    ` : '';
 
     const { value: formValues, isConfirmed } = await Swal.fire({
       title: `Editar Usuario ${user.Nombre}`,
@@ -310,6 +388,7 @@ const Depuration = () => {
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
           <select id="swal-input6" class="swal2-input" required>
+            <option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
             <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
             <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
           </select>
@@ -317,14 +396,8 @@ const Depuration = () => {
             <i class="fa-solid fa-key"></i> Restaurar Contraseña
           </button>
         </div>
-        <div style="margin: 10px 0;"><strong>Cursos:</strong></div>
-        <select id="swal-input7" class="swal2-input" multiple style="height: auto; width: 100%;">
-          ${courses.map(course => 
-            `<option value="${course.GrupoCurso_ID_PK}" ${userCourses.includes(course.Nombre_Curso) ? 'selected' : ''}>
-              ${course.Nombre_Curso} - Grupo ${course.Codigo_Grupo}
-            </option>`
-          ).join('')}
-        </select>
+        ${groupsTableHtml}
+        ${specialActionsHtml}
       `,
       width: '700px',
       focusConfirm: false,
@@ -342,8 +415,6 @@ const Depuration = () => {
         const apellido2 = document.getElementById('swal-input3').value;
         const genero = document.getElementById('swal-input5').value;
         const rol = document.getElementById('swal-input6').value;
-        const cursos = Array.from(document.getElementById('swal-input7').selectedOptions)
-                          .map(option => option.value);
 
         // Check if any changes were made
         const changesMade = 
@@ -351,22 +422,17 @@ const Depuration = () => {
           apellido1 !== user.Apellido1 ||
           apellido2 !== user.Apellido2 ||
           genero !== user.Genero ||
-          rol !== user.Rol ||
-          JSON.stringify(cursos) !== JSON.stringify(userCourses);
+          rol !== user.Rol;
 
         if (!changesMade) {
           Swal.showValidationMessage('No se realizaron cambios');
           return false;
         }
 
-        return { nombre, apellido1, apellido2, genero, rol, cursos };
+        return { nombre, apellido1, apellido2, genero, rol };
       },
       willOpen: () => {
-        // Configure multiple select
-        const select = document.getElementById('swal-input7');
-        select.size = Math.min(5, courses.length);
-        
-        // Add event listener for password reset
+        // Event listener para el botón de restaurar contraseña
         document.getElementById('reset-password-btn').addEventListener('click', async (e) => {
           e.preventDefault();
           const result = await Swal.fire({
@@ -402,6 +468,240 @@ const Depuration = () => {
             }
           }
         });
+
+        // Event listeners para los botones de desvincular curso
+        document.querySelectorAll('.unlink-course-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const groupId = e.currentTarget.getAttribute('data-group-id');
+            
+            const result = await Swal.fire({
+              title: '¿Desvincular curso?',
+              text: '¿Estás seguro que deseas desvincular al usuario de este curso?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, desvincular',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33'
+            });
+            
+            if (result.isConfirmed) {
+              try {
+                const apiUrl = process.env.REACT_APP_API_URL;
+                const response = await fetch(`${apiUrl}/usuarios_D/${user.id}/grupos/${groupId}`, {
+                  method: "DELETE",
+                  credentials: "include",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
+                });
+
+                if (!response.ok) {
+                  throw new Error('Error al desvincular curso');
+                }
+
+                Swal.fire('Éxito', 'Usuario desvinculado del curso correctamente', 'success');
+                handleEditUser(user); // Recargar la ventana de edición
+              } catch (error) {
+                console.error("Error al desvincular curso:", error);
+                Swal.fire('Error', 'No se pudo desvincular el curso', 'error');
+              }
+            }
+          });
+        });
+
+        // Event listener para el botón de agregar curso
+        if (document.getElementById('add-course-btn')) {
+          document.getElementById('add-course-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            try {
+              // Obtener todos los grupos disponibles
+              const apiUrl = process.env.REACT_APP_API_URL;
+              const response = await fetch(`${apiUrl}/grupos_D`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "Content-Type": "application/json"
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error('Error al obtener grupos');
+              }
+
+              const { grupos } = await response.json();
+              
+              // Filtrar grupos a los que el usuario no está vinculado
+              const availableGroups = grupos.filter(group => 
+                !userGroups.some(userGroup => userGroup.id === group.id)
+              );
+
+              if (availableGroups.length === 0) {
+                Swal.fire('Info', 'No hay cursos disponibles para vincular', 'info');
+                return;
+              }
+
+              const { value: selectedGroupId } = await Swal.fire({
+                title: 'Seleccionar curso',
+                input: 'select',
+                inputOptions: availableGroups.reduce((options, group) => {
+                  options[group.id] = group.nombreCompleto;
+                  return options;
+                }, {}),
+                inputPlaceholder: 'Selecciona un curso',
+                showCancelButton: true,
+                confirmButtonText: 'Vincular',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                  if (!value) {
+                    return 'Debes seleccionar un curso';
+                  }
+                }
+              });
+
+              if (selectedGroupId) {
+                // Vincular el usuario al grupo seleccionado
+                const linkResponse = await fetch(`${apiUrl}/usuarios_D/${user.id}/grupos/${selectedGroupId}`, {
+                  method: "POST",
+                  credentials: "include",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
+                });
+
+                if (!linkResponse.ok) {
+                  const errorData = await linkResponse.json();
+                  throw new Error(errorData.message || 'Error al vincular curso');
+                }
+
+                Swal.fire('Éxito', 'Usuario vinculado al curso correctamente', 'success');
+                handleEditUser(user); // Recargar la ventana de edición
+              }
+            } catch (error) {
+              console.error("Error al vincular curso:", error);
+              Swal.fire('Error', error.message || 'No se pudo vincular el curso', 'error');
+            }
+          });
+        }
+
+        // Event listeners para los botones de acciones especiales
+        if (document.getElementById('delete-customizations-btn')) {
+          document.getElementById('delete-customizations-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const result = await Swal.fire({
+              title: '¿Eliminar personalizaciones?',
+              text: 'Se eliminarán todas las personalizaciones del profesor y sus dependencias',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33'
+            });
+            
+            if (result.isConfirmed) {
+              try {
+                const apiUrl = process.env.REACT_APP_API_URL;
+                const response = await fetch(`${apiUrl}/profesores_D/${user.id}/personalizaciones`, {
+                  method: "DELETE",
+                  credentials: "include",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
+                });
+
+                if (!response.ok) {
+                  throw new Error('Error al eliminar personalizaciones');
+                }
+
+                Swal.fire('Éxito', 'Personalizaciones eliminadas correctamente', 'success');
+              } catch (error) {
+                console.error("Error al eliminar personalizaciones:", error);
+                Swal.fire('Error', 'No se pudieron eliminar las personalizaciones', 'error');
+              }
+            }
+          });
+        }
+
+        if (document.getElementById('delete-matches-btn')) {
+          document.getElementById('delete-matches-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const result = await Swal.fire({
+              title: '¿Eliminar partidas?',
+              text: 'Se eliminarán todas las partidas del profesor y sus dependencias',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33'
+            });
+            
+            if (result.isConfirmed) {
+              try {
+                const apiUrl = process.env.REACT_APP_API_URL;
+                const response = await fetch(`${apiUrl}/profesores_D/${user.id}/partidas`, {
+                  method: "DELETE",
+                  credentials: "include",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
+                });
+
+                if (!response.ok) {
+                  throw new Error('Error al eliminar partidas');
+                }
+
+                Swal.fire('Éxito', 'Partidas eliminadas correctamente', 'success');
+              } catch (error) {
+                console.error("Error al eliminar partidas:", error);
+                Swal.fire('Error', 'No se pudieron eliminar las partidas', 'error');
+              }
+            }
+          });
+        }
+
+        if (document.getElementById('reset-achievements-btn')) {
+          document.getElementById('reset-achievements-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const result = await Swal.fire({
+              title: '¿Reiniciar logros?',
+              text: 'Se eliminarán todos los logros del estudiante',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, reiniciar',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#d33'
+            });
+            
+            if (result.isConfirmed) {
+              try {
+                const apiUrl = process.env.REACT_APP_API_URL;
+                const response = await fetch(`${apiUrl}/estudiantes_D/${user.id}/logros`, {
+                  method: "DELETE",
+                  credentials: "include",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
+                });
+
+                if (!response.ok) {
+                  throw new Error('Error al reiniciar logros');
+                }
+
+                Swal.fire('Éxito', 'Logros reiniciados correctamente', 'success');
+              } catch (error) {
+                console.error("Error al reiniciar logros:", error);
+                Swal.fire('Error', 'No se pudieron reiniciar los logros', 'error');
+              }
+            }
+          });
+        }
       }
     });
 
@@ -421,8 +721,7 @@ const Depuration = () => {
           apellido1: formValues.apellido1,
           apellido2: formValues.apellido2,
           rol: formValues.rol,
-          genero: formValues.genero,
-          cursos: formValues.cursos
+          genero: formValues.genero
         })
       });
 

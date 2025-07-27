@@ -44,7 +44,7 @@ const Depuration = () => {
       const normalizedUsers = data.users.map(user => ({
         ...user,
         id: user.Usuario_ID_PK || user.id 
-      }));
+      })).reverse();
       setUsers(normalizedUsers || []);
       setFilteredUsers(normalizedUsers || []);
     } catch (error) {

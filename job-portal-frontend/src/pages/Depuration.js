@@ -18,8 +18,15 @@ const Depuration = () => {
   const [showSystemClean, setShowSystemClean] = useState(false);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [filteredHistorial, setFilteredHistorial] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [filteredLogs, setFilteredLogs] = useState([]);
+  const [logActionFilter, setLogActionFilter] = useState('all');
+  const [logErrorFilter, setLogErrorFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
 
-  
+
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -43,7 +50,7 @@ const Depuration = () => {
       console.log("Users data received:", data);
       const normalizedUsers = data.users.map(user => ({
         ...user,
-        id: user.Usuario_ID_PK || user.id 
+        id: user.Usuario_ID_PK || user.id
       })).reverse();
       setUsers(normalizedUsers || []);
       setFilteredUsers(normalizedUsers || []);
@@ -97,8 +104,8 @@ const Depuration = () => {
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(user => 
-        (user.Nombre && user.Nombre.toLowerCase().includes(query)) || 
+      result = result.filter(user =>
+        (user.Nombre && user.Nombre.toLowerCase().includes(query)) ||
         (user.Apellido1 && user.Apellido1.toLowerCase().includes(query)) ||
         (user.Apellido2 && user.Apellido2.toLowerCase().includes(query)) ||
         (user.Correo && user.Correo.toLowerCase().includes(query))
@@ -114,6 +121,10 @@ const Depuration = () => {
     if (selectedTab === 'users') {
       fetchUsers();
       fetchCourses();
+    } else if (selectedTab === 'history') {
+      fetchHistorial();
+    } else if (selectedTab === 'logs') {
+      fetchLogs();
     }
   }, [selectedTab]);
 
@@ -252,7 +263,7 @@ const Depuration = () => {
     }
   };
 
-   const handleDeleteItem = (itemType, id) => {
+  const handleDeleteItem = (itemType, id) => {
     Swal.fire({
       title: '¿Estás seguro?',
       text: `Esta acción eliminará el ${itemType} seleccionado`,
@@ -271,7 +282,7 @@ const Depuration = () => {
   const handleEditUser = async (user) => {
     // Verificar si el usuario es administrador
     const isAdmin = user.Rol === 'Administrador';
-    
+
     // Obtener grupos del usuario si no es admin
     let userGroups = [];
     if (!isAdmin) {
@@ -297,7 +308,7 @@ const Depuration = () => {
 
     // Verificar si se debe mostrar el botón de agregar curso
     const showAddCourseBtn = !isAdmin && (
-      user.Rol === 'Profesor' || 
+      user.Rol === 'Profesor' ||
       (user.Rol === 'Estudiante' && userGroups.length === 0)
     );
 
@@ -352,8 +363,8 @@ const Depuration = () => {
               </tr>
             </thead>
             <tbody>
-              ${userGroups.length > 0 ? 
-                userGroups.map(group => `
+              ${userGroups.length > 0 ?
+        userGroups.map(group => `
                   <tr>
                     <td style="padding: 10px; border-bottom: 1px solid #eee;">${group.codigo}</td>
                     <td style="padding: 10px; border-bottom: 1px solid #eee;">${group.nombre}</td>
@@ -488,7 +499,7 @@ const Depuration = () => {
         const rol = document.getElementById('swal-input6').value;
 
         // Check if any changes were made
-        const changesMade = 
+        const changesMade =
           nombre !== user.Nombre ||
           apellido1 !== user.Apellido1 ||
           apellido2 !== user.Apellido2 ||
@@ -515,7 +526,7 @@ const Depuration = () => {
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#3085d6'
           });
-          
+
           if (result.isConfirmed) {
             try {
               const apiUrl = process.env.REACT_APP_API_URL;
@@ -545,7 +556,7 @@ const Depuration = () => {
           btn.addEventListener('click', async (e) => {
             e.preventDefault();
             const groupId = e.currentTarget.getAttribute('data-group-id');
-            
+
             const result = await Swal.fire({
               title: '¿Desvincular curso?',
               text: '¿Estás seguro que deseas desvincular al usuario de este curso?',
@@ -555,7 +566,7 @@ const Depuration = () => {
               cancelButtonText: 'Cancelar',
               confirmButtonColor: '#d33'
             });
-            
+
             if (result.isConfirmed) {
               try {
                 const apiUrl = process.env.REACT_APP_API_URL;
@@ -586,7 +597,7 @@ const Depuration = () => {
         if (document.getElementById('add-course-btn')) {
           document.getElementById('add-course-btn').addEventListener('click', async (e) => {
             e.preventDefault();
-            
+
             try {
               // Obtener todos los grupos disponibles
               const apiUrl = process.env.REACT_APP_API_URL;
@@ -604,7 +615,7 @@ const Depuration = () => {
               }
 
               const { grupos } = await response.json();
-              
+
               // Filtrar grupos a los que el usuario no está vinculado y ordenar alfabéticamente
               const availableGroups = grupos
                 .filter(group => !userGroups.some(userGroup => userGroup.id === group.id))
@@ -640,7 +651,7 @@ const Depuration = () => {
                 didOpen: () => {
                   const searchInput = document.getElementById('course-search');
                   const select = document.getElementById('course-select');
-                  
+
                   searchInput.addEventListener('input', (e) => {
                     const searchTerm = e.target.value.toLowerCase();
                     Array.from(select.options).forEach(option => {
@@ -690,7 +701,7 @@ const Depuration = () => {
               cancelButtonText: 'Cancelar',
               confirmButtonColor: '#d33'
             });
-            
+
             if (result.isConfirmed) {
               try {
                 const apiUrl = process.env.REACT_APP_API_URL;
@@ -728,7 +739,7 @@ const Depuration = () => {
               cancelButtonText: 'Cancelar',
               confirmButtonColor: '#d33'
             });
-            
+
             if (result.isConfirmed) {
               try {
                 const apiUrl = process.env.REACT_APP_API_URL;
@@ -766,7 +777,7 @@ const Depuration = () => {
               cancelButtonText: 'Cancelar',
               confirmButtonColor: '#d33'
             });
-            
+
             if (result.isConfirmed) {
               try {
                 const apiUrl = process.env.REACT_APP_API_URL;
@@ -1094,10 +1105,10 @@ const Depuration = () => {
             const searchInput = document.getElementById('student-search');
             const tableBody = document.getElementById('student-table-body');
             const rows = tableBody.getElementsByTagName('tr');
-            
+
             searchInput.addEventListener('input', (e) => {
               const searchTerm = e.target.value.toLowerCase();
-              
+
               Array.from(rows).forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
@@ -1139,12 +1150,12 @@ const Depuration = () => {
           Swal.fire('Éxito', 'Todos los profesores han sido desvinculados', 'success');
           Swal.close();
         });
-        
+
         document.getElementById('students-btn').addEventListener('click', () => {
           Swal.fire('Éxito', 'Todos los estudiantes han sido desvinculados', 'success');
           Swal.close();
         });
-        
+
         document.getElementById('all-users-btn').addEventListener('click', () => {
           Swal.fire({
             title: '¡PELIGRO!',
@@ -1189,11 +1200,146 @@ const Depuration = () => {
     });
   };
 
+  // Fetch historial from API
+  const fetchHistorial = async () => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/historial_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener historial');
+      }
+
+      const data = await response.json();
+      const normalizedHistorial = data.historial.map(item => ({
+        ...item,
+        id: item.Resultados_ID_PK || item.id
+      })).reverse();
+      setHistorial(normalizedHistorial || []);
+      setFilteredHistorial(normalizedHistorial || []);
+    } catch (error) {
+      console.error("Error al obtener historial:", error);
+      Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch logs from API
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener logs');
+      }
+
+      const data = await response.json();
+      const normalizedLogs = data.logs.map(log => ({
+        ...log,
+        id: log.Bitacora_ID_PK || log.id,
+        usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
+        error: log.Error || 'No aplica'
+      })).reverse();
+      setLogs(normalizedLogs || []);
+      setFilteredLogs(normalizedLogs || []);
+    } catch (error) {
+      console.error("Error al obtener logs:", error);
+      Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter historial based on search
+  useEffect(() => {
+    if (selectedTab === 'history') {
+      let result = historial;
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(item =>
+          (item.curso && item.curso.toLowerCase().includes(query)) ||
+          (item.profesor && item.profesor.toLowerCase().includes(query)));
+      }
+
+      setFilteredHistorial(result);
+      setCurrentPage(1);
+    }
+  }, [historial, searchQuery, selectedTab]);
+
+  // Filter logs based on search and filters
+  useEffect(() => {
+    if (selectedTab === 'logs') {
+      let result = logs;
+
+      // Filter by action type
+      if (logActionFilter !== 'all') {
+        result = result.filter(log => {
+          if (logActionFilter === 'Descarga') {
+            return log.Accion.includes('Descarga');
+          } else if (logActionFilter === 'Agregado') {
+            return log.Accion.includes('Agregado') || log.Accion.includes('agregado');
+          } else if (logActionFilter === 'Eliminado') {
+            return log.Accion.includes('Eliminado') || log.Accion.includes('eliminado');
+          }
+          return true;
+        });
+      }
+
+      // Filter by error presence
+      if (logErrorFilter !== 'all') {
+        result = result.filter(log =>
+          logErrorFilter === 'conError' ? log.error !== 'No aplica' : log.error === 'No aplica'
+        );
+      }
+
+      // Filter by date
+      if (dateFilter) {
+        const filterDate = new Date(dateFilter).toDateString();
+        result = result.filter(log => {
+          const logDate = new Date(log.Fecha).toDateString();
+          return logDate === filterDate;
+        });
+      }
+
+      // Filter by search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(log =>
+          (log.usuario && log.usuario.toLowerCase().includes(query)) ||
+          (log.Accion && log.Accion.toLowerCase().includes(query)) ||
+          (log.error && log.error.toLowerCase().includes(query))
+        )
+      }
+
+      setFilteredLogs(result);
+      setCurrentPage(1);
+    }
+  }, [logs, searchQuery, logActionFilter, logErrorFilter, dateFilter, selectedTab]);
+
   // System clean functions
   const handleSystemClean = (action) => {
     let title, text;
-    
-    switch(action) {
+
+    switch (action) {
       case 'customizations':
         title = 'Limpiar personalizaciones';
         text = '¿Estás seguro que deseas eliminar todas las personalizaciones del sistema?';
@@ -1259,6 +1405,92 @@ const Depuration = () => {
     }
   };
 
+  const handleDeleteHistorial = async (historialId) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar registro?',
+      text: 'Esta acción eliminará permanentemente este registro de historial',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/historial_D/${historialId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar registro');
+      }
+
+      Swal.fire('Eliminado', 'El registro ha sido eliminado correctamente', 'success');
+      fetchHistorial();
+    } catch (error) {
+      console.error("Error al eliminar registro:", error);
+      Swal.fire('Error', 'No se pudo eliminar el registro', 'error');
+    }
+  };
+
+  // Delete log record
+  const handleDeleteLog = async (logId) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar registro?',
+      text: 'Esta acción eliminará permanentemente este registro de bitácora',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D/${logId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar registro');
+      }
+
+      Swal.fire('Eliminado', 'El registro ha sido eliminado correctamente', 'success');
+      fetchLogs();
+    } catch (error) {
+      console.error("Error al eliminar registro:", error);
+      Swal.fire('Error', 'No se pudo eliminar el registro', 'error');
+    }
+  };
+
+  // View error details
+  const viewErrorDetails = (error) => {
+    Swal.fire({
+      title: 'Detalles del error',
+      html: `
+      <div style="text-align: left; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+        <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: monospace;">${error}</pre>
+      </div>
+    `,
+      confirmButtonText: 'Cerrar'
+    });
+  };
+
   // System clean interface
   if (showSystemClean) {
     return (
@@ -1266,42 +1498,42 @@ const Depuration = () => {
         <section className="depuration__container">
           <div className="depuration__title">
             <h3>Limpieza del Sistema</h3>
-          </div>          
+          </div>
           <div className="system-clean__container">
             <div className="system-clean__warning">
               <i className="fa-solid fa-triangle-exclamation"></i>
               <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
-            </div>            
+            </div>
             <div className="system-clean__buttons">
-              <button 
+              <button
                 className="clean-button clean-button--customizations"
                 onClick={() => handleSystemClean('customizations')}
               >
                 <i className="fa-solid fa-paint-roller"></i>
                 Limpiar todas las personalizaciones
-              </button>              
-              <button 
+              </button>
+              <button
                 className="clean-button clean-button--logs"
                 onClick={() => handleSystemClean('logs')}
               >
                 <i className="fa-solid fa-clipboard-list"></i>
                 Limpiar la Bitácora
-              </button>              
-              <button 
+              </button>
+              <button
                 className="clean-button clean-button--history"
                 onClick={() => handleSystemClean('history')}
               >
                 <i className="fa-solid fa-clock-rotate-left"></i>
                 Limpiar Historial
-              </button>              
-              <button 
+              </button>
+              <button
                 className="clean-button clean-button--students"
                 onClick={() => handleSystemClean('students')}
               >
                 <i className="fa-solid fa-user-graduate"></i>
                 Eliminar todos los Estudiantes
-              </button>              
-              <button 
+              </button>
+              <button
                 className="clean-button clean-button--professors"
                 onClick={() => handleSystemClean('professors')}
               >
@@ -1309,16 +1541,16 @@ const Depuration = () => {
                 Eliminar todos los Profesores
               </button>
             </div>
-            
-              <button 
-                className="reset-button"
-                onClick={() => handleSystemClean('reset')}
-              >
-                <i className="fa-solid fa-bomb"></i>
-                REINICIAR SISTEMA FIDECOLAB
-              </button>
+
+            <button
+              className="reset-button"
+              onClick={() => handleSystemClean('reset')}
+            >
+              <i className="fa-solid fa-bomb"></i>
+              REINICIAR SISTEMA FIDECOLAB
+            </button>
           </div>
-          <button 
+          <button
             className="button__back"
             onClick={() => setShowSystemClean(false)}
           >
@@ -1338,8 +1570,8 @@ const Depuration = () => {
         <div className="depuration__content">
           {/* Left Sidebar */}
           <div className="depuration__left">
-            <div 
-              className={`left__box ${selectedTab === 'users' ? 'active' : ''}`} 
+            <div
+              className={`left__box ${selectedTab === 'users' ? 'active' : ''}`}
               onClick={() => handleTabChange('users')}
             >
               <div className="box__shape shape--users">
@@ -1350,9 +1582,9 @@ const Depuration = () => {
                 <p className="text__description">Gestiona todos los usuarios del sistema (profesores y estudiantes), su edición, eliminación y revisión de actividad</p>
               </div>
             </div>
-            
-            <div 
-              className={`left__box ${selectedTab === 'history' ? 'active' : ''}`} 
+
+            <div
+              className={`left__box ${selectedTab === 'history' ? 'active' : ''}`}
               onClick={() => handleTabChange('history')}
             >
               <div className="box__shape shape--history">
@@ -1363,9 +1595,9 @@ const Depuration = () => {
                 <p className="text__description">Desde acá se administrará todo el historial de cada partida al igual que la opción de una limpieza total o parcial.</p>
               </div>
             </div>
-            
-            <div 
-              className={`left__box ${selectedTab === 'logs' ? 'active' : ''}`} 
+
+            <div
+              className={`left__box ${selectedTab === 'logs' ? 'active' : ''}`}
               onClick={() => handleTabChange('logs')}
             >
               <div className="box__shape shape--log">
@@ -1376,8 +1608,8 @@ const Depuration = () => {
                 <p className="text__description">Registros detallados de todas las acciones del sistema, incluyendo errores y actividad de usuarios.</p>
               </div>
             </div>
-            
-            <div 
+
+            <div
               className="left__box left__box--danger"
               onClick={accessSystemClean}
             >
@@ -1404,7 +1636,7 @@ const Depuration = () => {
                       {selectedTab === 'logs' && 'Administrar Logs'}
                     </h3>
                   </div>
-                  
+
                   {/* Actions based on tab */}
                   {selectedTab === 'users' && (
                     <>
@@ -1421,22 +1653,22 @@ const Depuration = () => {
                     </>
                   )}
                 </div>
-                
+
                 <div className="options__bottom">
                   <div className="option__search">
                     <i className="fa-solid fa-magnifying-glass"></i>
-                    <input 
-                      type="search" 
+                    <input
+                      type="search"
                       placeholder="Buscar elemento"
                       value={searchQuery}
                       onChange={handleSearchChange}
                     />
-                  </div> 
-                                
+                  </div>
+
                   {selectedTab === 'users' && (
                     <>
                       <div className="option__filter">
-                        <select 
+                        <select
                           value={roleFilter}
                           onChange={handleRoleFilterChange}
                         >
@@ -1444,9 +1676,9 @@ const Depuration = () => {
                           <option value="Profesor">Profesores</option>
                           <option value="Estudiante">Estudiantes</option>
                         </select>
-                      </div>                      
+                      </div>
                       <div className="option__filter">
-                        <select 
+                        <select
                           value={statusFilter}
                           onChange={handleStatusFilterChange}
                         >
@@ -1454,9 +1686,40 @@ const Depuration = () => {
                           <option value="Activo">Activos</option>
                           <option value="Inactivo">Inactivos</option>
                         </select>
-                      </div>                      
+                      </div>
                     </>
-                  )} 
+                  )} {selectedTab === 'logs' && (
+                    <>
+                      <div className="option__filter">
+                        <select
+                          value={logActionFilter}
+                          onChange={(e) => setLogActionFilter(e.target.value)}
+                        >
+                          <option value="all">Todas las acciones</option>
+                          <option value="Descarga">Descargas</option>
+                          <option value="Agregado">Agregados</option>
+                          <option value="Eliminado">Eliminados</option>
+                        </select>
+                      </div>
+                      <div className="option__filter">
+                        <select
+                          value={logErrorFilter}
+                          onChange={(e) => setLogErrorFilter(e.target.value)}
+                        >
+                          <option value="all">Todos</option>
+                          <option value="conError">Con error</option>
+                          <option value="sinError">Sin error</option>
+                        </select>
+                      </div>
+                      <div className="option__filter">
+                        <input
+                          type="date"
+                          value={dateFilter}
+                          onChange={(e) => setDateFilter(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1500,21 +1763,21 @@ const Depuration = () => {
                                   </span>
                                 </td>
                                 <td className="table__data table__data--actions">
-                                  <button 
+                                  <button
                                     className="button__edit"
                                     onClick={() => handleEditUser(user)}
                                     title="Editar"
                                   >
                                     <i className="fa-solid fa-pen-to-square"></i>
                                   </button>
-                                  <button 
+                                  <button
                                     className={`button__ban ${!user.Estado ? 'inactive' : ''}`}
                                     onClick={() => handleToggleUserStatus(user)}
                                     title={user.Estado ? 'Desactivar' : 'Activar'}
                                   >
                                     <i className="fa-solid fa-ban"></i>
                                   </button>
-                                  <button 
+                                  <button
                                     className="button__delete"
                                     onClick={() => handleDeleteUser(user)}
                                     title="Eliminar"
@@ -1522,7 +1785,7 @@ const Depuration = () => {
                                     <i className="fa-solid fa-trash"></i>
                                   </button>
                                   {user.Rol !== 'Administrador' && (
-                                    <button 
+                                    <button
                                       className="button__view"
                                       onClick={() => viewUserDetails(user)}
                                       title="Ver detalles"
@@ -1545,7 +1808,7 @@ const Depuration = () => {
                           {totalPages > 1 && (
                             <tr>
                               <td colSpan="6">
-                                <div className="foot__buttons">                            
+                                <div className="foot__buttons">
                                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                                     .filter(number => {
                                       let pageNumber;
@@ -1554,14 +1817,14 @@ const Depuration = () => {
                                       }
                                       if (currentPage > 2 && currentPage < totalPages - 1) {
                                         pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                      }  
+                                      }
                                       if (currentPage === totalPages - 1 || currentPage === totalPages) {
                                         pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                      }                                                 
-                                      return pageNumber;                            
+                                      }
+                                      return pageNumber;
                                     })
                                     .map(number => (
-                                      <button 
+                                      <button
                                         className={`button__page ${currentPage === number ? "active" : ""}`}
                                         key={number}
                                         onClick={() => paginate(number)}
@@ -1593,28 +1856,43 @@ const Depuration = () => {
                       </tr>
                     </thead>
                     <tbody className="table__body">
-                      {currentItems.map((item, index) => (
-                        <tr className="table__row" key={index}>
-                          <td className="table__data">{item.fecha}</td>
-                          <td className="table__data">{item.curso}</td>
-                          <td className="table__data">{item.profesor}</td>
-                          <td className="table__data table__data--actions">
-                            <button 
-                              className="button__delete"
-                              onClick={() => handleDeleteItem('historial', item.id)}
-                              title="Eliminar"
-                            >
-                              <i className="fa-solid fa-trash"></i>
-                            </button>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="4" className="table__data table__data--loading">
+                            <div className="loading-spinner"></div>
+                            Cargando historial...
                           </td>
                         </tr>
-                      ))}
+                      ) : filteredHistorial.length > 0 ? (
+                        currentItems.map((item, index) => (
+                          <tr className="table__row" key={index}>
+                            <td className="table__data">{new Date(item.Fecha).toLocaleString()}</td>
+                            <td className="table__data">{item.curso}</td>
+                            <td className="table__data">{item.profesor}</td>
+                            <td className="table__data table__data--actions">
+                              <button
+                                className="button__delete"
+                                onClick={() => handleDeleteHistorial(item.id)}
+                                title="Eliminar"
+                              >
+                                <i className="fa-solid fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className="table__row">
+                          <td colSpan="4" className="table__data table__data--empty">
+                            No se encontraron registros de historial
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
                         <tr>
                           <td colSpan="4">
-                            <div className="foot__buttons">                            
+                            <div className="foot__buttons">
                               {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter(number => {
                                   let pageNumber;
@@ -1623,14 +1901,14 @@ const Depuration = () => {
                                   }
                                   if (currentPage > 2 && currentPage < totalPages - 1) {
                                     pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                  }  
+                                  }
                                   if (currentPage === totalPages - 1 || currentPage === totalPages) {
                                     pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                  }                                                 
-                                  return pageNumber;                            
+                                  }
+                                  return pageNumber;
                                 })
                                 .map(number => (
-                                  <button 
+                                  <button
                                     className={`button__page ${currentPage === number ? "active" : ""}`}
                                     key={number}
                                     onClick={() => paginate(number)}
@@ -1654,36 +1932,63 @@ const Depuration = () => {
                     <thead className="table__head">
                       <tr>
                         <th className="table__header">Fecha</th>
+                        <th className="table__header">Usuario</th>
                         <th className="table__header">Acción</th>
                         <th className="table__header">Error</th>
-                        <th className="table__header">Usuario</th>
                         <th className="table__header">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="table__body">
-                      {currentItems.map((item, index) => (
-                        <tr className="table__row" key={index}>
-                          <td className="table__data">{item.fecha}</td>
-                          <td className="table__data">{item.accion}</td>
-                          <td className="table__data">{item.error}</td>
-                          <td className="table__data">{item.usuario}</td>
-                          <td className="table__data table__data--actions">
-                            <button 
-                              className="button__delete"
-                              onClick={() => handleDeleteItem('log', item.id)}
-                              title="Eliminar"
-                            >
-                              <i className="fa-solid fa-trash"></i>
-                            </button>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="5" className="table__data table__data--loading">
+                            <div className="loading-spinner"></div>
+                            Cargando registros...
                           </td>
                         </tr>
-                      ))}
+                      ) : filteredLogs.length > 0 ? (
+                        currentItems.map((log, index) => (
+                          <tr className="table__row" key={index}>
+                            <td className="table__data">{new Date(log.Fecha).toLocaleString()}</td>
+                            <td className="table__data">{log.usuario}</td>
+                            <td className="table__data">{log.Accion}</td>
+                            <td className="table__data">
+                              {log.error === 'No aplica' ? (
+                                <span className="status-badge active">No aplica</span>
+                              ) : (
+                                <button
+                                  className="button__view"
+                                  onClick={() => viewErrorDetails(log.error)}
+                                  title="Ver detalles"
+                                >
+                                  <i className="fa-solid fa-eye"></i> Ver
+                                </button>
+                              )}
+                            </td>
+                            <td className="table__data table__data--actions">
+                              <button
+                                className="button__delete"
+                                onClick={() => handleDeleteLog(log.id)}
+                                title="Eliminar"
+                              >
+                                <i className="fa-solid fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className="table__row">
+                          <td colSpan="5" className="table__data table__data--empty">
+                            No se encontraron registros de bitácora
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
                         <tr>
                           <td colSpan="5">
-                            <div className="foot__buttons">                            
+                            <div className="foot__buttons">
                               {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter(number => {
                                   let pageNumber;
@@ -1692,14 +1997,14 @@ const Depuration = () => {
                                   }
                                   if (currentPage > 2 && currentPage < totalPages - 1) {
                                     pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                  }  
+                                  }
                                   if (currentPage === totalPages - 1 || currentPage === totalPages) {
                                     pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                  }                                                 
-                                  return pageNumber;                            
+                                  }
+                                  return pageNumber;
                                 })
                                 .map(number => (
-                                  <button 
+                                  <button
                                     className={`button__page ${currentPage === number ? "active" : ""}`}
                                     key={number}
                                     onClick={() => paginate(number)}

@@ -19,6 +19,8 @@ const Depuration = () => {
   const [showSystemClean, setShowSystemClean] = useState(false);
   const [courses, setCourses] = useState([]);
   const [data, setData] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [history, setHistory] = useState([]);
 
   // Calcular índices para la paginación
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -26,11 +28,14 @@ const Depuration = () => {
   const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
+  const currentData = selectedTab === 'users' ? filteredUsers : 
+                     selectedTab === 'history' ? history : 
+                     selectedTab === 'logs' ? logs : [];
+
   // FUNCIONES PARA LA PESTALA USUARIOS
 
-const fetchUsers = async () => {
+ const fetchUsers = async () => {
     try {
-      const secretKey = process.env.REACT_APP_SECRET_KEY;
       const apiUrl = process.env.REACT_APP_API_URL;
       const response = await fetch(`${apiUrl}/usuarios_D`, {
         method: "GET",
@@ -114,6 +119,54 @@ const fetchUsers = async () => {
       fetchCourses();
     }
   }, [selectedTab]);
+
+  const fetchLogs = async () => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener logs');
+      }
+
+      const data = await response.json();
+      setLogs(data.logs);
+    } catch (error) {
+      console.error("Error al obtener logs:", error);
+      Swal.fire('Error', 'No se pudieron obtener los logs', 'error');
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/historial_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener historial');
+      }
+
+      const data = await response.json();
+      setHistory(data.history);
+    } catch (error) {
+      console.error("Error al obtener historial:", error);
+      Swal.fire('Error', 'No se pudo obtener el historial', 'error');
+    }
+  };
 
   // Función para agregar usuario
   const handleAddUser = async () => {
@@ -826,6 +879,17 @@ const fetchUsers = async () => {
     });
   };
 
+  useEffect(() => {
+    if (selectedTab === 'users') {
+      fetchUsers();
+      fetchCourses();
+    } else if (selectedTab === 'history') {
+      fetchHistory();
+    } else if (selectedTab === 'logs') {
+      fetchLogs();
+    }
+  }, [selectedTab]);
+
   // Si estamos en modo limpieza del sistema, mostrar esa interfaz
   if (showSystemClean) {
     return (
@@ -1051,32 +1115,32 @@ const fetchUsers = async () => {
               {selectedTab === 'users' ? (
                 <>
                   <div className="bottom__title">
-                    <h3>Lista de Usuarios</h3>
-                  </div>
-                  <table className="bottom__table">
-                  <thead className="table__head">
-                    <tr>
-                      <th className="table__header">Nombre</th>
-                      <th className="table__header">Apellidos</th>
-                      <th className="table__header">Correo</th>
-                      <th className="table__header">Rol</th>
-                      <th className="table__header">Estado</th>
-                      <th className="table__header">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="table__body">
-                    {currentItems.map((user, index) => (
-                      <tr className="table__row" key={index}>
-                        <td className="table__data">{user.Nombre}</td>
-                        <td className="table__data">{user.Apellido1} {user.Apellido2}</td>
-                        <td className="table__data">{user.Correo}</td>
-                        <td className="table__data">{user.Rol}</td>
-                        <td className="table__data">
-                          <span className={`status-badge ${user.Estado ? 'active' : 'inactive'}`}>
-                            {user.Estado ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td className="table__data table__data--actions">
+                <h3>Lista de Usuarios</h3>
+              </div>
+              <table className="bottom__table">
+                <thead className="table__head">
+                  <tr>
+                    <th className="table__header">Nombre</th>
+                    <th className="table__header">Apellidos</th>
+                    <th className="table__header">Correo</th>
+                    <th className="table__header">Rol</th>
+                    <th className="table__header">Estado</th>
+                    <th className="table__header">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="table__body">
+                  {currentItems.map((user, index) => (
+                    <tr className="table__row" key={index}>
+                      <td className="table__data">{user.Nombre}</td>
+                      <td className="table__data">{user.Apellido1} {user.Apellido2}</td>
+                      <td className="table__data">{user.Correo}</td>
+                      <td className="table__data">{user.Rol}</td>
+                      <td className="table__data">
+                        <span className={`status-badge ${user.Estado ? 'active' : 'inactive'}`}>
+                          {user.Estado ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="table__data table__data--actions">
                           <button 
                             className="button__edit"
                             onClick={() => handleEditUser(user)}

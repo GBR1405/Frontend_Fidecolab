@@ -1263,7 +1263,7 @@ const Depuration = () => {
       usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
       Accion: log.Accion || 'Acción no especificada',
       Error: log.Error || 'No aplica',
-      Fecha: log.Fecha
+      Fecha: log.Fecha ? new Date(log.Fecha).toISOString() : new Date().toISOString()
     })).reverse();
     
     setLogs(normalizedLogs || []);
@@ -1965,7 +1965,9 @@ const Depuration = () => {
                       ) : filteredLogs.length > 0 ? (
                         currentItems.map((log, index) => (
                           <tr className="table__row" key={index}>
-                            <td className="table__data">{new Date(log.Fecha).toLocaleString()}</td>
+                            <td className="table__data">
+                              {log.fecha ? new Date(log.fecha).toLocaleString() : 'Fecha no disponible'}
+                            </td>
                             <td className="table__data">{log.usuario}</td>
                             <td className="table__data">{log.Accion}</td>
                             <td className="table__data">

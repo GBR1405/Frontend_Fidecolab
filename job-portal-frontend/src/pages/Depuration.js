@@ -1068,10 +1068,7 @@ const Depuration = () => {
                         </select>
                       </div>                      
                     </>
-                  )}
-                  <div className="option__button button--search">
-                    <button type="button">Buscar</button>
-                  </div>   
+                  )} 
                 </div>
               </div>
             </div>

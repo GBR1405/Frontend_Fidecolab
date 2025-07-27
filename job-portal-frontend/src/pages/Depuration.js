@@ -11,7 +11,6 @@ const Depuration = () => {
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [systemCleanCode, setSystemCleanCode] = useState('');
   const [showSystemClean, setShowSystemClean] = useState(false);
 
   // Calcular índices para la paginación
@@ -142,6 +141,22 @@ const Depuration = () => {
     });
   };
 
+  // Función para desvincular curso de usuario
+  const handleUnlinkCourse = (user) => {
+    Swal.fire({
+      title: 'Desvincular Cursos',
+      text: `¿Estás seguro que deseas desvincular los cursos de ${user.nombre}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, desvincular',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire('Desvinculado', `Los cursos de ${user.nombre} han sido desvinculados`, 'success');
+      }
+    });
+  };
+
   // Función para agregar usuario
   const handleAddUser = () => {
     Swal.fire({
@@ -227,41 +242,33 @@ const Depuration = () => {
         return;
     }
 
-    if (action === 'reset') {
-      Swal.fire({
-        title: title,
-        text: text,
-        icon: 'warning',
-        input: 'text',
-        inputPlaceholder: 'Ingresa "fidecolab" para confirmar',
-        showCancelButton: true,
-        confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        preConfirm: (input) => {
-          if (input.toLowerCase() !== 'fidecolab') {
-            Swal.showValidationMessage('Código incorrecto');
-          }
+    // Código encriptado (base64 de "fidecolab")
+    const encryptedCode = btoa('fidecolab');
+    
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Ingresa el código de seguridad',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: action === 'reset' ? '#d33' : '#3085d6',
+      timer: 10000,
+      timerProgressBar: true,
+      preConfirm: (input) => {
+        if (btoa(input) !== encryptedCode) {
+          Swal.showValidationMessage('Código incorrecto');
         }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire('Sistema Reiniciado', 'El sistema ha sido reiniciado completamente', 'success');
-        }
-      });
-    } else {
-      Swal.fire({
-        title: title,
-        text: text,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire('Completado', `La acción "${title}" se ha realizado con éxito`, 'success');
-        }
-      });
-    }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire('Completado', `La acción "${title}" se ha realizado con éxito`, 'success');
+      } else if (result.dismiss === Swal.DismissReason.timer) {
+        Swal.fire('Cancelado', 'El tiempo para confirmar ha expirado', 'error');
+      }
+    });
   };
 
   // Función para ver detalles de usuario
@@ -348,7 +355,8 @@ const Depuration = () => {
       confirmButtonText: 'Continuar',
       cancelButtonText: 'Cancelar',
       preConfirm: (input) => {
-        if (input.toLowerCase() !== 'fidecolab') {
+        // Código encriptado (base64 de "fidecolab")
+        if (btoa(input) !== btoa('fidecolab')) {
           Swal.showValidationMessage('Código incorrecto');
         }
       }
@@ -410,6 +418,7 @@ const Depuration = () => {
               </button>
             </div>
             
+            <div className="system-clean__reset">
               <button 
                 className="reset-button"
                 onClick={() => handleSystemClean('reset')}
@@ -417,6 +426,7 @@ const Depuration = () => {
                 <i className="fa-solid fa-bomb"></i>
                 REINICIAR SISTEMA FIDECOLAB
               </button>
+            </div>
           </div>
           <button 
             className="button__back"
@@ -573,8 +583,6 @@ const Depuration = () => {
                       </div>                      
                     </>
                   )}
-                  
-                  
                 </div>
               </div>
             </div>
@@ -588,12 +596,14 @@ const Depuration = () => {
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
-                      <th className="table__header">Nombre</th>
-                      <th className="table__header">Apellidos</th>
-                      <th className="table__header">Cursos</th>
-                      <th className="table__header">Rol</th>
-                      <th className="table__header">Estado</th>
-                      <th className="table__header">Acciones</th>
+                      <tr>
+                        <th className="table__header">Nombre</th>
+                        <th className="table__header">Apellidos</th>
+                        <th className="table__header">Cursos</th>
+                        <th className="table__header">Rol</th>
+                        <th className="table__header">Estado</th>
+                        <th className="table__header">Acciones</th>
+                      </tr>
                     </thead>
                     <tbody className="table__body">
                       {currentItems.map((item, index) => (
@@ -619,6 +629,13 @@ const Depuration = () => {
                               <i className="fa-solid fa-ban"></i>
                             </button>
                             <button 
+                              className="button__unlink"
+                              onClick={() => handleUnlinkCourse(item)}
+                              title="Desvincular cursos"
+                            >
+                              <i className="fa-solid fa-link-slash"></i>
+                            </button>
+                            <button 
                               className="button__delete"
                               onClick={() => handleDeleteItem('usuario', item.id)}
                               title="Eliminar"
@@ -638,31 +655,35 @@ const Depuration = () => {
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
-                        <div className="foot__buttons">                            
-                          {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(number => {
-                              let pageNumber;
-                              if (currentPage === 1 || currentPage === 2) {
-                                pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                              }
-                              if (currentPage > 2 && currentPage < totalPages - 1) {
-                                pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                              }  
-                              if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                              }                                                 
-                              return pageNumber;                            
-                            })
-                            .map(number => (
-                              <button 
-                                className={`button__page ${currentPage === number ? "active" : ""}`}
-                                key={number}
-                                onClick={() => paginate(number)}
-                              >
-                                {number}
-                              </button>
-                            ))}
-                        </div>
+                        <tr>
+                          <td colSpan="6">
+                            <div className="foot__buttons">                            
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(number => {
+                                  let pageNumber;
+                                  if (currentPage === 1 || currentPage === 2) {
+                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                                  }
+                                  if (currentPage > 2 && currentPage < totalPages - 1) {
+                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                                  }  
+                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                                  }                                                 
+                                  return pageNumber;                            
+                                })
+                                .map(number => (
+                                  <button 
+                                    className={`button__page ${currentPage === number ? "active" : ""}`}
+                                    key={number}
+                                    onClick={() => paginate(number)}
+                                  >
+                                    {number}
+                                  </button>
+                                ))}
+                            </div>
+                          </td>
+                        </tr>
                       )}
                     </tfoot>
                   </table>

@@ -2502,3 +2502,155 @@ body, html {
   font-size: 3rem;
   margin-bottom: 15px;
 }
+
+/* System Clean Styles */
+.system-clean__container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.system-clean__warning {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #fff3cd;
+  border-left: 5px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+}
+
+.system-clean__warning i {
+  font-size: 1.5rem;
+  color: #ffc107;
+}
+
+.system-clean__buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.clean-button {
+  align-items: center;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.clean-button i {
+  font-size: 1.2rem;
+}
+
+.clean-button--customizations {
+  background-color: #6f42c1;
+}
+
+.clean-button--customizations:hover {
+  background-color: #5a32a3;
+}
+
+.clean-button--logs {
+  background-color: #20c997;
+}
+
+.clean-button--logs:hover {
+  background-color: #17a589;
+}
+
+.clean-button--history {
+  background-color: #fd7e14;
+}
+
+.clean-button--history:hover {
+  background-color: #e36209;
+}
+
+.clean-button--students {
+  background-color: #17a2b8;
+}
+
+.clean-button--students:hover {
+  background-color: #138496;
+}
+
+.clean-button--professors {
+  background-color: #007bff;
+  grid-column: 1 / span 2;
+}
+
+.clean-button--professors:hover {
+  background-color: #0069d9;
+}
+
+.system-clean__reset {
+  display: flex;
+  justify-content: center;
+}
+
+.reset-button {
+  background-color: #dc3545;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  padding: 0.8rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: #c82333;
+}
+
+.reset-button i {
+  font-size: 1.2rem;
+}
+
+.button__back {
+  background-color: #6c757d;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.button__back:hover {
+  background-color: #5a6268;
+}
+
+/* Botón para desvincular cursos en la tabla */
+.button__unlink {
+  background-color: #6c757d;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.button__unlink:hover {
+  background-color: #5a6268;
+}

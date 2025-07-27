@@ -51,8 +51,69 @@ const TeamRoom = () => {
   const [transitionPhase, setTransitionPhase] = useState('idle');
   const [showBlackout, setShowBlackout] = useState(false);
   const [demoActive, setDemoActive] = useState(false);
+  const [timeUpAlert, setTimeUpAlert] = useState(null);
 
   const navigate = useNavigate();
+
+  const showTimeUpAlert = (gameType) => {
+  if (demoActive) return; // No mostrar si demo está activo
+  
+  // Cerrar alerta existente si hay una
+  if (timeUpAlert) {
+    Swal.close();
+  }
+  
+  const alert = Swal.fire({
+    title: '¡Tiempo terminado!',
+    text: `Se ha acabado el tiempo para el juego ${gameType}.`,
+    icon: 'info',
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    backdrop: true,
+    customClass: {
+      container: 'time-up-alert',
+      popup: 'time-up-alert-popup'
+    },
+    willOpen: () => {
+      // Asegurar z-index menor que el demo
+      const container = document.querySelector('.swal2-container');
+      if (container) {
+        container.style.zIndex = '9999'; // Menor que el demo
+      }
+    }
+  });
+  
+  setTimeUpAlert(alert);
+};
+
+useEffect(() => {
+  if (!socket) return;
+
+  const handleDemoStarted = () => {
+    setDemoActive(true);
+    // Cerrar alerta si existe
+    if (timeUpAlert) {
+      Swal.close();
+      setTimeUpAlert(null);
+    }
+  };
+
+  const handleDemoEnded = () => {
+    setDemoActive(false);
+    // Mostrar alerta solo si el tiempo está en 0
+    if (timer.remaining <= 0 && timer.gameType) {
+      showTimeUpAlert(timer.gameType);
+    }
+  };
+
+  socket.on('drawingDemoStarted', handleDemoStarted);
+  socket.on('drawingDemoEnded', handleDemoEnded);
+
+  return () => {
+    socket.off('drawingDemoStarted', handleDemoStarted);
+    socket.off('drawingDemoEnded', handleDemoEnded);
+  };
+}, [socket, timer.remaining, timer.gameType, demoActive, timeUpAlert]);
 
   useEffect(() => {
   if (!socket) return;
@@ -74,22 +135,49 @@ const TeamRoom = () => {
   };
 
   const showTimeUpAlert = (gameType) => {
-    if (!Swal.isVisible() && !demoActive) {
-      Swal.fire({
-        title: '¡Tiempo terminado!',
-        text: `Se ha acabado el tiempo para el juego ${gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
-        icon: 'info',
-        showConfirmButton: false,
-        allowOutsideClick: false
-      });
+  if (demoActive) return; // No mostrar si demo está activo
+  
+  // Cerrar alerta existente si hay una
+  if (timeUpAlert) {
+    Swal.close();
+  }
+  
+  const alert = Swal.fire({
+    title: '¡Tiempo terminado!',
+    text: `Se ha acabado el tiempo para el juego ${gameType}.`,
+    icon: 'info',
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    backdrop: true,
+    customClass: {
+      container: 'time-up-alert',
+      popup: 'time-up-alert-popup'
+    },
+    willOpen: () => {
+      // Asegurar z-index menor que el demo
+      const container = document.querySelector('.swal2-container');
+      if (container) {
+        container.style.zIndex = '9999'; // Menor que el demo
+      }
     }
-  };
+  });
+  
+  setTimeUpAlert(alert);
+};
+
+
 
   const handleTimeUp = (gameType) => {
-    if (!demoActive) {
-      showTimeUpAlert(gameType);
-    }
-  };
+  if (demoActive) {
+    // No hacer nada si el demo está activo
+    return;
+  }
+  
+  showTimeUpAlert(gameType);
+};
+
+// En tus listeners de socket
+socket.on('timeUp', handleTimeUp);
 
   socket.on('drawingDemoStarted', handleDemoStarted);
   socket.on('drawingDemoEnded', handleDemoEnded);

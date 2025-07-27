@@ -598,17 +598,20 @@
   }
 }
 
-/* Estilos para el modal de demostración */
-.drawing-demo-modal {
-  z-index: 9999 !important; /* Valor alto para asegurar que esté encima */
+/* En tu archivo CSS */
+.demo-modal-container {
+  z-index: 99999 !important;
 }
 
-/* Ajustar el z-index del SweetAlert */
+.time-up-alert {
+  z-index: 9999 !important; /* Menor que el demo */
+}
+
 .swal2-container {
-  z-index: 9000 !important; /* Valor menor que el modal de demostración */
+  z-index: 9999 !important;
 }
 
-/* Opcional: Si hay problemas con el overlay */
-.drawing-demo-overlay {
+/* Asegurar que el backdrop del SweetAlert no interfiera */
+.swal2-backdrop-show {
   z-index: 9998 !important;
 }

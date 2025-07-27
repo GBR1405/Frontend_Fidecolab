@@ -74,7 +74,6 @@ const StudentHistory = () => {
           <div className="left__title_H">
             <h3>Historial de Partidas</h3>
           </div>
-
           {loading ? (
             <span>Cargando historial...</span>
           ) : historial.length === 0 ? (

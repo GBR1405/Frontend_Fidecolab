@@ -15,7 +15,7 @@
   --primary-text-clr: #696F79;
 }
 
-.historial__view_H {
+.historial__view {
   box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
   height: 100%;
   width: 100%;   
@@ -25,7 +25,7 @@
   overflow: hidden;
 }
 
-.left__title_H{
+.left__title{
     background-color: var(--blue-royal-clr);
     border-radius: 1em 1em 0px 0px;
     font-size: 1vw;
@@ -37,7 +37,7 @@
     align-items: center;
 }
 
-.left__content_H{
+.left__content{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -46,31 +46,31 @@
 }
 
 /* Ajusta la paginación para que quede pegada abajo */
-.pagination-container_H {
+.pagination-container {
   margin-top: auto;
   padding: 1rem 0 0;
 }
 
-.left__table_H {
+.left__table {
     display: grid;
     height: 100%;
     grid-template-rows: 15% 70% 15%;
 }
 
-.table__head_H{
+.table__head {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
     width: 100%;    
 }
 
-.table__header_H{
+.table__header{
     width: 100%;
     font-size: 0.9vw;
     font-weight: 600;
 }
 
-.table__body_H{
+.table__body{
     background-color: white;
     height: 100%;
     box-shadow: 
@@ -78,7 +78,7 @@
     inset 0 -10px 4px -10px rgba(0, 0, 0, 0.1); /* Sombra inferior */
 }
 
-.table__row_H{
+.table__row{
     text-align: center;
     display: flex;
     justify-content: space-evenly;
@@ -88,12 +88,12 @@
     transition: 0.2s ease-in-out
 }
 
-.table__row_H:hover{
+.table__row:hover{
     background-color: rgb(253, 253, 253);
     transition: 0.2s ease-in-out
 }
 
-.table__data_H{
+.table__data{
     height: 100%;
     width: 100%;
     overflow-x: auto;
@@ -104,24 +104,24 @@
     border-left: 1px solid var(--white-smoke-clr);   
 }
 
-.table__data_H::-webkit-scrollbar{
+.table__data::-webkit-scrollbar{
     background-color: var(--white-smoke-clr);
     width: 0.3vw;
     height: 0.3vw;
 }
 
-.table__data_H::-webkit-scrollbar-track{
+.table__data::-webkit-scrollbar-track{
     box-shadow: inset 0 0px 1.5px 0.5px rgba(0, 0, 0, 0.08); /* Sombra superior */
     border-radius: 1em;
 }
 
-.table__data_H::-webkit-scrollbar-thumb{
+.table__data::-webkit-scrollbar-thumb{
     background-color: var(--orange-clr);
     border-radius: 1em;
     cursor: pointer;
 }
 
-.foot__buttons_H{
+.foot__buttons{
     height: 100%;
     display: flex;
     justify-content: center;
@@ -132,7 +132,7 @@
         all: unset;
     }
 
-    .button__page_H{
+    .button__page{
         width: 2vmax;
         height: 2vmax;
         font-size: 0.7vw;
@@ -148,22 +148,22 @@
         justify-content: center;
     }
 
-    .button__page_H:hover{
+    .button__page:hover{
         background-color: var(--blue-royal-clr);
         transition: 0.5s ease-in-out
     }
 
-    .button__page_H.active{
+    .button__page.active{
         background-color: #3b7cc7;
     }
     
-    .button__page_H:nth-child(n):focus,
-    .button__page_H:nth-child(n).active {
+    .button__page:nth-child(n):focus,
+    .button__page:nth-child(n).active {
         background-color: #3b7cc7;
     }
 }
 
-.historial__container_H{
+.historial__container{
     border: 1px solid var(--line-clr);
     border-radius: 1em;
     padding: 20px 40px;
@@ -181,7 +181,7 @@
         color: var(--blue-royal-clr);
     }
     
-    .historial__options_H{
+    .historial__options{
         background-color: var(--white-smoke-clr);
         box-shadow: 0px 4px 4px 1px rgba(0, 0, 0, 0.06);
         padding: 1%;
@@ -193,14 +193,14 @@
         grid-template-rows: 1fr 1fr;     
     }
     
-    .options__top_H{
+    .options__top{
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 4%;
     }
     
-    .option__box_H{
+    .option__box{
         display: flex;
     
         height: 80%;
@@ -230,7 +230,7 @@
         }    
     }
     
-    .options__bottom_H{
+    .options__bottom{
         display: flex;
         justify-content: center;
         align-items: center;
@@ -247,7 +247,7 @@
         }
     }
     
-    .option__search_H{
+    .option__search{
         height: 80%;
         width: 80%;
         background-color: white;  
@@ -264,7 +264,7 @@
         justify-content: space-evenly;
     }
     
-    .option__button_H{
+    .option__button{
         height: 80%;
         width: 14%;
         background-color: var(--blue-royal-clr);
@@ -277,7 +277,7 @@
         color: white;
     }
     
-    .option__button_H:hover{
+    .option__button:hover{
         background-color: var(--dark-royal-clr);
     }  
 }

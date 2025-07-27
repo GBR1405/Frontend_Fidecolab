@@ -1427,7 +1427,7 @@ const Depuration = () => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/historial_D/${historialId}`, {
+      const response = await fetch(`${apiUrl}/bitacora_D/${historialId}`, {
         method: "DELETE",
         credentials: "include",
         headers: {

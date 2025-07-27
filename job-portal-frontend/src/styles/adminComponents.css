@@ -2512,6 +2512,7 @@ body, html {
   height: 100%;
   width: 100%;
   gap: 1rem;
+  margin-top: 5vh;
 }
 
 /* Spinner personalizado */

@@ -363,7 +363,7 @@ const Depuration = () => {
                         data-group-id="${group.id}"
                         class="unlink-course-btn" 
                         style="${dangerButtonStyle} padding: 5px 8px; width: auto;">
-                        <i class="fa-solid fa-link-slash" style="margin-right: 5px;"></i> Desvincular
+                        <i class="fa-solid fa-link-slash" style="margin-right: 5px;"></i>
                       </button>
                     </td>
                   </tr>

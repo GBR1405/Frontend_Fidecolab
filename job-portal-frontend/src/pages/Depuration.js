@@ -464,7 +464,7 @@ const Depuration = () => {
         ${groupsTableHtml}
         ${specialActionsHtml}
       `,
-      width: '900px',
+      width: '1100px',
       focusConfirm: false,
       confirmButtonText: 'Guardar cambios',
       cancelButtonText: 'Cancelar',

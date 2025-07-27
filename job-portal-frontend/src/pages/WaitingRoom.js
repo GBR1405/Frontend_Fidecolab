@@ -25,6 +25,40 @@ const WaitingRoom = () => {
   
   const [teamGroups, setTeamGroups] = useState({});
 
+  useEffect(() => {
+      if (!socket || !partidaId) return;
+    
+      // 🔍 Verificar estado de la partida antes de ejecutar lógica
+      const verificarEstadoPartida = async () => {
+        try {
+          const res = await fetch(`${apiUrl}/check-activity`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ partidaId })
+          });
+    
+          const data = await res.json();
+    
+          if (data.isFinished) {
+            window.location.href = `/resultados/${partidaId}`;
+            return;
+          }
+    
+          console.log('Partida activa, obteniendo configuración...');
+        } catch (error) {
+          console.error('Error al verificar estado de la partida:', error);
+        }
+      };
+    
+      
+    
+      verificarEstadoPartida(); // Llamado antes del emit
+    }, [socket, partidaId]);
+
 
   // Función para obtener el número de equipo del estudiante
   const fetchTeamNumber = async () => {

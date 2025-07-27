@@ -121,6 +121,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     });
   };
 
+  
+
   const handleDrawingAction = (action) => {
     if (!action || action.userId === userId) return;
 
@@ -347,6 +349,26 @@ const clearLocalDrawing = () => {
   useEffect(() => {
   if (!socket) return;
 
+  const handleSyncResponse = ({ actions }) => {
+    const syncedLines = {};
+    actions?.forEach(({ userId, path }) => {
+      if (userId && path) {
+        syncedLines[userId] = [...(syncedLines[userId] || []), path];
+      }
+    });
+    setRemoteLines(syncedLines);
+  };
+
+  socket.on('drawingSyncResponse', handleSyncResponse);
+
+  return () => {
+    socket.off('drawingSyncResponse', handleSyncResponse);
+  };
+}, [socket, partidaId, equipoNumero, userId]);
+
+  useEffect(() => {
+  if (!socket) return;
+
   // Función para manejar acciones remotas en tiempo real
   const handleRemoteAction = (action) => {
     if (!action || action.userId === userId) return;
@@ -386,6 +408,8 @@ const clearLocalDrawing = () => {
       return newRemoteLines;
     });
   };
+
+  
 
   // Función para sincronización inicial
   const handleSyncResponse = ({ actions }) => {
@@ -481,7 +505,7 @@ const clearLocalDrawing = () => {
   };
 
   // Limpiar dibujos
-  const clearUserDrawing = () => {
+  const clearUserDrawing = async () => {
   isResetting.current = true;
   
   // 1. Limpiar estado local completamente
@@ -501,7 +525,7 @@ const clearLocalDrawing = () => {
     partidaId, 
     equipoNumero, 
     userId,
-    clearAll: true // Nueva bandera para indicar limpieza completa
+    clearAll: true
   });
 
   socket.emit('updateTintaState', {
@@ -511,7 +535,18 @@ const clearLocalDrawing = () => {
     tinta: MAX_TINTA
   });
 
-  // 5. Feedback visual
+  // 5. Esperar un breve momento para que el servidor procese la limpieza
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // 6. Solicitar una recarga completa de los trazos remotos
+  socket.emit('requestDrawingSync', { 
+    partidaId, 
+    equipoNumero, 
+    userId,
+    forceRefresh: true 
+  });
+
+  // 7. Feedback visual
   Swal.fire({
     title: 'Dibujo borrado',
     text: 'Tu tinta ha sido recargada',

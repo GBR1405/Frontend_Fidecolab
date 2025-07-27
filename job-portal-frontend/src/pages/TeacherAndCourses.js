@@ -1163,7 +1163,7 @@ const AdminProfessorCourses = () => {
               <div className="container__below">
                         <div className="below__box">
                             <div className="below__button">
-                                <button onClick={handleAddProfessor} type="submit">Agregar</button>
+                                <button onClick={handleAddProfessor} type="submit">Agregar Profesor</button>
                             </div>
                             {selectedTeacher && (
                                 <div className="below__button">

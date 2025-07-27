@@ -1205,7 +1205,7 @@ const Depuration = () => {
   setLoading(true);
   try {
     const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/historial_D`, {
+    const response = await fetch(`${apiUrl}/historial_partidas_D`, {
       method: "GET",
       credentials: "include",
       headers: {
@@ -1215,22 +1215,23 @@ const Depuration = () => {
     });
 
     if (!response.ok) {
-      throw new Error('Error al obtener historial');
+      throw new Error('Error al obtener historial de partidas');
     }
 
     const data = await response.json();
     const normalizedHistorial = data.map(item => ({
       ...item,
-      id: item.Resultados_ID_PK || item.id,
-      curso: item.Nombre_Curso || 'Curso no disponible',
-      profesor: `${item.Nombre_Profesor} ${item.Apellido1_Profesor}` || 'Profesor no disponible',
-      fecha: item.Fecha
+      id: item.id,
+      fecha: item.fecha,
+      profesor: item.profesor || 'Profesor no disponible',
+      curso: item.curso || 'Curso no disponible',
+      total_estudiantes: item.total_estudiantes || 0
     })).reverse();
     
     setHistorial(normalizedHistorial || []);
     setFilteredHistorial(normalizedHistorial || []);
   } catch (error) {
-    console.error("Error al obtener historial:", error);
+    console.error("Error al obtener historial de partidas:", error);
     Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
   } finally {
     setLoading(false);
@@ -1857,8 +1858,9 @@ const Depuration = () => {
                     <thead className="table__head">
                       <tr>
                         <th className="table__header">Fecha</th>
-                        <th className="table__header">Curso</th>
+                        <th className="table__header">Curso/Grupo</th>
                         <th className="table__header">Profesor</th>
+                        <th className="table__header">Estudiantes</th>
                         <th className="table__header">Acciones</th>
                       </tr>
                     </thead>
@@ -1873,19 +1875,26 @@ const Depuration = () => {
                       ) : filteredHistorial.length > 0 ? (
                         currentItems.map((item, index) => (
                           <tr className="table__row" key={index}>
-                            <td className="table__data">{new Date(item.Fecha).toLocaleString()}</td>
-                            <td className="table__data">{item.curso}</td>
-                            <td className="table__data">{item.profesor}</td>
-                            <td className="table__data table__data--actions">
-                              <button
-                                className="button__delete"
-                                onClick={() => handleDeleteHistorial(item.id)}
-                                title="Eliminar"
-                              >
-                                <i className="fa-solid fa-trash"></i>
-                              </button>
-                            </td>
-                          </tr>
+                          <td className="table__data">{new Date(item.fecha).toLocaleString()}</td>
+                          <td className="table__data">{item.curso}</td>
+                          <td className="table__data">{item.profesor}</td>
+                          <td className="table__data">{item.total_estudiantes}</td>
+                          <td className="table__data table__data--actions">
+                            <button 
+                              className="button__view"
+                              title="Ver detalles"
+                            >
+                              <i className="fa-solid fa-eye"></i>
+                            </button>
+                            <button 
+                              className="button__delete"
+                              onClick={() => handleDeleteHistorial(item.id)}
+                              title="Eliminar"
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
                         ))
                       ) : (
                         <tr className="table__row">

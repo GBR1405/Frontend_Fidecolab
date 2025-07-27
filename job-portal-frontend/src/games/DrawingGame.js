@@ -70,6 +70,13 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
         const parsedLines = JSON.parse(savedLines);
         if (Array.isArray(parsedLines)) {
           setLines(parsedLines);
+          // Emitir al servidor los trazos cargados
+          socket.emit('syncSavedLines', {
+            partidaId,
+            equipoNumero,
+            userId,
+            lines: parsedLines
+          });
         }
       }
       
@@ -477,8 +484,9 @@ const clearLocalDrawing = () => {
   const clearUserDrawing = () => {
   isResetting.current = true;
   
-  // 1. Limpiar estado local
+  // 1. Limpiar estado local completamente
   setLines([]);
+  setRemoteLines({});
   
   // 2. Limpiar localStorage
   localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
@@ -488,15 +496,14 @@ const clearLocalDrawing = () => {
   tintaConsumida.current = 0;
   setTinta(MAX_TINTA);
 
-  // 4. Emitir dos eventos separados:
-  // - Uno para limpiar trazos visuales (para todos)
+  // 4. Emitir eventos de limpieza
   socket.emit('clearDrawingPaths', { 
     partidaId, 
     equipoNumero, 
-    userId 
+    userId,
+    clearAll: true // Nueva bandera para indicar limpieza completa
   });
 
-  // - Otro para actualizar la tinta (solo para este usuario)
   socket.emit('updateTintaState', {
     partidaId,
     equipoNumero,

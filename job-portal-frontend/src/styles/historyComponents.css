@@ -15,7 +15,7 @@
   --primary-text-clr: #696F79;
 }
 
-.historial__view {
+.historial__view_H {
   box-shadow: 0px 2px 5px 2px rgba(0, 0, 0, 0.06);
   height: 100%;
   width: 100%;   
@@ -25,7 +25,7 @@
   overflow: hidden;
 }
 
-.left__title{
+.left__title_H{
     background-color: var(--blue-royal-clr);
     border-radius: 1em 1em 0px 0px;
     font-size: 1vw;
@@ -37,7 +37,7 @@
     align-items: center;
 }
 
-.left__content{
+.left__content_H{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -46,18 +46,18 @@
 }
 
 /* Ajusta la paginación para que quede pegada abajo */
-.pagination-container {
+.pagination-container_H {
   margin-top: auto;
   padding: 1rem 0 0;
 }
 
-.left__table {
+.left__table_H {
     display: grid;
     height: 100%;
     grid-template-rows: 15% 70% 15%;
 }
 
-.table__head {
+.table__head_H {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
@@ -121,7 +121,7 @@
     cursor: pointer;
 }
 
-.foot__buttons{
+.foot__buttons_H{
     height: 100%;
     display: flex;
     justify-content: center;
@@ -132,7 +132,7 @@
         all: unset;
     }
 
-    .button__page{
+    .button__page_H{
         width: 2vmax;
         height: 2vmax;
         font-size: 0.7vw;
@@ -148,17 +148,17 @@
         justify-content: center;
     }
 
-    .button__page:hover{
+    .button__page_H:hover{
         background-color: var(--blue-royal-clr);
         transition: 0.5s ease-in-out
     }
 
-    .button__page.active{
+    .button__page_H.active{
         background-color: #3b7cc7;
     }
     
-    .button__page:nth-child(n):focus,
-    .button__page:nth-child(n).active {
+    .button__page_H:nth-child(n):focus,
+    .button__page_H:nth-child(n).active {
         background-color: #3b7cc7;
     }
 }

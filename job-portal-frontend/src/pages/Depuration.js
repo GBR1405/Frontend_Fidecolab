@@ -19,6 +19,49 @@ const Depuration = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Agrega esto al inicio del componente (fuera de la función principal)
+const selectStyles = `
+  .custom-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .custom-select:focus {
+    border-color: #3085d6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(48, 133, 214, 0.2);
+  }
+  .custom-select-multiple {
+    width: 100%;
+    min-height: 120px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+  }
+  .custom-select-multiple option {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  .custom-select-multiple option:checked {
+    background-color: #3085d6;
+    color: white;
+  }
+`;
+
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
@@ -147,31 +190,57 @@ const Depuration = () => {
 
   // Add new user
   const handleAddUser = async () => {
+    const style = document.createElement('style');
+    style.innerHTML = selectStyles;
+    document.head.appendChild(style);
+
     const { value: formValues } = await Swal.fire({
       title: 'Agregar Nuevo Usuario',
       html: `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input1" class="swal2-input" placeholder="Nombre" required>
-          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>
-          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>
+        <div style="width: 850px; max-width: 95vw; padding: 10px;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nombre</label>
+              <input id="swal-input1" class="swal2-input" placeholder="Nombre" required style="width: 100%;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Primer Apellido</label>
+              <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required style="width: 100%;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Segundo Apellido</label>
+              <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" style="width: 100%;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Correo electrónico</label>
+              <input id="swal-input4" class="swal2-input" placeholder="Correo" type="email" required style="width: 100%;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Género</label>
+              <select id="swal-input5" class="custom-select" required>
+                <option value="">Seleccione...</option>
+                <option value="1">Masculino</option>
+                <option value="2">Femenino</option>
+                <option value="3">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Rol</label>
+            <select id="swal-input6" class="custom-select" required>
+              <option value="">Seleccione Rol</option>
+              <option value="Profesor">Profesor</option>
+              <option value="Estudiante">Estudiante</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+          </div>
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input4" class="swal2-input" placeholder="Correo electrónico" type="email" required>
-          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
-            <option value="">Género</option>
-            <option value="1">Masculino</option>
-            <option value="2">Femenino</option>
-            <option value="3">Otro</option>
-          </select>
-        </div>
-        <select id="swal-input6" class="swal2-input" required>
-          <option value="">Seleccione Rol</option>
-          <option value="Profesor">Profesor</option>
-          <option value="Estudiante">Estudiante</option>
-          <option value="Administrador">Administrador</option>
-        </select>
       `,
-      width: '700px',
+      width: '900px',
       focusConfirm: false,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',

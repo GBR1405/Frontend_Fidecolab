@@ -1220,13 +1220,12 @@ const Depuration = () => {
 
     const data = await response.json();
     
-    // Normalizar los datos recibidos
+    // Normalizar los datos correctamente
     const normalizedHistorial = data.map(item => ({
-      ...item,
       id: item.id_partida || item.id,
-      fecha: item.fecha || item.FechaInicio, // Usa el campo correcto
-      profesor: item.profesor || 'Profesor no disponible',
-      curso: item.curso_grupo || item.curso || 'Curso no disponible',
+      fecha: item.fecha, // Esto ya viene formateado desde el backend
+      profesor: item.profesor,
+      curso: item.curso_grupo || item.curso,
       total_estudiantes: item.total_estudiantes || 0
     }));
     
@@ -1878,14 +1877,10 @@ const Depuration = () => {
                         currentItems.map((item, index) => (
                           <tr className="table__row" key={index}>
                           <td className="table__data">
-                            {item.fecha ? (
-                              new Date(item.fecha).toString() === 'Invalid Date' ? 
-                                'Fecha inválida' : 
-                                new Date(item.fecha).toLocaleString()
-                            ) : 'Sin fecha'}
+                            {item.fecha || 'Sin fecha'}
                           </td>
-                          <td className="table__data">{item.curso}</td>
-                          <td className="table__data">{item.profesor}</td>
+                          <td className="table__data">{item.curso || 'Curso no disponible'}</td>
+                          <td className="table__data">{item.profesor || 'Profesor no disponible'}</td>
                           <td className="table__data">{item.total_estudiantes}</td>
                           <td className="table__data table__data--actions">
                             <button 

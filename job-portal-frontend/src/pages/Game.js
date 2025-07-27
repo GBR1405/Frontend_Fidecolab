@@ -824,12 +824,15 @@ function randomHSL() {
 
   return (
     <LayoutSimulation>
-      <DrawingDemoModal 
-        partidaId={partidaId} 
-        equipoNumero={equipoNumero}
-        userId={userId}
-        isProfessor={false} // O puedes determinar esto basado en el rol del usuario
-      />
+      {demoActive && (
+        <DrawingDemoModal 
+          partidaId={partidaId} 
+          equipoNumero={equipoNumero}
+          userId={userId}
+          isProfessor={false}
+          onClose={() => setDemoActive(false)}
+        />
+      )}
       <div className="teamroom__container">
         {/* Overlay de transición */}
         <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>

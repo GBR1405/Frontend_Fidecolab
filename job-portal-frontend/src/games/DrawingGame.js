@@ -21,7 +21,8 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [lastColor, setLastColor] = useState('#000000');
   const [currentGameInfo, setCurrentGameInfo] = useState(null);
-  
+  const isResetting = useRef(false);
+
   // Referencias y constantes
   const userId = localStorage.getItem('userId');
   const isDrawing = useRef(false);
@@ -144,6 +145,14 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
 
   const handleGameState = ({ actions, tintaState }) => {
     const grouped = {};
+
+    if (!isResetting.current && tintaState?.[userId] !== undefined) {
+      const parsed = parseInt(tintaState[userId]);
+      if (!isNaN(parsed)) {
+        tintaConsumida.current = MAX_TINTA - parsed;
+        setTinta(parsed);
+      }
+    }
 
     actions?.forEach(({ userId, path }) => {
       if (!grouped[userId]) grouped[userId] = [];
@@ -465,53 +474,69 @@ const clearLocalDrawing = () => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-  // 1. Limpiar estado local del usuario
-  setLines([]);
-  
-  // 2. Limpiar localStorage del usuario
-  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
+    isResetting.current = true; // Activamos flag de reset
+    
+    // 1. Limpiar estado local
+    setLines([]);
+    
+    // 2. Limpiar localStorage
+    localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+    localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
 
-  // 3. Notificar al servidor para borrado permanente (solo este usuario)
-  socket.emit('drawingAction', {
-    partidaId,
-    equipoNumero,
-    userId,
-    action: {
-      type: 'clear',
-      userId, // Enviamos explícitamente el userId actual
-      tinta: MAX_TINTA,
-      permanent: true
-    }
-  });
+    // 3. Resetear contadores locales
+    tintaConsumida.current = 0;
+    setTinta(MAX_TINTA);
 
-  // 4. Limpiar trazos remotos solo del usuario actual (opcional)
-  // Esto es para limpieza local en caso de reconexión
-  setRemoteLines(prev => {
-    const updated = { ...prev };
-    delete updated[userId];
-    return updated;
-  });
+    // 4. Notificar al servidor con bandera explícita
+    socket.emit('drawingAction', {
+      partidaId,
+      equipoNumero,
+      userId,
+      action: {
+        type: 'clear',
+        userId,
+        isLocalReset: true, // BANDERA CLAVE
+        tinta: MAX_TINTA
+      }
+    });
 
-  // 5. Resetear estado de tinta local
-  tintaConsumida.current = 0;
-  setTinta(MAX_TINTA);
+    // 5. Limpiar trazos remotos del usuario (opcional)
+    setRemoteLines(prev => {
+      const updated = { ...prev };
+      delete updated[userId];
+      return updated;
+    });
 
-  // 6. Feedback visual solo para este usuario
-  Swal.fire({
-    title: 'Dibujo borrado',
-    text: 'Todos tus trazos han sido eliminados permanentemente',
-    icon: 'success',
-    timer: 1500,
-    showConfirmButton: false
-  });
+    // 6. Feedback visual
+    Swal.fire({
+      title: 'Dibujo borrado',
+      text: 'Tu tinta ha sido recargada',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
+    });
 
-  socket.emit('initDrawingGame', {
-    partidaId,
-    equipoNumero,
-    userId
-  });
-};
+    setTimeout(() => {
+      isResetting.current = false; // Desactivamos flag después de 1seg
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTintaUpdate = ({ userId: updatedUserId, tinta: newTinta }) => {
+      if (updatedUserId === userId) { // Solo actualizar si es nuestro usuario
+        setTinta(newTinta);
+        tintaConsumida.current = MAX_TINTA - newTinta;
+      }
+    };
+
+    socket.on('tintaUpdate', handleTintaUpdate);
+
+    return () => {
+      socket.off('tintaUpdate', handleTintaUpdate);
+    };
+  }, [socket, userId]);
 
   // Configuración de Socket.io
   useEffect(() => {

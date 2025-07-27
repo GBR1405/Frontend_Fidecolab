@@ -149,31 +149,44 @@ const Depuration = () => {
   const handleAddUser = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'Agregar Nuevo Usuario',
-      html:
-        '<input id="swal-input1" class="swal2-input" placeholder="Nombre" required>' +
-        '<input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>' +
-        '<input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>' +
-        '<select id="swal-input4" class="swal2-input" required>' +
-          '<option value="">Seleccione Rol</option>' +
-          '<option value="Profesor">Profesor</option>' +
-          '<option value="Estudiante">Estudiante</option>' +
-          '<option value="Administrador">Administrador</option>' +
-        '</select>' +
-        '<select id="swal-input5" class="swal2-input" required>' +
-          '<option value="">Seleccione Género</option>' +
-          '<option value="1">Masculino</option>' +
-          '<option value="2">Femenino</option>' +
-          '<option value="3">Otro</option>' +
-        '</select>',
+      html: `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input1" class="swal2-input" placeholder="Nombre" required>
+          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>
+          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input4" class="swal2-input" placeholder="Correo electrónico" type="email" required>
+          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
+            <option value="">Género</option>
+            <option value="1">Masculino</option>
+            <option value="2">Femenino</option>
+            <option value="3">Otro</option>
+          </select>
+        </div>
+        <select id="swal-input6" class="swal2-input" required>
+          <option value="">Seleccione Rol</option>
+          <option value="Profesor">Profesor</option>
+          <option value="Estudiante">Estudiante</option>
+          <option value="Administrador">Administrador</option>
+        </select>
+      `,
+      width: '700px',
       focusConfirm: false,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      showCancelButton: true,
+      confirmButtonText: 'Agregar',
+      cancelButtonText: 'Cancelar',
       preConfirm: () => {
         const nombre = document.getElementById('swal-input1').value;
         const apellido1 = document.getElementById('swal-input2').value;
         const apellido2 = document.getElementById('swal-input3').value;
-        const rol = document.getElementById('swal-input4').value;
+        const correo = document.getElementById('swal-input4').value;
         const genero = document.getElementById('swal-input5').value;
+        const rol = document.getElementById('swal-input6').value;
 
-        if (!nombre || !apellido1 || !apellido2 || !rol || !genero) {
+        if (!nombre || !apellido1 || !apellido2 || !correo || !genero || !rol) {
           Swal.showValidationMessage('Todos los campos son obligatorios');
           return false;
         }
@@ -184,20 +197,22 @@ const Depuration = () => {
             text: 'Para crear un usuario administrador, ingrese el código de seguridad',
             input: 'text',
             inputPlaceholder: 'Código de seguridad',
+            width: '600px',
             showCancelButton: true,
             confirmButtonText: 'Confirmar',
             cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3085d6',
             preConfirm: (code) => {
               if (code !== 'fidecolab') {
                 Swal.showValidationMessage('Código incorrecto');
                 return false;
               }
-              return { nombre, apellido1, apellido2, rol, genero };
+              return { nombre, apellido1, apellido2, correo, genero, rol };
             }
           });
         }
 
-        return { nombre, apellido1, apellido2, rol, genero };
+        return { nombre, apellido1, apellido2, correo, genero, rol };
       }
     });
 
@@ -216,6 +231,7 @@ const Depuration = () => {
           nombre: formValues.nombre,
           apellido1: formValues.apellido1,
           apellido2: formValues.apellido2,
+          correo: formValues.correo,
           rol: formValues.rol,
           genero: formValues.genero
         })
@@ -274,55 +290,120 @@ const Depuration = () => {
       console.error("Error al obtener cursos del usuario:", error);
     }
 
-    const { value: formValues } = await Swal.fire({
+    const { value: formValues, isConfirmed } = await Swal.fire({
       title: `Editar Usuario ${user.Nombre}`,
-      html:
-        `<input id="swal-input1" class="swal2-input" placeholder="Nombre" value="${user.Nombre}" required>` +
-        `<input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" value="${user.Apellido1}" required>` +
-        `<input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" value="${user.Apellido2}" required>` +
-        `<div style="margin: 10px 0;"><strong>Correo:</strong> ${user.Correo}</div>` +
-        `<select id="swal-input4" class="swal2-input" required>` +
-          `<option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>` +
-          `<option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>` +
-        `</select>` +
-        `<select id="swal-input5" class="swal2-input" required>` +
-          `<option value="1" ${user.Genero === 'Masculino' ? 'selected' : ''}>Masculino</option>` +
-          `<option value="2" ${user.Genero === 'Femenino' ? 'selected' : ''}>Femenino</option>` +
-          `<option value="3" ${user.Genero === 'Otro' ? 'selected' : ''}>Otro</option>` +
-        `</select>` +
-        `<div style="margin: 10px 0;"><strong>Cursos:</strong></div>` +
-        `<select id="swal-input6" class="swal2-input" multiple style="height: auto;">` +
-          courses.map(course => 
+      html: `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input1" class="swal2-input" placeholder="Nombre" value="${user.Nombre}" required>
+          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" value="${user.Apellido1}" required>
+          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" value="${user.Apellido2}" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input4" class="swal2-input" placeholder="Correo" value="${user.Correo}" disabled>
+          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
+            <option value="1" ${user.Genero === '1' ? 'selected' : ''}>Masculino</option>
+            <option value="2" ${user.Genero === '2' ? 'selected' : ''}>Femenino</option>
+            <option value="3" ${user.Genero === '3' ? 'selected' : ''}>Otro</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <select id="swal-input6" class="swal2-input" required>
+            <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
+            <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
+          </select>
+          <button id="reset-password-btn" class="swal2-button swal2-cancel" style="width: 100%; background-color: #f8bb86;">
+            <i class="fa-solid fa-key"></i> Restaurar Contraseña
+          </button>
+        </div>
+        <div style="margin: 10px 0;"><strong>Cursos:</strong></div>
+        <select id="swal-input7" class="swal2-input" multiple style="height: auto; width: 100%;">
+          ${courses.map(course => 
             `<option value="${course.GrupoCurso_ID_PK}" ${userCourses.includes(course.Nombre_Curso) ? 'selected' : ''}>
               ${course.Nombre_Curso} - Grupo ${course.Codigo_Grupo}
             </option>`
-          ).join('') +
-        `</select>`,
+          ).join('')}
+        </select>
+      `,
+      width: '700px',
       focusConfirm: false,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar cambios',
+      cancelButtonText: 'Cancelar',
+      showDenyButton: true,
+      denyButtonText: 'Descartar cambios',
+      denyButtonColor: '#6c757d',
       preConfirm: () => {
         const nombre = document.getElementById('swal-input1').value;
         const apellido1 = document.getElementById('swal-input2').value;
         const apellido2 = document.getElementById('swal-input3').value;
-        const rol = document.getElementById('swal-input4').value;
         const genero = document.getElementById('swal-input5').value;
-        const cursos = Array.from(document.getElementById('swal-input6').selectedOptions)
+        const rol = document.getElementById('swal-input6').value;
+        const cursos = Array.from(document.getElementById('swal-input7').selectedOptions)
                           .map(option => option.value);
 
-        if (!nombre || !apellido1 || !apellido2 || !rol || !genero) {
-          Swal.showValidationMessage('Todos los campos son obligatorios');
+        // Check if any changes were made
+        const changesMade = 
+          nombre !== user.Nombre ||
+          apellido1 !== user.Apellido1 ||
+          apellido2 !== user.Apellido2 ||
+          genero !== user.Genero ||
+          rol !== user.Rol ||
+          JSON.stringify(cursos) !== JSON.stringify(userCourses);
+
+        if (!changesMade) {
+          Swal.showValidationMessage('No se realizaron cambios');
           return false;
         }
 
-        return { nombre, apellido1, apellido2, rol, genero, cursos };
+        return { nombre, apellido1, apellido2, genero, rol, cursos };
       },
       willOpen: () => {
         // Configure multiple select
-        const select = document.getElementById('swal-input6');
+        const select = document.getElementById('swal-input7');
         select.size = Math.min(5, courses.length);
+        
+        // Add event listener for password reset
+        document.getElementById('reset-password-btn').addEventListener('click', async (e) => {
+          e.preventDefault();
+          const result = await Swal.fire({
+            title: '¿Restaurar contraseña?',
+            text: 'Se generará una nueva contraseña aleatoria y se enviará al correo del usuario',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3085d6'
+          });
+          
+          if (result.isConfirmed) {
+            try {
+              const apiUrl = process.env.REACT_APP_API_URL;
+              const response = await fetch(`${apiUrl}/usuarios_D/${user.id}/restaurar-contrasena`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "Content-Type": "application/json"
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error('Error al restaurar contraseña');
+              }
+
+              Swal.fire('Éxito', 'Contraseña restablecida y correo enviado al usuario', 'success');
+            } catch (error) {
+              console.error("Error al restaurar contraseña:", error);
+              Swal.fire('Error', 'No se pudo restaurar la contraseña', 'error');
+            }
+          }
+        });
       }
     });
 
-    if (!formValues) return;
+    if (!formValues || !isConfirmed) return;
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
@@ -493,50 +574,88 @@ const Depuration = () => {
 
       // Build HTML content based on user role
       let detailsContent = `
-        <div style="text-align: left; margin-bottom: 20px;">
-          <h3>Información Básica</h3>
-          <p><strong>Nombre completo:</strong> ${user.Nombre} ${user.Apellido1} ${user.Apellido2}</p>
-          <p><strong>Correo:</strong> ${user.Correo}</p>
-          <p><strong>Género:</strong> ${user.Genero}</p>
-          <p><strong>Rol:</strong> ${user.Rol}</p>
-          <p><strong>Estado:</strong> ${user.Estado ? 'Activo' : 'Inactivo'}</p>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <h3 style="margin: 0; color: #2c3e50;">Información Básica</h3>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <p><strong>Nombre completo:</strong> ${user.Nombre} ${user.Apellido1} ${user.Apellido2 || ''}</p>
+              <p><strong>Correo:</strong> ${user.Correo}</p>
+            </div>
+            <div>
+              <p><strong>Género:</strong> ${user.Genero === '1' ? 'Masculino' : user.Genero === '2' ? 'Femenino' : 'Otro'}</p>
+              <p><strong>Rol:</strong> ${user.Rol}</p>
+            </div>
+          </div>
+          
+          <div style="background-color: ${user.Estado ? '#d4edda' : '#f8d7da'}; 
+                      color: ${user.Estado ? '#155724' : '#721c24'}; 
+                      padding: 10px; 
+                      border-radius: 5px; 
+                      text-align: center;">
+            <strong>Estado:</strong> ${user.Estado ? 'Activo' : 'Inactivo'}
+          </div>
       `;
 
       if (user.Rol === 'Estudiante') {
         detailsContent += `
-          <h3 style="margin-top: 20px;">Estadísticas</h3>
-          <p><strong>Partidas jugadas:</strong> ${userDetails.totalPartidas || 0}</p>
-          <p><strong>Cursos vinculados:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <h3 style="margin: 0; color: #2c3e50;">Estadísticas</h3>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <p><strong>Partidas jugadas:</strong> ${userDetails.totalPartidas || 0}</p>
+            </div>
+            <div>
+              <p><strong>Cursos vinculados:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+            </div>
+          </div>
         `;
       } else if (user.Rol === 'Profesor') {
         detailsContent += `
-          <h3 style="margin-top: 20px;">Estadísticas</h3>
-          <p><strong>Personalizaciones activas:</strong> ${userDetails.totalPersonalizaciones || 0}</p>
-          <p><strong>Cursos que imparte:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <h3 style="margin: 0; color: #2c3e50;">Estadísticas</h3>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <p><strong>Personalizaciones activas:</strong> ${userDetails.totalPersonalizaciones || 0}</p>
+            </div>
+            <div>
+              <p><strong>Cursos que imparte:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+            </div>
+          </div>
         `;
 
         if (userDetails.estudiantes && userDetails.estudiantes.length > 0) {
           detailsContent += `
-            <h3 style="margin-top: 20px;">Estudiantes Vinculados</h3>
-            <div style="max-height: 200px; overflow-y: auto;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                  <tr style="background-color: #f2f2f2;">
-                    <th style="padding: 8px; border: 1px solid #ddd;">Nombre</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Correo</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Curso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${userDetails.estudiantes.map(estudiante => `
-                    <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre} ${estudiante.Apellido1} ${estudiante.Apellido2}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Correo}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre_Curso} G${estudiante.Codigo_Grupo}</td>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: #2c3e50;">Estudiantes Vinculados</h3>
+                <input type="text" id="student-search" placeholder="Buscar estudiante..." 
+                      style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+              </div>
+              <div style="max-height: 300px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #17a2b8; color: white;">
+                      <th style="padding: 10px; border: 1px solid #ddd;">Nombre</th>
+                      <th style="padding: 10px; border: 1px solid #ddd;">Correo</th>
+                      <th style="padding: 10px; border: 1px solid #ddd;">Curso</th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody id="student-table-body">
+                    ${userDetails.estudiantes.map(estudiante => `
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre} ${estudiante.Apellido1} ${estudiante.Apellido2 || ''}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Correo}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre_Curso} G${estudiante.Codigo_Grupo}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
             </div>
           `;
         }
@@ -545,14 +664,16 @@ const Depuration = () => {
       // Show user's log
       if (userDetails.bitacora && userDetails.bitacora.length > 0) {
         detailsContent += `
-          <h3 style="margin-top: 20px;">Bitácora (Últimas 10 acciones)</h3>
-          <div style="max-height: 200px; overflow-y: auto;">
+          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <h3 style="margin: 0; color: #2c3e50;">Bitácora (Últimas 10 acciones)</h3>
+          </div>
+          <div style="max-height: 300px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
-                <tr style="background-color: #f2f2f2;">
-                  <th style="padding: 8px; border: 1px solid #ddd;">Fecha</th>
-                  <th style="padding: 8px; border: 1px solid #ddd;">Acción</th>
-                  <th style="padding: 8px; border: 1px solid #ddd;">Error</th>
+                <tr style="background-color: #6c757d; color: white;">
+                  <th style="padding: 10px; border: 1px solid #ddd;">Fecha</th>
+                  <th style="padding: 10px; border: 1px solid #ddd;">Acción</th>
+                  <th style="padding: 10px; border: 1px solid #ddd;">Error</th>
                 </tr>
               </thead>
               <tbody>
@@ -560,7 +681,7 @@ const Depuration = () => {
                   <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">${new Date(log.Fecha).toLocaleString()}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${log.Accion}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${log.Error || 'Ninguno'}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: ${log.Error ? '#dc3545' : '#28a745'};">${log.Error || 'Ninguno'}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -574,8 +695,26 @@ const Depuration = () => {
       Swal.fire({
         title: `Detalles de ${user.Nombre}`,
         html: detailsContent,
-        width: '800px',
-        confirmButtonText: 'Cerrar'
+        width: '900px',
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#3085d6',
+        willOpen: () => {
+          // Add search functionality if there are students
+          if (userDetails.estudiantes && userDetails.estudiantes.length > 0) {
+            const searchInput = document.getElementById('student-search');
+            const tableBody = document.getElementById('student-table-body');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            searchInput.addEventListener('input', (e) => {
+              const searchTerm = e.target.value.toLowerCase();
+              
+              Array.from(rows).forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+              });
+            });
+          }
+        }
       });
     } catch (error) {
       console.error("Error al obtener detalles del usuario:", error);
@@ -587,33 +726,53 @@ const Depuration = () => {
   const handleUnlinkUsers = () => {
     Swal.fire({
       title: 'Desvincular Usuarios',
-      text: 'Seleccione qué usuarios desea desvincular',
-      icon: 'question',
+      html: `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <button id="professors-btn" class="swal2-button swal2-confirm" style="background-color: #ffc107; color: #000; flex: 1; margin-right: 10px;">
+            <i class="fa-solid fa-user-tie"></i> Desvincular Profesores
+          </button>
+          <button id="students-btn" class="swal2-button swal2-confirm" style="background-color: #17a2b8; color: #fff; flex: 1;">
+            <i class="fa-solid fa-user-graduate"></i> Desvincular Estudiantes
+          </button>
+        </div>
+        <button id="all-users-btn" class="swal2-button swal2-deny" style="background-color: #6c757d; color: #fff; width: 100%;">
+          <i class="fa-solid fa-users-slash"></i> Desvincular Todos los Usuarios
+        </button>
+      `,
+      width: '700px',
+      showConfirmButton: false,
       showCancelButton: true,
-      confirmButtonText: 'Desvincular todos los profesores',
-      cancelButtonText: 'Desvincular todos los estudiantes',
-      showDenyButton: true,
-      denyButtonText: 'Desvincular todos los usuarios',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('Éxito', 'Todos los profesores han sido desvinculados', 'success');
-      } else if (result.isDenied) {
-        Swal.fire({
-          title: '¡PELIGRO!',
-          text: 'Esta acción desvinculará TODOS los usuarios y no se puede deshacer',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Confirmar',
-          cancelButtonText: 'Cancelar',
-          timer: 15000,
-          timerProgressBar: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            Swal.fire('Éxito', 'Todos los usuarios han sido desvinculados', 'success');
-          }
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#d33',
+      willOpen: () => {
+        document.getElementById('professors-btn').addEventListener('click', () => {
+          Swal.fire('Éxito', 'Todos los profesores han sido desvinculados', 'success');
+          Swal.close();
         });
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        Swal.fire('Éxito', 'Todos los estudiantes han sido desvinculados', 'success');
+        
+        document.getElementById('students-btn').addEventListener('click', () => {
+          Swal.fire('Éxito', 'Todos los estudiantes han sido desvinculados', 'success');
+          Swal.close();
+        });
+        
+        document.getElementById('all-users-btn').addEventListener('click', () => {
+          Swal.fire({
+            title: '¡PELIGRO!',
+            text: 'Esta acción desvinculará TODOS los usuarios y no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d33',
+            width: '600px',
+            timer: 15000,
+            timerProgressBar: true,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              Swal.fire('Éxito', 'Todos los usuarios han sido desvinculados', 'success');
+            }
+          });
+        });
       }
     });
   };

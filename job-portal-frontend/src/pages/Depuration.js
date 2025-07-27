@@ -1054,55 +1054,70 @@ const fetchUsers = async () => {
                     <h3>Lista de Usuarios</h3>
                   </div>
                   <table className="bottom__table">
-                    <thead className="table__head">
+                  <thead className="table__head">
+                    <tr>
                       <th className="table__header">Nombre</th>
                       <th className="table__header">Apellidos</th>
-                      <th className="table__header">Cursos</th>
+                      <th className="table__header">Correo</th>
                       <th className="table__header">Rol</th>
                       <th className="table__header">Estado</th>
                       <th className="table__header">Acciones</th>
-                    </thead>
-                    <tbody className="table__body">
-                      {currentItems.map((item, index) => (
-                        <tr className="table__row" key={index}>
-                          <td className="table__data">{item.nombre}</td>
-                          <td className="table__data">{item.primerApellido} {item.segundoApellido}</td>
-                          <td className="table__data">{item.cursosVinculados}</td>
-                          <td className="table__data">{item.rol}</td>
-                          <td className="table__data">{item.estado}</td>
-                          <td className="table__data table__data--actions">
+                    </tr>
+                  </thead>
+                  <tbody className="table__body">
+                    {currentItems.map((user, index) => (
+                      <tr className="table__row" key={index}>
+                        <td className="table__data">{user.Nombre}</td>
+                        <td className="table__data">{user.Apellido1} {user.Apellido2}</td>
+                        <td className="table__data">{user.Correo}</td>
+                        <td className="table__data">{user.Rol}</td>
+                        <td className="table__data">
+                          <span className={`status-badge ${user.Estado ? 'active' : 'inactive'}`}>
+                            {user.Estado ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                        <td className="table__data table__data--actions">
+                          <button 
+                            className="button__edit"
+                            onClick={() => handleEditUser(user)}
+                            title="Editar"
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i>
+                          </button>
+                          <button 
+                            className={`button__ban ${!user.Estado ? 'inactive' : ''}`}
+                            onClick={() => handleToggleUserStatus(user)}
+                            title={user.Estado ? 'Desactivar' : 'Activar'}
+                          >
+                            <i className="fa-solid fa-ban"></i>
+                          </button>
+                          <button 
+                            className="button__delete"
+                            onClick={() => handleDeleteUser(user)}
+                            title="Eliminar"
+                          >
+                            <i className="fa-solid fa-trash"></i>
+                          </button>
+                          <button 
+                            className="button__view"
+                            onClick={() => viewUserDetails(user)}
+                            title="Ver detalles"
+                          >
+                            <i className="fa-solid fa-eye"></i>
+                          </button>
+                          {user.Rol !== 'Administrador' && (
                             <button 
-                              className="button__edit"
-                              onClick={() => editUser(item)}
-                              title="Editar"
+                              className="button__password"
+                              onClick={() => handleRestorePassword(user.Usuario_ID_PK)}
+                              title="Restaurar contraseña"
                             >
-                              <i className="fa-solid fa-pen-to-square"></i>
+                              <i className="fa-solid fa-key"></i>
                             </button>
-                            <button 
-                              className={`button__ban ${item.estado === 'Inactivo' ? 'inactive' : ''}`}
-                              onClick={() => toggleUserStatus(item)}
-                              title={item.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                            >
-                              <i className="fa-solid fa-ban"></i>
-                            </button>
-                            <button 
-                              className="button__delete"
-                              onClick={() => handleDeleteItem('usuario', item.id)}
-                              title="Eliminar"
-                            >
-                              <i className="fa-solid fa-trash"></i>
-                            </button>
-                            <button 
-                              className="button__view"
-                              onClick={() => viewUserDetails(item)}
-                              title="Ver detalles"
-                            >
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
                         <div className="foot__buttons">                            

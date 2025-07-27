@@ -1202,71 +1202,78 @@ const Depuration = () => {
 
   // Fetch historial from API
   const fetchHistorial = async () => {
-    setLoading(true);
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/historial_D`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener historial');
+  setLoading(true);
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/historial_D`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
+    });
 
-      const data = await response.json();
-      const normalizedHistorial = data.historial.map(item => ({
-        ...item,
-        id: item.Resultados_ID_PK || item.id
-      })).reverse();
-      setHistorial(normalizedHistorial || []);
-      setFilteredHistorial(normalizedHistorial || []);
-    } catch (error) {
-      console.error("Error al obtener historial:", error);
-      Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error('Error al obtener historial');
     }
-  };
+
+    const data = await response.json();
+    const normalizedHistorial = data.map(item => ({
+      ...item,
+      id: item.Resultados_ID_PK || item.id,
+      curso: item.Nombre_Curso || 'Curso no disponible',
+      profesor: `${item.Nombre_Profesor} ${item.Apellido1_Profesor}` || 'Profesor no disponible',
+      fecha: item.Fecha
+    })).reverse();
+    
+    setHistorial(normalizedHistorial || []);
+    setFilteredHistorial(normalizedHistorial || []);
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Fetch logs from API
   const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/bitacora_D`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener logs');
+  setLoading(true);
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/bitacora_D`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
+    });
 
-      const data = await response.json();
-      const normalizedLogs = data.logs.map(log => ({
-        ...log,
-        id: log.Bitacora_ID_PK || log.id,
-        usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
-        error: log.Error || 'No aplica'
-      })).reverse();
-      setLogs(normalizedLogs || []);
-      setFilteredLogs(normalizedLogs || []);
-    } catch (error) {
-      console.error("Error al obtener logs:", error);
-      Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error('Error al obtener logs');
     }
-  };
+
+    const data = await response.json();
+    const normalizedLogs = data.logs.map(log => ({
+      ...log,
+      id: log.Bitacora_ID_PK || log.id,
+      usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
+      Accion: log.Accion || 'Acción no especificada',
+      Error: log.Error || 'No aplica',
+      Fecha: log.Fecha
+    })).reverse();
+    
+    setLogs(normalizedLogs || []);
+    setFilteredLogs(normalizedLogs || []);
+  } catch (error) {
+    console.error("Error al obtener logs:", error);
+    Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Filter historial based on search
   useEffect(() => {

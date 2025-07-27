@@ -1219,15 +1219,19 @@ const Depuration = () => {
     }
 
     const data = await response.json();
-    
-    // Normalizar los datos correctamente
+    console.log("Datos crudos del backend:", data); // <-- Añade esto para depuración
+
+    // Normalización más robusta
     const normalizedHistorial = data.map(item => ({
-      id: item.id_partida || item.id,
-      fecha: item.fecha, // Esto ya viene formateado desde el backend
-      profesor: item.profesor,
-      curso: item.curso_grupo || item.curso,
+      id: item.id_partida || item.Partida_ID_PK || item.id,
+      fecha: item.fecha || item.FechaInicio,
+      profesor: item.profesor || (item.Nombre && item.Apellido1 ? `${item.Nombre} ${item.Apellido1}` : 'Profesor no disponible'),
+      curso: item.curso_grupo || (item.Codigo_Curso && item.Nombre_Curso && item.Codigo_Grupo ? 
+             `${item.Codigo_Curso}-${item.Nombre_Curso} G${item.Codigo_Grupo}` : 'Curso no disponible'),
       total_estudiantes: item.total_estudiantes || 0
     }));
+
+    console.log("Datos normalizados:", normalizedHistorial); // <-- Verifica la normalización
     
     setHistorial(normalizedHistorial);
     setFilteredHistorial(normalizedHistorial);
@@ -1238,7 +1242,6 @@ const Depuration = () => {
     setLoading(false);
   }
 };
-
   // Fetch logs from API
   const fetchLogs = async () => {
   setLoading(true);

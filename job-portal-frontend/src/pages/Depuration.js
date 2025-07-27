@@ -1044,9 +1044,7 @@ const Depuration = () => {
                       onChange={handleSearchChange}
                     />
                   </div> 
-                  <div className="option__button button--search">
-                    <button type="button">Buscar</button>
-                  </div>                 
+                                
                   {selectedTab === 'users' && (
                     <>
                       <div className="option__filter">
@@ -1071,6 +1069,9 @@ const Depuration = () => {
                       </div>                      
                     </>
                   )}
+                  <div className="option__button button--search">
+                    <button type="button">Buscar</button>
+                  </div>   
                 </div>
               </div>
             </div>

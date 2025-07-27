@@ -244,7 +244,7 @@ const Depuration = () => {
       }
 
       await response.json();
-      Swal.fire('Éxito', 'Usuario agregado correctamente', 'success');
+      Swal.fire('Éxito', 'Usuario agregado correctamente, se le envio un correo al usuario con su contraseña', 'success');
       fetchUsers();
     } catch (error) {
       console.error("Error al agregar usuario:", error);

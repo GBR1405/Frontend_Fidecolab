@@ -475,69 +475,69 @@ const clearLocalDrawing = () => {
 
   // Limpiar dibujos
   const clearUserDrawing = () => {
-    isResetting.current = true; // Activamos flag de reset
-    
-    // 1. Limpiar estado local
-    setLines([]);
-    
-    // 2. Limpiar localStorage
-    localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-    localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
+  isResetting.current = true; // Activamos flag de reset
+  
+  // 1. Limpiar estado local
+  setLines([]);
+  
+  // 2. Limpiar localStorage
+  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
 
-    // 3. Resetear contadores locales
-    tintaConsumida.current = 0;
-    setTinta(MAX_TINTA);
+  // 3. Resetear contadores locales
+  tintaConsumida.current = 0;
+  setTinta(MAX_TINTA);
 
-    // 4. Notificar al servidor con bandera explícita
-    socket.emit('drawingAction', {
-      partidaId,
-      equipoNumero,
+  // 4. Notificar al servidor con bandera explícita
+  socket.emit('drawingAction', {
+    partidaId,
+    equipoNumero,
+    userId,
+    action: {
+      type: 'clear',
       userId,
-      action: {
-        type: 'clear',
-        userId,
-        isLocalReset: true, // BANDERA CLAVE
-        tinta: MAX_TINTA
-      }
-    });
+      isLocalReset: true, // BANDERA CLAVE
+      tinta: MAX_TINTA
+    }
+  });
 
-    // 5. Limpiar trazos remotos del usuario (opcional)
-    setRemoteLines(prev => {
-      const updated = { ...prev };
-      delete updated[userId];
-      return updated;
-    });
+  // 5. Limpiar trazos remotos del usuario (opcional)
+  setRemoteLines(prev => {
+    const updated = { ...prev };
+    delete updated[userId];
+    return updated;
+  });
 
-    // 6. Feedback visual
-    Swal.fire({
-      title: 'Dibujo borrado',
-      text: 'Tu tinta ha sido recargada',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false
-    });
+  // 6. Feedback visual
+  Swal.fire({
+    title: 'Dibujo borrado',
+    text: 'Tu tinta ha sido recargada',
+    icon: 'success',
+    timer: 1500,
+    showConfirmButton: false
+  });
 
-    setTimeout(() => {
-      isResetting.current = false; // Desactivamos flag después de 1seg
-    }, 1000);
+  setTimeout(() => {
+    isResetting.current = false; // Desactivamos flag después de 1seg
+  }, 1000);
+};
+
+useEffect(() => {
+  if (!socket) return;
+
+  const handleTintaUpdate = ({ userId: updatedUserId, tinta: newTinta }) => {
+    if (updatedUserId === userId) { // Solo actualizar si es nuestro usuario
+      setTinta(newTinta);
+      tintaConsumida.current = MAX_TINTA - newTinta;
+    }
   };
 
-  useEffect(() => {
-    if (!socket) return;
+  socket.on('tintaUpdate', handleTintaUpdate);
 
-    const handleTintaUpdate = ({ userId: updatedUserId, tinta: newTinta }) => {
-      if (updatedUserId === userId) { // Solo actualizar si es nuestro usuario
-        setTinta(newTinta);
-        tintaConsumida.current = MAX_TINTA - newTinta;
-      }
-    };
-
-    socket.on('tintaUpdate', handleTintaUpdate);
-
-    return () => {
-      socket.off('tintaUpdate', handleTintaUpdate);
-    };
-  }, [socket, userId]);
+  return () => {
+    socket.off('tintaUpdate', handleTintaUpdate);
+  };
+}, [socket, userId]);
 
   // Configuración de Socket.io
   useEffect(() => {

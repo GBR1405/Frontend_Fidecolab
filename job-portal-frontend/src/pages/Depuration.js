@@ -4,8 +4,9 @@ import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
 
+const token = Cookies.get("authToken");
+
 const Depuration = () => {
-  const token = Cookies.get("authToken");
   const [selectedTab, setSelectedTab] = useState('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -15,13 +16,8 @@ const Depuration = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [showSystemClean, setShowSystemClean] = useState(false);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Pagination calculations
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -52,6 +48,30 @@ const Depuration = () => {
     }
   };
 
+  // Fetch courses from API
+  const fetchCourses = async () => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/cursos`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener cursos');
+      }
+
+      const data = await response.json();
+      setCourses(data.courses || []);
+    } catch (error) {
+      console.error("Error al obtener cursos:", error);
+    }
+  };
+
   // Filter users based on search and filters
   useEffect(() => {
     let result = users;
@@ -71,10 +91,10 @@ const Depuration = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(user => 
-        user.Nombre.toLowerCase().includes(query) || 
-        user.Apellido1.toLowerCase().includes(query) ||
-        user.Apellido2.toLowerCase().includes(query) ||
-        user.Correo.toLowerCase().includes(query)
+        (user.Nombre && user.Nombre.toLowerCase().includes(query)) || 
+        (user.Apellido1 && user.Apellido1.toLowerCase().includes(query)) ||
+        (user.Apellido2 && user.Apellido2.toLowerCase().includes(query)) ||
+        (user.Correo && user.Correo.toLowerCase().includes(query))
       );
     }
 
@@ -82,14 +102,45 @@ const Depuration = () => {
     setCurrentPage(1);
   }, [users, roleFilter, statusFilter, searchQuery]);
 
-  // Load data when component mounts and when tab changes
+  // Load data when component mounts or tab changes
   useEffect(() => {
     if (selectedTab === 'users') {
       fetchUsers();
+      fetchCourses();
     }
   }, [selectedTab]);
 
-  // Handle add user
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  // Handle page change
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
+    setCurrentPage(1);
+  };
+
+  // Handle search input change
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  // Handle role filter change
+  const handleRoleFilterChange = (event) => {
+    setRoleFilter(event.target.value);
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
+  // Add new user
   const handleAddUser = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'Agregar Nuevo Usuario',
@@ -166,20 +217,58 @@ const Depuration = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al agregar usuario');
+        throw new Error('Error al agregar usuario');
       }
 
+      await response.json();
       Swal.fire('Éxito', 'Usuario agregado correctamente', 'success');
       fetchUsers();
     } catch (error) {
       console.error("Error al agregar usuario:", error);
-      Swal.fire('Error', error.message || 'No se pudo agregar el usuario', 'error');
+      Swal.fire('Error', 'No se pudo agregar el usuario', 'error');
     }
   };
 
-  // Handle edit user
+   const handleDeleteItem = (itemType, id) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `Esta acción eliminará el ${itemType} seleccionado`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire('Eliminado', `El ${itemType} ha sido eliminado`, 'success');
+      }
+    });
+  };
+
+  // Edit user
   const handleEditUser = async (user) => {
+    // Get user's current courses
+    let userCourses = [];
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.cursos) {
+          userCourses = data.data.cursos.split(',').map(c => c.trim());
+        }
+      }
+    } catch (error) {
+      console.error("Error al obtener cursos del usuario:", error);
+    }
+
     const { value: formValues } = await Swal.fire({
       title: `Editar Usuario ${user.Nombre}`,
       html:
@@ -190,12 +279,19 @@ const Depuration = () => {
         `<select id="swal-input4" class="swal2-input" required>` +
           `<option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>` +
           `<option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>` +
-          `<option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>` +
         `</select>` +
         `<select id="swal-input5" class="swal2-input" required>` +
           `<option value="1" ${user.Genero === 'Masculino' ? 'selected' : ''}>Masculino</option>` +
           `<option value="2" ${user.Genero === 'Femenino' ? 'selected' : ''}>Femenino</option>` +
           `<option value="3" ${user.Genero === 'Otro' ? 'selected' : ''}>Otro</option>` +
+        `</select>` +
+        `<div style="margin: 10px 0;"><strong>Cursos:</strong></div>` +
+        `<select id="swal-input6" class="swal2-input" multiple style="height: auto;">` +
+          courses.map(course => 
+            `<option value="${course.GrupoCurso_ID_PK}" ${userCourses.includes(course.Nombre_Curso) ? 'selected' : ''}>
+              ${course.Nombre_Curso} - Grupo ${course.Codigo_Grupo}
+            </option>`
+          ).join('') +
         `</select>`,
       focusConfirm: false,
       preConfirm: () => {
@@ -204,13 +300,20 @@ const Depuration = () => {
         const apellido2 = document.getElementById('swal-input3').value;
         const rol = document.getElementById('swal-input4').value;
         const genero = document.getElementById('swal-input5').value;
+        const cursos = Array.from(document.getElementById('swal-input6').selectedOptions)
+                          .map(option => option.value);
 
         if (!nombre || !apellido1 || !apellido2 || !rol || !genero) {
           Swal.showValidationMessage('Todos los campos son obligatorios');
           return false;
         }
 
-        return { nombre, apellido1, apellido2, rol, genero };
+        return { nombre, apellido1, apellido2, rol, genero, cursos };
+      },
+      willOpen: () => {
+        // Configure multiple select
+        const select = document.getElementById('swal-input6');
+        select.size = Math.min(5, courses.length);
       }
     });
 
@@ -230,24 +333,24 @@ const Depuration = () => {
           apellido1: formValues.apellido1,
           apellido2: formValues.apellido2,
           rol: formValues.rol,
-          genero: formValues.genero
+          genero: formValues.genero,
+          cursos: formValues.cursos
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar usuario');
+        throw new Error('Error al actualizar usuario');
       }
 
       Swal.fire('Éxito', 'Usuario actualizado correctamente', 'success');
       fetchUsers();
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
-      Swal.fire('Error', error.message || 'No se pudo actualizar el usuario', 'error');
+      Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
     }
   };
 
-  // Handle restore password
+  // Restore password
   const handleRestorePassword = async (userId) => {
     const result = await Swal.fire({
       title: '¿Restaurar contraseña?',
@@ -272,18 +375,17 @@ const Depuration = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al restaurar contraseña');
+        throw new Error('Error al restaurar contraseña');
       }
 
       Swal.fire('Éxito', 'Contraseña restablecida y correo enviado al usuario', 'success');
     } catch (error) {
       console.error("Error al restaurar contraseña:", error);
-      Swal.fire('Error', error.message || 'No se pudo restaurar la contraseña', 'error');
+      Swal.fire('Error', 'No se pudo restaurar la contraseña', 'error');
     }
   };
 
-  // Handle toggle user status
+  // Toggle user status
   const handleToggleUserStatus = async (user) => {
     const newStatus = user.Estado ? 0 : 1;
     const action = newStatus ? 'activar' : 'desactivar';
@@ -301,37 +403,31 @@ const Depuration = () => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      
-      // Verifica que el ID sea numérico
-      const userId = Number(user.Usuario_ID_PK);
-      if (isNaN(userId)) {
-        throw new Error('ID de usuario no válido');
-      }
-
-      const response = await fetch(`${apiUrl}/usuarios_D/${userId}/desactivar`, {
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}/desactivar`, {
         method: "PUT",
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
-        }
-        // Eliminamos el body ya que el estado se manejará en el backend
+        },
+        body: JSON.stringify({
+          estado: newStatus
+        })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error al ${action} usuario`);
+        throw new Error(`Error al ${action} usuario`);
       }
 
       Swal.fire('Éxito', `Usuario ${action}do correctamente`, 'success');
       fetchUsers();
     } catch (error) {
       console.error(`Error al ${action} usuario:`, error);
-      Swal.fire('Error', error.message || `No se pudo ${action} el usuario`, 'error');
+      Swal.fire('Error', `No se pudo ${action} el usuario`, 'error');
     }
   };
 
-  // Handle delete user
+  // Delete user
   const handleDeleteUser = async (user) => {
     const result = await Swal.fire({
       title: '¿Eliminar usuario?',
@@ -359,15 +455,14 @@ const Depuration = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar usuario');
+        throw new Error('Error al eliminar usuario');
       }
 
       Swal.fire('Eliminado', 'El usuario ha sido eliminado correctamente', 'success');
       fetchUsers();
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
-      Swal.fire('Error', error.message || 'No se pudo eliminar el usuario', 'error');
+      Swal.fire('Error', 'No se pudo eliminar el usuario', 'error');
     }
   };
 
@@ -390,6 +485,7 @@ const Depuration = () => {
 
       const { data: userDetails } = await response.json();
 
+      // Build HTML content based on user role
       let detailsContent = `
         <div style="text-align: left; margin-bottom: 20px;">
           <h3>Información Básica</h3>
@@ -440,7 +536,7 @@ const Depuration = () => {
         }
       }
 
-      // Show user logs
+      // Show user's log
       if (userDetails.bitacora && userDetails.bitacora.length > 0) {
         detailsContent += `
           <h3 style="margin-top: 20px;">Bitácora (Últimas 10 acciones)</h3>
@@ -481,29 +577,42 @@ const Depuration = () => {
     }
   };
 
-  // Pagination controls
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // Tab change handler
-  const handleTabChange = (tab) => {
-    setSelectedTab(tab);
-    setCurrentPage(1);
+  // Unlink users
+  const handleUnlinkUsers = () => {
+    Swal.fire({
+      title: 'Desvincular Usuarios',
+      text: 'Seleccione qué usuarios desea desvincular',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Desvincular todos los profesores',
+      cancelButtonText: 'Desvincular todos los estudiantes',
+      showDenyButton: true,
+      denyButtonText: 'Desvincular todos los usuarios',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire('Éxito', 'Todos los profesores han sido desvinculados', 'success');
+      } else if (result.isDenied) {
+        Swal.fire({
+          title: '¡PELIGRO!',
+          text: 'Esta acción desvinculará TODOS los usuarios y no se puede deshacer',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Confirmar',
+          cancelButtonText: 'Cancelar',
+          timer: 15000,
+          timerProgressBar: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire('Éxito', 'Todos los usuarios han sido desvinculados', 'success');
+          }
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire('Éxito', 'Todos los estudiantes han sido desvinculados', 'success');
+      }
+    });
   };
 
-  // Search and filter handlers
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleRoleFilterChange = (event) => {
-    setRoleFilter(event.target.value);
-  };
-
-  const handleStatusFilterChange = (event) => {
-    setStatusFilter(event.target.value);
-  };
-
-  // System clean access
+  // Access system clean
   const accessSystemClean = () => {
     Swal.fire({
       title: 'Acceso a Limpieza del Sistema',
@@ -524,6 +633,146 @@ const Depuration = () => {
       }
     });
   };
+
+  // System clean functions
+  const handleSystemClean = (action) => {
+    let title, text;
+    
+    switch(action) {
+      case 'customizations':
+        title = 'Limpiar personalizaciones';
+        text = '¿Estás seguro que deseas eliminar todas las personalizaciones del sistema?';
+        break;
+      case 'logs':
+        title = 'Limpiar bitácora';
+        text = '¿Estás seguro que deseas eliminar todos los registros de la bitácora?';
+        break;
+      case 'history':
+        title = 'Limpiar historial';
+        text = '¿Estás seguro que deseas eliminar todo el historial del sistema?';
+        break;
+      case 'students':
+        title = 'Eliminar todos los estudiantes';
+        text = '¿Estás seguro que deseas eliminar todos los estudiantes del sistema?';
+        break;
+      case 'professors':
+        title = 'Eliminar todos los profesores';
+        text = '¿Estás seguro que deseas eliminar todos los profesores del sistema?';
+        break;
+      case 'reset':
+        title = 'PELIGRO - REINICIAR SISTEMA';
+        text = 'Esta acción eliminará TODOS los datos del sistema (excepto administradores) y NO SE PUEDE DESHACER. ¿Estás absolutamente seguro?';
+        break;
+      default:
+        return;
+    }
+
+    if (action === 'reset') {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        input: 'text',
+        inputPlaceholder: 'Ingresa "fidecolab" para confirmar',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        preConfirm: (input) => {
+          if (input.toLowerCase() !== 'fidecolab') {
+            Swal.showValidationMessage('Código incorrecto');
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire('Sistema Reiniciado', 'El sistema ha sido reiniciado completamente', 'success');
+        }
+      });
+    } else {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire('Completado', `La acción "${title}" se ha realizado con éxito`, 'success');
+        }
+      });
+    }
+  };
+
+  // System clean interface
+  if (showSystemClean) {
+    return (
+      <LayoutAdmin>
+        <section className="depuration__container">
+          <div className="depuration__title">
+            <h3>Limpieza del Sistema</h3>
+          </div>          
+          <div className="system-clean__container">
+            <div className="system-clean__warning">
+              <i className="fa-solid fa-triangle-exclamation"></i>
+              <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
+            </div>            
+            <div className="system-clean__buttons">
+              <button 
+                className="clean-button clean-button--customizations"
+                onClick={() => handleSystemClean('customizations')}
+              >
+                <i className="fa-solid fa-paint-roller"></i>
+                Limpiar todas las personalizaciones
+              </button>              
+              <button 
+                className="clean-button clean-button--logs"
+                onClick={() => handleSystemClean('logs')}
+              >
+                <i className="fa-solid fa-clipboard-list"></i>
+                Limpiar la Bitácora
+              </button>              
+              <button 
+                className="clean-button clean-button--history"
+                onClick={() => handleSystemClean('history')}
+              >
+                <i className="fa-solid fa-clock-rotate-left"></i>
+                Limpiar Historial
+              </button>              
+              <button 
+                className="clean-button clean-button--students"
+                onClick={() => handleSystemClean('students')}
+              >
+                <i className="fa-solid fa-user-graduate"></i>
+                Eliminar todos los Estudiantes
+              </button>              
+              <button 
+                className="clean-button clean-button--professors"
+                onClick={() => handleSystemClean('professors')}
+              >
+                <i className="fa-solid fa-user-tie"></i>
+                Eliminar todos los Profesores
+              </button>
+            </div>
+            
+              <button 
+                className="reset-button"
+                onClick={() => handleSystemClean('reset')}
+              >
+                <i className="fa-solid fa-bomb"></i>
+                REINICIAR SISTEMA FIDECOLAB
+              </button>
+          </div>
+          <button 
+            className="button__back"
+            onClick={() => setShowSystemClean(false)}
+          >
+            Regresar
+          </button>
+        </section>
+      </LayoutAdmin>
+    );
+  }
 
   return (
     <LayoutAdmin>
@@ -601,12 +850,20 @@ const Depuration = () => {
                     </h3>
                   </div>
                   
+                  {/* Actions based on tab */}
                   {selectedTab === 'users' && (
-                    <div className="option__button button--add">
-                      <button type="button" onClick={handleAddUser}>
-                        Agregar Usuario
-                      </button>
-                    </div>
+                    <>
+                      <div className="option__button button--unlink">
+                        <button type="button" onClick={handleUnlinkUsers}>
+                          Desvincular usuario
+                        </button>
+                      </div>
+                      <div className="option__button button--add">
+                        <button type="button" onClick={handleAddUser}>
+                          Agregar Usuario
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
                 
@@ -615,12 +872,14 @@ const Depuration = () => {
                     <i className="fa-solid fa-magnifying-glass"></i>
                     <input 
                       type="search" 
-                      placeholder="Buscar usuario"
+                      placeholder="Buscar elemento"
                       value={searchQuery}
                       onChange={handleSearchChange}
                     />
                   </div> 
-                  
+                  <div className="option__button button--search">
+                    <button type="button">Buscar</button>
+                  </div>                 
                   {selectedTab === 'users' && (
                     <>
                       <div className="option__filter">
@@ -631,7 +890,6 @@ const Depuration = () => {
                           <option value="all">Todos los roles</option>
                           <option value="Profesor">Profesores</option>
                           <option value="Estudiante">Estudiantes</option>
-                          <option value="Administrador">Administradores</option>
                         </select>
                       </div>                      
                       <div className="option__filter">
@@ -650,146 +908,271 @@ const Depuration = () => {
               </div>
             </div>
 
-            {/* Users Table */}
+            {/* List to Depurate */}
             <div className="depuration__bottom">
-              {loading ? (
-                <div className="loading-container">
-                  <i className="fa-solid fa-spinner fa-spin"></i>
-                  <p>Cargando usuarios...</p>
-                </div>
-              ) : filteredUsers.length === 0 ? (
-                <div className="depuration__empty">
-                  <i className="fa-solid fa-user-slash"></i>
-                  <p>No se encontraron usuarios</p>
-                </div>
-              ) : (
+              {selectedTab === 'users' ? (
+                <>
+                  {loading ? (
+                    <div className="loading-container">
+                      <div className="loading-spinner"></div>
+                      <p>Cargando usuarios...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bottom__title">
+                        <h3>Lista de Usuarios</h3>
+                      </div>
+                      <table className="bottom__table">
+                        <thead className="table__head">
+                          <tr>
+                            <th className="table__header">Nombre</th>
+                            <th className="table__header">Apellidos</th>
+                            <th className="table__header">Correo</th>
+                            <th className="table__header">Rol</th>
+                            <th className="table__header">Estado</th>
+                            <th className="table__header">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody className="table__body">
+                          {currentItems.length > 0 ? (
+                            currentItems.map((user, index) => (
+                              <tr className="table__row" key={index}>
+                                <td className="table__data">{user.Nombre}</td>
+                                <td className="table__data">{user.Apellido1} {user.Apellido2}</td>
+                                <td className="table__data">{user.Correo}</td>
+                                <td className="table__data">{user.Rol}</td>
+                                <td className="table__data">
+                                  <span className={`status-badge ${user.Estado ? 'active' : 'inactive'}`}>
+                                    {user.Estado ? 'Activo' : 'Inactivo'}
+                                  </span>
+                                </td>
+                                <td className="table__data table__data--actions">
+                                  <button 
+                                    className="button__edit"
+                                    onClick={() => handleEditUser(user)}
+                                    title="Editar"
+                                  >
+                                    <i className="fa-solid fa-pen-to-square"></i>
+                                  </button>
+                                  <button 
+                                    className={`button__ban ${!user.Estado ? 'inactive' : ''}`}
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    title={user.Estado ? 'Desactivar' : 'Activar'}
+                                  >
+                                    <i className="fa-solid fa-ban"></i>
+                                  </button>
+                                  <button 
+                                    className="button__delete"
+                                    onClick={() => handleDeleteUser(user)}
+                                    title="Eliminar"
+                                  >
+                                    <i className="fa-solid fa-trash"></i>
+                                  </button>
+                                  <button 
+                                    className="button__view"
+                                    onClick={() => viewUserDetails(user)}
+                                    title="Ver detalles"
+                                  >
+                                    <i className="fa-solid fa-eye"></i>
+                                  </button>
+                                  {user.Rol !== 'Administrador' && (
+                                    <button 
+                                      className="button__password"
+                                      onClick={() => handleRestorePassword(user.Usuario_ID_PK)}
+                                      title="Restaurar contraseña"
+                                    >
+                                      <i className="fa-solid fa-key"></i>
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr className="table__row">
+                              <td colSpan="6" className="table__data table__data--empty">
+                                No se encontraron usuarios
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                        <tfoot className="table__foot">
+                          {totalPages > 1 && (
+                            <tr>
+                              <td colSpan="6">
+                                <div className="foot__buttons">                            
+                                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(number => {
+                                      let pageNumber;
+                                      if (currentPage === 1 || currentPage === 2) {
+                                        pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                                      }
+                                      if (currentPage > 2 && currentPage < totalPages - 1) {
+                                        pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                                      }  
+                                      if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                        pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                                      }                                                 
+                                      return pageNumber;                            
+                                    })
+                                    .map(number => (
+                                      <button 
+                                        className={`button__page ${currentPage === number ? "active" : ""}`}
+                                        key={number}
+                                        onClick={() => paginate(number)}
+                                      >
+                                        {number}
+                                      </button>
+                                    ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tfoot>
+                      </table>
+                    </>
+                  )}
+                </>
+              ) : selectedTab === 'history' ? (
                 <>
                   <div className="bottom__title">
-                    <h3>Lista de Usuarios</h3>
+                    <h3>Historial de partidas</h3>
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
                       <tr>
-                        <th className="table__header">Nombre</th>
-                        <th className="table__header">Apellidos</th>
-                        <th className="table__header">Correo</th>
-                        <th className="table__header">Rol</th>
-                        <th className="table__header">Estado</th>
+                        <th className="table__header">Fecha</th>
+                        <th className="table__header">Curso</th>
+                        <th className="table__header">Profesor</th>
                         <th className="table__header">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="table__body">
-                      {currentItems.map((user, index) => (
+                      {currentItems.map((item, index) => (
                         <tr className="table__row" key={index}>
-                          <td className="table__data">{user.Nombre}</td>
-                          <td className="table__data">{user.Apellido1} {user.Apellido2}</td>
-                          <td className="table__data">{user.Correo}</td>
-                          <td className="table__data">{user.Rol}</td>
-                          <td className="table__data">
-                            <span className={`status-badge ${user.Estado ? 'active' : 'inactive'}`}>
-                              {user.Estado ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </td>
+                          <td className="table__data">{item.fecha}</td>
+                          <td className="table__data">{item.curso}</td>
+                          <td className="table__data">{item.profesor}</td>
                           <td className="table__data table__data--actions">
                             <button 
-                              className="button__edit"
-                              onClick={() => handleEditUser(user)}
-                              title="Editar"
-                            >
-                              <i className="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button 
-                              className={`button__ban ${!user.Estado ? 'inactive' : ''}`}
-                              onClick={() => handleToggleUserStatus(user)}
-                              title={user.Estado ? 'Desactivar' : 'Activar'}
-                            >
-                              <i className="fa-solid fa-ban"></i>
-                            </button>
-                            <button 
                               className="button__delete"
-                              onClick={() => handleDeleteUser(user)}
+                              onClick={() => handleDeleteItem('historial', item.id)}
                               title="Eliminar"
                             >
                               <i className="fa-solid fa-trash"></i>
                             </button>
-                            <button 
-                              className="button__view"
-                              onClick={() => viewUserDetails(user)}
-                              title="Ver detalles"
-                            >
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                            {user.Rol !== 'Administrador' && (
-                              <button 
-                                className="button__password"
-                                onClick={() => handleRestorePassword(user.Usuario_ID_PK)}
-                                title="Restaurar contraseña"
-                              >
-                                <i className="fa-solid fa-key"></i>
-                              </button>
-                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot className="table__foot">
+                      {totalPages > 1 && (
+                        <tr>
+                          <td colSpan="4">
+                            <div className="foot__buttons">                            
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(number => {
+                                  let pageNumber;
+                                  if (currentPage === 1 || currentPage === 2) {
+                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                                  }
+                                  if (currentPage > 2 && currentPage < totalPages - 1) {
+                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                                  }  
+                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                                  }                                                 
+                                  return pageNumber;                            
+                                })
+                                .map(number => (
+                                  <button 
+                                    className={`button__page ${currentPage === number ? "active" : ""}`}
+                                    key={number}
+                                    onClick={() => paginate(number)}
+                                  >
+                                    {number}
+                                  </button>
+                                ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tfoot>
                   </table>
-                  
-                  {totalPages > 1 && (
-                    <div className="table__foot">
-                      <div className="foot__buttons">
-                        <button
-                          className="button__page"
-                          onClick={() => paginate(1)}
-                          disabled={currentPage === 1}
-                        >
-                          <i className="fa-solid fa-angles-left"></i>
-                        </button>
-                        <button
-                          className="button__page"
-                          onClick={() => paginate(currentPage - 1)}
-                          disabled={currentPage === 1}
-                        >
-                          <i className="fa-solid fa-angle-left"></i>
-                        </button>
-                        
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                          .filter(number => {
-                            if (currentPage <= 3) {
-                              return number <= 5;
-                            } else if (currentPage >= totalPages - 2) {
-                              return number >= totalPages - 4;
-                            } else {
-                              return number >= currentPage - 2 && number <= currentPage + 2;
-                            }
-                          })
-                          .map(number => (
-                            <button
-                              key={number}
-                              className={`button__page ${currentPage === number ? "active" : ""}`}
-                              onClick={() => paginate(number)}
-                            >
-                              {number}
-                            </button>
-                          ))}
-                        
-                        <button
-                          className="button__page"
-                          onClick={() => paginate(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                        >
-                          <i className="fa-solid fa-angle-right"></i>
-                        </button>
-                        <button
-                          className="button__page"
-                          onClick={() => paginate(totalPages)}
-                          disabled={currentPage === totalPages}
-                        >
-                          <i className="fa-solid fa-angles-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </>
+              ) : selectedTab === 'logs' ? (
+                <>
+                  <div className="bottom__title">
+                    <h3>Bitácora de Acciones</h3>
+                  </div>
+                  <table className="bottom__table">
+                    <thead className="table__head">
+                      <tr>
+                        <th className="table__header">Fecha</th>
+                        <th className="table__header">Acción</th>
+                        <th className="table__header">Error</th>
+                        <th className="table__header">Usuario</th>
+                        <th className="table__header">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="table__body">
+                      {currentItems.map((item, index) => (
+                        <tr className="table__row" key={index}>
+                          <td className="table__data">{item.fecha}</td>
+                          <td className="table__data">{item.accion}</td>
+                          <td className="table__data">{item.error}</td>
+                          <td className="table__data">{item.usuario}</td>
+                          <td className="table__data table__data--actions">
+                            <button 
+                              className="button__delete"
+                              onClick={() => handleDeleteItem('log', item.id)}
+                              title="Eliminar"
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="table__foot">
+                      {totalPages > 1 && (
+                        <tr>
+                          <td colSpan="5">
+                            <div className="foot__buttons">                            
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(number => {
+                                  let pageNumber;
+                                  if (currentPage === 1 || currentPage === 2) {
+                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                                  }
+                                  if (currentPage > 2 && currentPage < totalPages - 1) {
+                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                                  }  
+                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                                  }                                                 
+                                  return pageNumber;                            
+                                })
+                                .map(number => (
+                                  <button 
+                                    className={`button__page ${currentPage === number ? "active" : ""}`}
+                                    key={number}
+                                    onClick={() => paginate(number)}
+                                  >
+                                    {number}
+                                  </button>
+                                ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tfoot>
+                  </table>
+                </>
+              ) : (
+                <div className="depuration__empty">
+                  <i className="fa-solid fa-folder-open"></i>
+                  <p>Selecciona un módulo para administrar</p>
+                </div>
               )}
             </div>
           </div>

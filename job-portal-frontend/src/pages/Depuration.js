@@ -2,23 +2,540 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
+import Cookies from 'js-cookie';
+
+const token = Cookies.get("authToken");
+
 
 const Depuration = () => {
   const [selectedTab, setSelectedTab] = useState('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [data, setData] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [systemCleanCode, setSystemCleanCode] = useState('');
   const [showSystemClean, setShowSystemClean] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [data, setData] = useState([]);
 
   // Calcular índices para la paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  // FUNCIONES PARA LA PESTALA USUARIOS
+
+const fetchUsers = async () => {
+    try {
+      const secretKey = process.env.REACT_APP_SECRET_KEY;
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener usuarios');
+      }
+
+      const data = await response.json();
+      setUsers(data.users);
+      setFilteredUsers(data.users);
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+      Swal.fire('Error', 'No se pudieron obtener los usuarios', 'error');
+    }
+  };
+
+  // Obtener todos los cursos
+  const fetchCourses = async () => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/cursos`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener cursos');
+      }
+
+      const data = await response.json();
+      setCourses(data.courses);
+    } catch (error) {
+      console.error("Error al obtener cursos:", error);
+    }
+  };
+
+  // Filtrar usuarios según búsqueda y filtros
+  useEffect(() => {
+    let result = users;
+
+    // Filtrar por rol
+    if (roleFilter !== 'all') {
+      result = result.filter(user => user.Rol === roleFilter);
+    }
+
+    // Filtrar por estado
+    if (statusFilter !== 'all') {
+      const statusValue = statusFilter === 'Activo' ? 1 : 0;
+      result = result.filter(user => user.Estado === statusValue);
+    }
+
+    // Filtrar por búsqueda
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(user => 
+        user.Nombre.toLowerCase().includes(query) || 
+        user.Apellido1.toLowerCase().includes(query) ||
+        user.Apellido2.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredUsers(result);
+    setCurrentPage(1);
+  }, [users, roleFilter, statusFilter, searchQuery]);
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    if (selectedTab === 'users') {
+      fetchUsers();
+      fetchCourses();
+    }
+  }, [selectedTab]);
+
+  // Función para agregar usuario
+  const handleAddUser = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Agregar Nuevo Usuario',
+      html:
+        '<input id="swal-input1" class="swal2-input" placeholder="Nombre" required>' +
+        '<input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>' +
+        '<input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>' +
+        '<input id="swal-input4" class="swal2-input" placeholder="Correo" type="email" required>' +
+        '<select id="swal-input5" class="swal2-input" required>' +
+          '<option value="">Seleccione Rol</option>' +
+          '<option value="Profesor">Profesor</option>' +
+          '<option value="Estudiante">Estudiante</option>' +
+          '<option value="Administrador">Administrador</option>' +
+        '</select>' +
+        '<select id="swal-input6" class="swal2-input" required>' +
+          '<option value="">Seleccione Género</option>' +
+          '<option value="1">Masculino</option>' +
+          '<option value="2">Femenino</option>' +
+          '<option value="3">Otro</option>' +
+        '</select>',
+      focusConfirm: false,
+      preConfirm: () => {
+        const nombre = document.getElementById('swal-input1').value;
+        const apellido1 = document.getElementById('swal-input2').value;
+        const apellido2 = document.getElementById('swal-input3').value;
+        const correo = document.getElementById('swal-input4').value;
+        const rol = document.getElementById('swal-input5').value;
+        const genero = document.getElementById('swal-input6').value;
+
+        if (!nombre || !apellido1 || !apellido2 || !correo || !rol || !genero) {
+          Swal.showValidationMessage('Todos los campos son obligatorios');
+          return false;
+        }
+
+        if (rol === 'Administrador') {
+          return Swal.fire({
+            title: 'Confirmación requerida',
+            text: 'Para crear un usuario administrador, ingrese el código de seguridad',
+            input: 'text',
+            inputPlaceholder: 'Código de seguridad',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: (code) => {
+              if (code !== 'fidecolab') {
+                Swal.showValidationMessage('Código incorrecto');
+                return false;
+              }
+              return { nombre, apellido1, apellido2, correo, rol, genero };
+            }
+          });
+        }
+
+        return { nombre, apellido1, apellido2, correo, rol, genero };
+      }
+    });
+
+    if (!formValues) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: formValues.nombre,
+          apellido1: formValues.apellido1,
+          apellido2: formValues.apellido2,
+          correo: formValues.correo,
+          rol: formValues.rol,
+          genero: formValues.genero
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al agregar usuario');
+      }
+
+      const data = await response.json();
+      Swal.fire('Éxito', 'Usuario agregado correctamente', 'success');
+      fetchUsers();
+    } catch (error) {
+      console.error("Error al agregar usuario:", error);
+      Swal.fire('Error', 'No se pudo agregar el usuario', 'error');
+    }
+  };
+
+  // Función para editar usuario
+  const handleEditUser = async (user) => {
+    // Obtener cursos vinculados al usuario
+    let userCourses = [];
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data.cursos) {
+          userCourses = data.data.cursos.split(',').map(c => c.trim());
+        }
+      }
+    } catch (error) {
+      console.error("Error al obtener cursos del usuario:", error);
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: `Editar Usuario ${user.Nombre}`,
+      html:
+        `<input id="swal-input1" class="swal2-input" placeholder="Nombre" value="${user.Nombre}" required>` +
+        `<input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" value="${user.Apellido1}" required>` +
+        `<input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" value="${user.Apellido2}" required>` +
+        `<div style="margin: 10px 0;"><strong>Correo:</strong> ${user.Correo}</div>` +
+        `<select id="swal-input4" class="swal2-input" required>` +
+          `<option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>` +
+          `<option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>` +
+        `</select>` +
+        `<select id="swal-input5" class="swal2-input" required>` +
+          `<option value="1" ${user.Genero === 'Masculino' ? 'selected' : ''}>Masculino</option>` +
+          `<option value="2" ${user.Genero === 'Femenino' ? 'selected' : ''}>Femenino</option>` +
+          `<option value="3" ${user.Genero === 'Otro' ? 'selected' : ''}>Otro</option>` +
+        `</select>` +
+        `<div style="margin: 10px 0;"><strong>Cursos:</strong></div>` +
+        `<select id="swal-input6" class="swal2-input" multiple style="height: auto;">` +
+          courses.map(course => 
+            `<option value="${course.GrupoCurso_ID_PK}" ${userCourses.includes(course.Nombre_Curso) ? 'selected' : ''}>
+              ${course.Nombre_Curso} - Grupo ${course.Codigo_Grupo}
+            </option>`
+          ).join('') +
+        `</select>`,
+      focusConfirm: false,
+      preConfirm: () => {
+        const nombre = document.getElementById('swal-input1').value;
+        const apellido1 = document.getElementById('swal-input2').value;
+        const apellido2 = document.getElementById('swal-input3').value;
+        const rol = document.getElementById('swal-input4').value;
+        const genero = document.getElementById('swal-input5').value;
+        const cursos = Array.from(document.getElementById('swal-input6').selectedOptions)
+                          .map(option => option.value);
+
+        if (!nombre || !apellido1 || !apellido2 || !rol || !genero) {
+          Swal.showValidationMessage('Todos los campos son obligatorios');
+          return false;
+        }
+
+        return { nombre, apellido1, apellido2, rol, genero, cursos };
+      },
+      willOpen: () => {
+        // Configurar el select múltiple
+        const select = document.getElementById('swal-input6');
+        select.size = Math.min(5, courses.length);
+      }
+    });
+
+    if (!formValues) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: formValues.nombre,
+          apellido1: formValues.apellido1,
+          apellido2: formValues.apellido2,
+          rol: formValues.rol,
+          genero: formValues.genero,
+          cursos: formValues.cursos
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar usuario');
+      }
+
+      Swal.fire('Éxito', 'Usuario actualizado correctamente', 'success');
+      fetchUsers();
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
+      Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+    }
+  };
+
+  // Función para restaurar contraseña
+  const handleRestorePassword = async (userId) => {
+    const result = await Swal.fire({
+      title: '¿Restaurar contraseña?',
+      text: 'Se generará una nueva contraseña aleatoria y se enviará al correo del usuario',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${userId}/restaurar-contrasena`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al restaurar contraseña');
+      }
+
+      Swal.fire('Éxito', 'Contraseña restablecida y correo enviado al usuario', 'success');
+    } catch (error) {
+      console.error("Error al restaurar contraseña:", error);
+      Swal.fire('Error', 'No se pudo restaurar la contraseña', 'error');
+    }
+  };
+
+  // Función para desactivar usuario
+  const handleToggleUserStatus = async (user) => {
+    const newStatus = user.Estado ? 0 : 1;
+    const action = newStatus ? 'activar' : 'desactivar';
+
+    const result = await Swal.fire({
+      title: `¿${newStatus ? 'Activar' : 'Desactivar'} usuario?`,
+      text: `Estás a punto de ${action} al usuario ${user.Nombre}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}/${newStatus ? 'activar' : 'desactivar'}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al ${action} usuario`);
+      }
+
+      Swal.fire('Éxito', `Usuario ${action}do correctamente`, 'success');
+      fetchUsers();
+    } catch (error) {
+      console.error(`Error al ${action} usuario:`, error);
+      Swal.fire('Error', `No se pudo ${action} el usuario`, 'error');
+    }
+  };
+
+  // Función para eliminar usuario
+  const handleDeleteUser = async (user) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar usuario?',
+      html: `Estás a punto de eliminar permanentemente al usuario <strong>${user.Nombre} ${user.Apellido1}</strong>.<br><br>
+            <strong>ADVERTENCIA:</strong> Esta acción eliminará toda la información asociada al usuario y no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar eliminación',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      focusCancel: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar usuario');
+      }
+
+      Swal.fire('Eliminado', 'El usuario ha sido eliminado correctamente', 'success');
+      fetchUsers();
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      Swal.fire('Error', 'No se pudo eliminar el usuario', 'error');
+    }
+  };
+
+  // Función para ver detalles de usuario
+  const viewUserDetails = async (user) => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener detalles del usuario');
+      }
+
+      const { data: userDetails } = await response.json();
+
+      // Construir el contenido HTML según el rol del usuario
+      let detailsContent = `
+        <div style="text-align: left; margin-bottom: 20px;">
+          <h3>Información Básica</h3>
+          <p><strong>Nombre completo:</strong> ${user.Nombre} ${user.Apellido1} ${user.Apellido2}</p>
+          <p><strong>Correo:</strong> ${user.Correo}</p>
+          <p><strong>Género:</strong> ${user.Genero}</p>
+          <p><strong>Rol:</strong> ${user.Rol}</p>
+          <p><strong>Estado:</strong> ${user.Estado ? 'Activo' : 'Inactivo'}</p>
+      `;
+
+      if (user.Rol === 'Estudiante') {
+        detailsContent += `
+          <h3 style="margin-top: 20px;">Estadísticas</h3>
+          <p><strong>Partidas jugadas:</strong> ${userDetails.totalPartidas || 0}</p>
+          <p><strong>Cursos vinculados:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+        `;
+      } else if (user.Rol === 'Profesor') {
+        detailsContent += `
+          <h3 style="margin-top: 20px;">Estadísticas</h3>
+          <p><strong>Personalizaciones activas:</strong> ${userDetails.totalPersonalizaciones || 0}</p>
+          <p><strong>Cursos que imparte:</strong> ${userDetails.cursos || 'Ninguno'}</p>
+        `;
+
+        if (userDetails.estudiantes && userDetails.estudiantes.length > 0) {
+          detailsContent += `
+            <h3 style="margin-top: 20px;">Estudiantes Vinculados</h3>
+            <div style="max-height: 200px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Nombre</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Correo</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Curso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${userDetails.estudiantes.map(estudiante => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre} ${estudiante.Apellido1} ${estudiante.Apellido2}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Correo}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre_Curso} G${estudiante.Codigo_Grupo}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+
+      // Mostrar bitácora del usuario
+      if (userDetails.bitacora && userDetails.bitacora.length > 0) {
+        detailsContent += `
+          <h3 style="margin-top: 20px;">Bitácora (Últimas 10 acciones)</h3>
+          <div style="max-height: 200px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background-color: #f2f2f2;">
+                  <th style="padding: 8px; border: 1px solid #ddd;">Fecha</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Acción</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${userDetails.bitacora.map(log => `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${new Date(log.Fecha).toLocaleString()}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${log.Accion}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${log.Error || 'Ninguno'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      detailsContent += `</div>`;
+
+      Swal.fire({
+        title: `Detalles de ${user.Nombre}`,
+        html: detailsContent,
+        width: '800px',
+        confirmButtonText: 'Cerrar'
+      });
+    } catch (error) {
+      console.error("Error al obtener detalles del usuario:", error);
+      Swal.fire('Error', 'No se pudieron obtener los detalles del usuario', 'error');
+    }
+  };
 
   // Datos de ejemplo para usuarios
   const getUsersData = async () => {
@@ -142,42 +659,6 @@ const Depuration = () => {
     });
   };
 
-  // Función para agregar usuario
-  const handleAddUser = () => {
-    Swal.fire({
-      title: 'Agregar Nuevo Usuario',
-      html:
-        '<input id="swal-input1" class="swal2-input" placeholder="Nombre">' +
-        '<input id="swal-input2" class="swal2-input" placeholder="Primer Apellido">' +
-        '<input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido">' +
-        '<select id="swal-input4" class="swal2-input">' +
-          '<option value="">Seleccione Género</option>' +
-          '<option value="Masculino">Masculino</option>' +
-          '<option value="Femenino">Femenino</option>' +
-          '<option value="Otro">Otro</option>' +
-        '</select>' +
-        '<select id="swal-input5" class="swal2-input">' +
-          '<option value="">Seleccione Rol</option>' +
-          '<option value="Profesor">Profesor</option>' +
-          '<option value="Estudiante">Estudiante</option>' +
-        '</select>',
-      focusConfirm: false,
-      preConfirm: () => {
-        return [
-          document.getElementById('swal-input1').value,
-          document.getElementById('swal-input2').value,
-          document.getElementById('swal-input3').value,
-          document.getElementById('swal-input4').value,
-          document.getElementById('swal-input5').value
-        ]
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('Éxito', 'Usuario agregado correctamente', 'success');
-      }
-    });
-  };
-
   // Función para eliminar elemento
   const handleDeleteItem = (itemType, id) => {
     Swal.fire({
@@ -265,21 +746,7 @@ const Depuration = () => {
   };
 
   // Función para ver detalles de usuario
-  const viewUserDetails = (user) => {
-    Swal.fire({
-      title: `Detalles de ${user.nombre}`,
-      html: `
-        <div style="text-align: left;">
-          <p><strong>Nombre completo:</strong> ${user.nombre} ${user.primerApellido} ${user.segundoApellido}</p>
-          <p><strong>Género:</strong> ${user.genero}</p>
-          <p><strong>Rol:</strong> ${user.rol}</p>
-          <p><strong>Estado:</strong> ${user.estado}</p>
-          <p><strong>Cursos vinculados:</strong> ${user.cursosVinculados}</p>
-        </div>
-      `,
-      confirmButtonText: 'Cerrar'
-    });
-  };
+  
 
   // Función para cambiar estado de usuario
   const toggleUserStatus = (user) => {

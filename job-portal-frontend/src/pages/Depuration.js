@@ -13,7 +13,7 @@ const Depuration = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(5);
   const [showSystemClean, setShowSystemClean] = useState(false);
   const [loading, setLoading] = useState(false);
 

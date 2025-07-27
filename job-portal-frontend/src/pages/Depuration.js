@@ -301,46 +301,75 @@ const Depuration = () => {
       (user.Rol === 'Estudiante' && userGroups.length === 0)
     );
 
+    // Estilos CSS para los botones
+    const buttonStyle = `
+      align-items: center;
+      background-color: #f2a007;
+      border-radius: 5px;
+      box-shadow: 0 4px 4px 1px rgba(0, 0, 0, 0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      font-size: 14px;
+      font-weight: 500;
+      height: 36px;
+      justify-content: center;
+      padding: 0 12px;
+      text-align: center;
+      border: none;
+      transition: all 0.3s ease;
+    `;
+
+    const dangerButtonStyle = `
+      ${buttonStyle}
+      background-color: #ff6b6b;
+    `;
+
+    const secondaryButtonStyle = `
+      ${buttonStyle}
+      background-color: #6c757d;
+    `;
+
     // Crear el HTML para la tabla de grupos
     const groupsTableHtml = !isAdmin ? `
       <div style="margin: 15px 0;">
         <h4 style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-          <span>Cursos Vinculados</span>
+          <span style="font-size: 16px; font-weight: 600;">Cursos Vinculados</span>
           ${showAddCourseBtn ? `
-            <button id="add-course-btn" class="swal2-button swal2-confirm" style="padding: 4px 10px; font-size: 12px;">
-              <i class="fa-solid fa-plus"></i> Agregar Curso
+            <button id="add-course-btn" style="${buttonStyle}">
+              <i class="fa-solid fa-plus" style="margin-right: 5px;"></i> Agregar Curso
             </button>
           ` : ''}
         </h4>
-        <div style="max-height: 200px; overflow-y: auto;">
+        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 5px;">
           <table style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr style="background-color: #f5f5f5;">
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Código</th>
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Nombre</th>
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Grupo</th>
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Acciones</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 500;">Código</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 500;">Nombre</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 500;">Grupo</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 500;">Acciones</th>
               </tr>
             </thead>
             <tbody>
               ${userGroups.length > 0 ? 
                 userGroups.map(group => `
                   <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${group.codigo}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${group.nombre}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">G${group.grupo}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${group.codigo}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${group.nombre}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">G${group.grupo}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">
                       <button 
                         data-group-id="${group.id}"
-                        class="unlink-course-btn swal2-button swal2-cancel" 
-                        style="padding: 2px 6px; background-color: #ff6b6b; color: white;">
-                        <i class="fa-solid fa-link-slash"></i>
+                        class="unlink-course-btn" 
+                        style="${dangerButtonStyle} padding: 5px 8px; width: auto;">
+                        <i class="fa-solid fa-link-slash" style="margin-right: 5px;"></i> Desvincular
                       </button>
                     </td>
                   </tr>
                 `).join('') : `
                   <tr>
-                    <td colspan="4" style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">
+                    <td colspan="4" style="padding: 15px; text-align: center; border-bottom: 1px solid #eee; color: #777;">
                       No hay cursos vinculados
                     </td>
                   </tr>
@@ -353,62 +382,99 @@ const Depuration = () => {
 
     // Crear el HTML para los botones de acciones especiales
     const specialActionsHtml = !isAdmin ? `
-      <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+      <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
         ${user.Rol === 'Profesor' ? `
-          <button id="delete-customizations-btn" class="swal2-button swal2-cancel" style="width: 48%;">
-            <i class="fa-solid fa-trash"></i> Eliminar Personalizaciones
+          <button id="delete-customizations-btn" style="${dangerButtonStyle} width: 100%;">
+            <i class="fa-solid fa-trash" style="margin-right: 5px;"></i> Eliminar Personalizaciones
           </button>
-          <button id="delete-matches-btn" class="swal2-button swal2-cancel" style="width: 48%;">
-            <i class="fa-solid fa-gamepad"></i> Eliminar Partidas
+          <button id="delete-matches-btn" style="${dangerButtonStyle} width: 100%;">
+            <i class="fa-solid fa-gamepad" style="margin-right: 5px;"></i> Eliminar Partidas
           </button>
         ` : ''}
         ${user.Rol === 'Estudiante' ? `
-          <button id="reset-achievements-btn" class="swal2-button swal2-cancel" style="width: 100%;">
-            <i class="fa-solid fa-trophy"></i> Reiniciar Logros
+          <button id="reset-achievements-btn" style="${dangerButtonStyle} width: 100%;">
+            <i class="fa-solid fa-trophy" style="margin-right: 5px;"></i> Reiniciar Logros
           </button>
         ` : ''}
       </div>
     ` : '';
 
+    // Estilo para los selects
+    const selectStyle = `
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      background-color: white;
+      color: #333;
+    `;
+
     const { value: formValues, isConfirmed } = await Swal.fire({
       title: `Editar Usuario ${user.Nombre}`,
       html: `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input1" class="swal2-input" placeholder="Nombre" value="${user.Nombre}" required>
-          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" value="${user.Apellido1}" required>
-          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" value="${user.Apellido2}" required>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Nombre</label>
+            <input id="swal-input1" class="swal2-input" placeholder="Nombre" value="${user.Nombre}" required
+              style="${selectStyle}">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Primer Apellido</label>
+            <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" value="${user.Apellido1}" required
+              style="${selectStyle}">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Segundo Apellido</label>
+            <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" value="${user.Apellido2}" required
+              style="${selectStyle}">
+          </div>
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input4" class="swal2-input" placeholder="Correo" value="${user.Correo}" disabled>
-          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
-            <option value="1" ${user.Genero === '1' ? 'selected' : ''}>Masculino</option>
-            <option value="2" ${user.Genero === '2' ? 'selected' : ''}>Femenino</option>
-            <option value="3" ${user.Genero === '3' ? 'selected' : ''}>Otro</option>
-          </select>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Correo</label>
+            <input id="swal-input4" class="swal2-input" placeholder="Correo" value="${user.Correo}" disabled
+              style="${selectStyle}">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Género</label>
+            <select id="swal-input5" style="${selectStyle}" required>
+              <option value="1" ${user.Genero === '1' ? 'selected' : ''}>Masculino</option>
+              <option value="2" ${user.Genero === '2' ? 'selected' : ''}>Femenino</option>
+              <option value="3" ${user.Genero === '3' ? 'selected' : ''}>Otro</option>
+            </select>
+          </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <select id="swal-input6" class="swal2-input" required>
-            <option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
-            <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
-            <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
-          </select>
-          <button id="reset-password-btn" class="swal2-button swal2-cancel" style="width: 100%; background-color: #f8bb86;">
-            <i class="fa-solid fa-key"></i> Restaurar Contraseña
-          </button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Rol</label>
+            <select id="swal-input6" style="${selectStyle}" required>
+              <option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
+              <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
+              <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Acciones</label>
+            <button id="reset-password-btn" style="${secondaryButtonStyle} width: 100%;">
+              <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Restaurar Contraseña
+            </button>
+          </div>
         </div>
         ${groupsTableHtml}
         ${specialActionsHtml}
       `,
-      width: '700px',
+      width: '900px',
       focusConfirm: false,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      showCancelButton: true,
       confirmButtonText: 'Guardar cambios',
       cancelButtonText: 'Cancelar',
       showDenyButton: true,
       denyButtonText: 'Descartar cambios',
-      denyButtonColor: '#6c757d',
+      customClass: {
+        confirmButton: 'custom-confirm-button',
+        cancelButton: 'custom-cancel-button',
+        denyButton: 'custom-deny-button'
+      },
       preConfirm: () => {
         const nombre = document.getElementById('swal-input1').value;
         const apellido1 = document.getElementById('swal-input2').value;
@@ -534,31 +600,49 @@ const Depuration = () => {
 
               const { grupos } = await response.json();
               
-              // Filtrar grupos a los que el usuario no está vinculado
-              const availableGroups = grupos.filter(group => 
-                !userGroups.some(userGroup => userGroup.id === group.id)
-              );
+              // Filtrar grupos a los que el usuario no está vinculado y ordenar alfabéticamente
+              const availableGroups = grupos
+                .filter(group => !userGroups.some(userGroup => userGroup.id === group.id))
+                .sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto));
 
               if (availableGroups.length === 0) {
                 Swal.fire('Info', 'No hay cursos disponibles para vincular', 'info');
                 return;
               }
 
+              // Crear un diálogo con buscador para los cursos
               const { value: selectedGroupId } = await Swal.fire({
                 title: 'Seleccionar curso',
-                input: 'select',
-                inputOptions: availableGroups.reduce((options, group) => {
-                  options[group.id] = group.nombreCompleto;
-                  return options;
-                }, {}),
-                inputPlaceholder: 'Selecciona un curso',
+                html: `
+                  <input id="course-search" type="text" placeholder="Buscar curso..." 
+                    style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                  <div style="max-height: 300px; overflow-y: auto;">
+                    <select id="course-select" size="8" style="width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+                      ${availableGroups.map(group => `
+                        <option value="${group.id}">${group.nombreCompleto}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                `,
+                focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: 'Vincular',
                 cancelButtonText: 'Cancelar',
-                inputValidator: (value) => {
-                  if (!value) {
-                    return 'Debes seleccionar un curso';
-                  }
+                preConfirm: () => {
+                  const select = document.getElementById('course-select');
+                  return select.value;
+                },
+                didOpen: () => {
+                  const searchInput = document.getElementById('course-search');
+                  const select = document.getElementById('course-select');
+                  
+                  searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    Array.from(select.options).forEach(option => {
+                      const text = option.text.toLowerCase();
+                      option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                    });
+                  });
                 }
               });
 

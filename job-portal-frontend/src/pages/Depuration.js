@@ -1219,17 +1219,19 @@ const Depuration = () => {
     }
 
     const data = await response.json();
+    
+    // Normalizar los datos recibidos
     const normalizedHistorial = data.map(item => ({
       ...item,
-      id: item.id,
-      fecha: item.fecha,
+      id: item.id_partida || item.id,
+      fecha: item.fecha || item.FechaInicio, // Usa el campo correcto
       profesor: item.profesor || 'Profesor no disponible',
-      curso: item.curso || 'Curso no disponible',
+      curso: item.curso_grupo || item.curso || 'Curso no disponible',
       total_estudiantes: item.total_estudiantes || 0
-    })).reverse();
+    }));
     
-    setHistorial(normalizedHistorial || []);
-    setFilteredHistorial(normalizedHistorial || []);
+    setHistorial(normalizedHistorial);
+    setFilteredHistorial(normalizedHistorial);
   } catch (error) {
     console.error("Error al obtener historial de partidas:", error);
     Swal.fire('Error', 'No se pudieron obtener los registros de historial', 'error');
@@ -1875,7 +1877,13 @@ const Depuration = () => {
                       ) : filteredHistorial.length > 0 ? (
                         currentItems.map((item, index) => (
                           <tr className="table__row" key={index}>
-                          <td className="table__data">{new Date(item.fecha).toLocaleString()}</td>
+                          <td className="table__data">
+                            {item.fecha ? (
+                              new Date(item.fecha).toString() === 'Invalid Date' ? 
+                                'Fecha inválida' : 
+                                new Date(item.fecha).toLocaleString()
+                            ) : 'Sin fecha'}
+                          </td>
                           <td className="table__data">{item.curso}</td>
                           <td className="table__data">{item.profesor}</td>
                           <td className="table__data">{item.total_estudiantes}</td>

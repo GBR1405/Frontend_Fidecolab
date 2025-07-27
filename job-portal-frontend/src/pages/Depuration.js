@@ -1139,7 +1139,7 @@ const Depuration = () => {
                                       onClick={() => viewUserDetails(user)}
                                       title="Ver detalles"
                                     >
-                                      <i className="fa-solid fa-key"></i>
+                                      <i className="fa-solid fa-eye"></i>
                                     </button>
                                   )}
                                 </td>

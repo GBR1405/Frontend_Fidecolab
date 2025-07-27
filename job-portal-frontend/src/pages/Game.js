@@ -55,6 +55,91 @@ const TeamRoom = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && socket) {
+      // Cuando la página vuelve a estar visible
+      console.log('Página visible, sincronizando estado...');
+      
+      // Verificar estado de la partida
+      verificarEstadoPartida();
+      
+      // Sincronizar tiempo
+      socket.emit('RequestTimeSync', partidaId);
+      
+      // Obtener configuración actual del juego
+      socket.emit('getGameConfig', partidaId, (response) => {
+        if (!response.error && response.juegos?.length > 0) {
+          const currentIndex = response.currentIndex || 0;
+          const currentGame = response.juegos[currentIndex];
+          
+          if (games[currentGame.tipo.toLowerCase()]) {
+            setCurrentGameInfo({
+              ...games[currentGame.tipo.toLowerCase()],
+              config: currentGame.configEspecifica,
+              dificultad: currentGame.dificultad,
+              tema: currentGame.tema
+            });
+            
+            setGameProgress({
+              current: currentIndex + 1,
+              total: response.juegos.length
+            });
+          }
+        }
+      });
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [socket, partidaId]);
+
+// Verificación periódica si estamos en el último juego
+useEffect(() => {
+  let intervalId;
+
+  if (gameProgress.current === gameProgress.total && gameProgress.total > 0) {
+    // Estamos en el último juego, verificar cada minuto si la partida terminó
+    intervalId = setInterval(() => {
+      verificarEstadoPartida();
+    }, 60000); // 60 segundos
+  }
+
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [gameProgress]);
+
+// Función para verificar estado de la partida (reutilizable)
+const verificarEstadoPartida = async () => {
+  try {
+    const res = await fetch(`${apiUrl}/check-activity`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ partidaId })
+    });
+
+    const data = await res.json();
+
+    if (data.isFinished) {
+      window.location.href = `/resultados/${partidaId}`;
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error al verificar estado de la partida:', error);
+    return false;
+  }
+};
+
+  useEffect(() => {
     if (!socket) return;
 
     const handleDemoStarted = () => {

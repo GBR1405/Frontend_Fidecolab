@@ -285,46 +285,46 @@ const Depuration = () => {
 
   // Handle toggle user status
   const handleToggleUserStatus = async (user) => {
-    const newStatus = user.Estado ? 0 : 1;
-    const action = newStatus ? 'activar' : 'desactivar';
+  const newStatus = user.Estado ? 0 : 1;
+  const action = newStatus ? 'activar' : 'desactivar';
 
-    const result = await Swal.fire({
-      title: `¿${newStatus ? 'Activar' : 'Desactivar'} usuario?`,
-      text: `Estás a punto de ${action} al usuario ${user.Nombre}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Confirmar',
-      cancelButtonText: 'Cancelar'
+  const result = await Swal.fire({
+    title: `¿${newStatus ? 'Activar' : 'Desactivar'} usuario?`,
+    text: `Estás a punto de ${action} al usuario ${user.Nombre}`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}/desactivar`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        estado: newStatus
+      })
     });
 
-    if (!result.isConfirmed) return;
-
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D/${user.Usuario_ID_PK}/desactivar`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          estado: newStatus
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error al ${action} usuario`);
-      }
-
-      Swal.fire('Éxito', `Usuario ${action}do correctamente`, 'success');
-      fetchUsers();
-    } catch (error) {
-      console.error(`Error al ${action} usuario:`, error);
-      Swal.fire('Error', error.message || `No se pudo ${action} el usuario`, 'error');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Error al ${action} usuario`);
     }
-  };
+
+    Swal.fire('Éxito', `Usuario ${action}do correctamente`, 'success');
+    fetchUsers();
+  } catch (error) {
+    console.error(`Error al ${action} usuario:`, error);
+    Swal.fire('Error', error.message || `No se pudo ${action} el usuario`, 'error');
+  }
+};
 
   // Handle delete user
   const handleDeleteUser = async (user) => {

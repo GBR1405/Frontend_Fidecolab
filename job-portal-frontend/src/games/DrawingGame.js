@@ -6,7 +6,11 @@ import Swal from 'sweetalert2';
 import '../styles/drawingComponent.css';
 
 const DrawingGame = ({ gameConfig, onGameComplete }) => {
-  // Parámetros de la URL y contexto
+  // Constantes
+  const MAX_INK = 5000;
+  const INK_RESET_COOLDOWN = 1000; // 1 segundo entre resets
+
+  // Parámetros y conexión
   const { partidaId, equipoNumero } = useParams();
   const socket = useSocket();
   const stageRef = useRef(null);
@@ -17,19 +21,19 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
   const [tool, setTool] = useState('brush');
   const [lines, setLines] = useState([]);
   const [remoteLines, setRemoteLines] = useState({});
-  const [tinta, setTinta] = useState(5000);
+  const [ink, setInk] = useState(MAX_INK);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [lastColor, setLastColor] = useState('#000000');
   const [currentGameInfo, setCurrentGameInfo] = useState(null);
-  const isResetting = useRef(false);
-
-  // Referencias y constantes
+  
+  // Referencias
   const userId = localStorage.getItem('userId');
   const isDrawing = useRef(false);
   const lastPoint = useRef(null);
   const animationRef = useRef(null);
-  const tintaConsumida = useRef(0);
-  const MAX_TINTA = 5000;
+  const inkConsumed = useRef(0);
+  const isResetting = useRef(false);
+  const lastActionTime = useRef(Date.now());
 
   // Paleta de colores
   const colorPalette = [
@@ -37,210 +41,134 @@ const DrawingGame = ({ gameConfig, onGameComplete }) => {
     '#00FF00', '#00CC33', '#006699', '#0000FF',
     '#6600FF', '#9933FF', '#FF00FF', '#FF33CC',
     '#000000', '#FFFFFF', '#888888'
-];
+  ];
 
- socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
-
+  // Efecto inicial - Conexión y carga de estado
   useEffect(() => {
     if (!socket || !partidaId) return;
-    socket.emit('getGameConfig', partidaId, (response) => {
-      if (response.error) {
-        console.error('Error al obtener configuración:', response.error);
-        return;
+
+    socket.emit('joinDrawingTeam', { partidaId, equipoNumero });
+
+    // Cargar estado guardado
+    const loadSavedState = () => {
+      try {
+        const savedLines = localStorage.getItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+        const savedInk = localStorage.getItem(`ink-${partidaId}-${equipoNumero}-${userId}`);
+        
+        if (savedLines) {
+          const parsedLines = JSON.parse(savedLines);
+          if (Array.isArray(parsedLines)) {
+            setLines(parsedLines);
+          }
+        }
+        
+        if (savedInk) {
+          const parsedInk = parseInt(savedInk);
+          if (!isNaN(parsedInk)) {
+            setInk(parsedInk);
+            inkConsumed.current = MAX_INK - parsedInk;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved state:', error);
       }
-      if (response.juegos?.length > 0) {
-        const initialIndex = response.currentIndex || 0;
-        const currentGame = response.juegos[initialIndex];
-        if (currentGame && currentGame.tema) {
+    };
+
+    loadSavedState();
+
+    // Obtener configuración del juego
+    socket.emit('getGameConfig', partidaId, (response) => {
+      if (response?.juegos?.length > 0) {
+        const currentGame = response.juegos[response.currentIndex || 0];
+        if (currentGame?.tema) {
           setCurrentGameInfo({ tema: currentGame.tema });
         }
       }
     });
-  }, [socket, partidaId]);
+  }, [socket, partidaId, equipoNumero, userId]);
 
-  // Cargar estado inicial desde localStorage
+  // Manejadores de eventos del socket
   useEffect(() => {
-  const loadSavedState = () => {
-    try {
-      const savedLines = localStorage.getItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-      const savedTinta = localStorage.getItem(`tinta-${partidaId}-${equipoNumero}-${userId}`);
+    if (!socket) return;
+
+    const handleInkUpdate = ({ userId: updatedUserId, ink: newInk }) => {
+      if (updatedUserId !== userId) return;
       
-      if (savedLines) {
-        const parsedLines = JSON.parse(savedLines);
-        if (Array.isArray(parsedLines)) {
-          setLines(parsedLines);
-        }
-      }
-      
-      if (savedTinta) {
-        const parsedTinta = parseInt(savedTinta);
-        if (!isNaN(parsedTinta)) {
-          setTinta(parsedTinta);
-          tintaConsumida.current = MAX_TINTA - parsedTinta;
-          
-          // Emitir al servidor el estado de la tinta al cargar
-          if (socket) {
-            socket.emit('updateTintaState', {
-              partidaId,
-              equipoNumero,
-              userId,
-              tinta: parsedTinta
-            });
+      const now = Date.now();
+      if (now <= lastActionTime.current) return;
+
+      lastActionTime.current = now;
+      inkConsumed.current = MAX_INK - newInk;
+      setInk(newInk);
+      localStorage.setItem(`ink-${partidaId}-${equipoNumero}-${userId}`, newInk.toString());
+    };
+
+    const handleDrawingAction = (action) => {
+      if (!action || action.userId === userId) return;
+
+      setRemoteLines(prev => {
+        const updated = { ...prev };
+        const current = updated[action.userId] || [];
+
+        switch (action.type) {
+          case 'pathStart':
+            updated[action.userId] = [...current, action.path];
+            break;
+          case 'pathUpdate':
+          case 'pathComplete': {
+            const index = current.findIndex(p => p.id === action.path?.id);
+            if (index !== -1) current[index] = action.path;
+            else current.push(action.path);
+            updated[action.userId] = [...current];
+            break;
           }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading saved state:', error);
-    }
-  };
-
-  loadSavedState();
-}, [partidaId, equipoNumero, userId, socket]);
-
-
-  useEffect(() => {
-  if (!socket) return;
-
-  const updateRemoteLines = (newData) => {
-    setRemoteLines((prev) => {
-      const merged = { ...prev };
-
-      for (const [userId, paths] of Object.entries(newData)) {
-        merged[userId] = paths;
-      }
-
-      return merged;
-    });
-  };
-
-  const handleDrawingAction = (action) => {
-    if (!action || action.userId === userId) return;
-
-    setRemoteLines((prev) => {
-      const updated = { ...prev };
-      const current = updated[action.userId] || [];
-
-      switch (action.type) {
-        case 'pathStart':
-          updated[action.userId] = [...current, action.path];
-          break;
-
-        case 'pathUpdate':
-        case 'pathComplete': {
-          const index = current.findIndex(p => p.id === action.path?.id);
-          if (index !== -1) current[index] = action.path;
-          else current.push(action.path);
-          updated[action.userId] = [...current];
-          break;
+          case 'clear':
+            delete updated[action.userId];
+            break;
         }
 
-        case 'clear':
-          delete updated[action.userId];
-          break;
-      }
+        return updated;
+      });
+    };
 
-      return updated;
-    });
-  };
+    const handleDrawingCleared = ({ userId: clearedUserId }) => {
+      if (clearedUserId === userId) return;
+      
+      setRemoteLines(prev => {
+        const updated = { ...prev };
+        delete updated[clearedUserId];
+        return updated;
+      });
+    };
 
-  const handleGameState = ({ actions, tintaState }) => {
-    const grouped = {};
+    socket.on('inkUpdate', handleInkUpdate);
+    socket.on('drawingAction', handleDrawingAction);
+    socket.on('userDrawingCleared', handleDrawingCleared);
 
-    if (!isResetting.current && tintaState?.[userId] !== undefined) {
-      const parsed = parseInt(tintaState[userId]);
-      if (!isNaN(parsed)) {
-        tintaConsumida.current = MAX_TINTA - parsed;
-        setTinta(parsed);
-      }
-    }
-
-    actions?.forEach(({ userId, path }) => {
-      if (!grouped[userId]) grouped[userId] = [];
-      grouped[userId].push(path);
-    });
-
-    updateRemoteLines(grouped);
-
-    if (tintaState?.[userId] !== undefined) {
-      const parsed = parseInt(tintaState[userId]);
-      if (!isNaN(parsed)) {
-        tintaConsumida.current = MAX_TINTA - parsed;
-        setTinta(parsed);
-      }
-    }
-  };
-
-  socket.on('drawingAction', handleDrawingAction);
-  socket.on('drawingGameState', handleGameState);
-
-  socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
-
-  return () => {
-    socket.off('drawingAction', handleDrawingAction);
-    socket.off('drawingGameState', handleGameState);
-  };
-}, [socket, partidaId, equipoNumero, userId]);
-
-useEffect(() => {
-  if (!socket) return;
-
-  const handleDrawingCleared = () => {
-    console.log("🧽 Drawing cleared, limpiando canvas local");
-    clearLocalDrawing();
-  };
-
-  socket.on('drawingCleared', handleDrawingCleared);
-
-  return () => {
-    socket.off('drawingCleared', handleDrawingCleared);
-  };
-}, [socket]);
-
-const clearLocalDrawing = () => {
-  setLines([]);
-  setRemoteLines({});
-  setTinta(MAX_TINTA);
-  tintaConsumida.current = 0;
-  lastPoint.current = null;
-
-  // Limpiar storage
-  localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-  localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
-};
+    return () => {
+      socket.off('inkUpdate', handleInkUpdate);
+      socket.off('drawingAction', handleDrawingAction);
+      socket.off('userDrawingCleared', handleDrawingCleared);
+    };
+  }, [socket, userId, partidaId, equipoNumero]);
 
   // Guardar líneas en localStorage cuando cambian
   useEffect(() => {
-    const saveLines = () => {
-      try {
-        localStorage.setItem(
-          `lines-${partidaId}-${equipoNumero}-${userId}`, 
-          JSON.stringify(lines)
-        );
-      } catch (error) {
-        console.error('Error saving lines:', error);
-      }
-    };
-
-    saveLines();
+    localStorage.setItem(
+      `lines-${partidaId}-${equipoNumero}-${userId}`,
+      JSON.stringify(lines)
+    );
   }, [lines, partidaId, equipoNumero, userId]);
 
   // Guardar tinta en localStorage cuando cambia
   useEffect(() => {
-    const saveTinta = () => {
-      try {
-        localStorage.setItem(
-          `tinta-${partidaId}-${equipoNumero}-${userId}`, 
-          tinta.toString()
-        );
-      } catch (error) {
-        console.error('Error saving tinta:', error);
-      }
-    };
+    localStorage.setItem(
+      `ink-${partidaId}-${equipoNumero}-${userId}`,
+      ink.toString()
+    );
+  }, [ink, partidaId, equipoNumero, userId]);
 
-    saveTinta();
-  }, [tinta, partidaId, equipoNumero, userId]);
-
-  // Manejo de herramientas y colores
+  // Manejo de herramientas
   const handleColorSelect = (colorHex) => {
     setColor(colorHex);
     if (tool === 'eraser') setTool('brush');
@@ -261,7 +189,7 @@ const clearLocalDrawing = () => {
     }
   };
 
-  // Iniciar nuevo trazo
+  // Funciones de dibujo
   const startNewLine = (pos) => {
     const newLine = {
       points: [pos.x, pos.y],
@@ -271,13 +199,12 @@ const clearLocalDrawing = () => {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
     
-    setLines(prevLines => [...prevLines, newLine]);
+    setLines(prev => [...prev, newLine]);
     return newLine;
   };
 
-  // Dibujar línea
   const drawLine = (point) => {
-    if (!isDrawing.current || tinta <= 0) return;
+    if (!isDrawing.current || ink <= 0) return;
     
     // Calcular consumo de tinta
     if (lastPoint.current) {
@@ -286,7 +213,7 @@ const clearLocalDrawing = () => {
         Math.pow(point.y - lastPoint.current.y, 2)
       );
       
-      if (tintaConsumida.current + distance >= MAX_TINTA) {
+      if (inkConsumed.current + distance >= MAX_INK) {
         endDrawing();
         Swal.fire({
           title: '¡Sin tinta!',
@@ -298,22 +225,22 @@ const clearLocalDrawing = () => {
         return;
       }
       
-      tintaConsumida.current += distance;
-      const newTinta = MAX_TINTA - tintaConsumida.current;
-      setTinta(newTinta);
+      inkConsumed.current += distance;
+      const newInk = MAX_INK - inkConsumed.current;
+      setInk(newInk);
     }
     
     lastPoint.current = point;
     
     // Actualizar última línea
-    setLines(prevLines => {
-      if (prevLines.length === 0) {
+    setLines(prev => {
+      if (prev.length === 0) {
         const newLine = startNewLine(point);
         emitDrawingAction('pathStart', newLine);
         return [newLine];
       }
       
-      const updatedLines = [...prevLines];
+      const updatedLines = [...prev];
       const lastLine = updatedLines[updatedLines.length - 1];
       const updatedLine = {
         ...lastLine,
@@ -336,98 +263,6 @@ const clearLocalDrawing = () => {
     animationRef.current = requestAnimationFrame(() => {});
   };
 
-  useEffect(() => {
-  if (!socket) return;
-
-  // Función para manejar acciones remotas en tiempo real
-  const handleRemoteAction = (action) => {
-    if (!action || action.userId === userId) return;
-
-    setRemoteLines(prev => {
-      const newRemoteLines = {...prev};
-      
-      switch (action.type) {
-        case 'pathStart':
-          newRemoteLines[action.userId] = [...(newRemoteLines[action.userId] || []), action.path];
-          break;
-          
-        case 'pathUpdate':
-          if (newRemoteLines[action.userId]) {
-            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
-            if (index >= 0 && action.path) {
-              newRemoteLines[action.userId][index] = action.path;
-            }
-          }
-          break;
-          
-        case 'pathComplete':
-          if (newRemoteLines[action.userId]) {
-            const index = newRemoteLines[action.userId].findIndex(l => l.id === action.path?.id);
-            if (index >= 0 && action.path) {
-              newRemoteLines[action.userId][index] = action.path;
-            }
-          }
-          break;
-          
-        case 'clear':
-          delete newRemoteLines[action.userId];
-          socket.emit('initDrawingGame', { partidaId, equipoNumero, userId });
-          break;
-      }
-      
-      return newRemoteLines;
-    });
-  };
-
-  // Función para sincronización inicial
-  const handleSyncResponse = ({ actions }) => {
-    const syncedLines = {};
-    actions?.forEach(({ userId, path }) => {
-      if (userId && path) {
-        syncedLines[userId] = [...(syncedLines[userId] || []), path];
-      }
-    });
-    setRemoteLines(syncedLines);
-  };
-
-  // Configurar listeners
-  socket.on('drawingAction', handleRemoteAction);
-  socket.on('drawingSyncResponse', handleSyncResponse);
-
-  // Solicitar sincronización inicial
-  socket.emit('requestDrawingSync', { partidaId, equipoNumero, userId });
-
-  return () => {
-    socket.off('drawingAction', handleRemoteAction);
-    socket.off('drawingSyncResponse', handleSyncResponse);
-  };
-}, [socket, partidaId, equipoNumero, userId]);
-
-  // Emitir acción de dibujo
-  const emitDrawingAction = (type, line) => {
-    if (!socket || !line) return;
-    
-    try {
-      socket.emit('drawingAction', {
-        partidaId,
-        equipoNumero,
-        userId,
-        action: {
-          type,
-          path: {
-            id: line.id,
-            points: line.points || [],
-            color: line.color || '#000000',
-            strokeWidth: line.strokeWidth || 5
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error emitting drawing action:', error);
-    }
-  };
-
-  // Finalizar dibujo
   const endDrawing = () => {
     if (!isDrawing.current) return;
     
@@ -443,14 +278,78 @@ const clearLocalDrawing = () => {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
+  };
 
-    // Asegurarse de que el estado de dibujo se resetea completamente
-    document.body.style.cursor = 'default';
+  // Emitir acciones de dibujo
+  const emitDrawingAction = (type, line) => {
+    if (!socket || !line) return;
+    
+    socket.emit('drawingAction', {
+      partidaId,
+      equipoNumero,
+      userId,
+      action: {
+        type,
+        path: {
+          id: line.id,
+          points: line.points,
+          color: line.color || '#000000',
+          strokeWidth: line.strokeWidth || 5
+        }
+      }
+    });
+  };
+
+  // Limpiar dibujo del usuario actual
+  const clearUserDrawing = () => {
+    if (isResetting.current) return;
+    isResetting.current = true;
+
+    // Optimistic UI update
+    setInk(MAX_INK);
+    inkConsumed.current = 0;
+    setLines([]);
+    localStorage.setItem(`ink-${partidaId}-${equipoNumero}-${userId}`, MAX_INK.toString());
+    localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
+
+    // Notificar al servidor
+    socket.emit('drawingAction', {
+      partidaId,
+      equipoNumero,
+      userId,
+      action: {
+        type: 'clear',
+        timestamp: Date.now()
+      }
+    }, (response) => {
+      isResetting.current = false;
+      
+      if (response?.error) {
+        // Rollback en caso de error
+        const savedInk = parseInt(localStorage.getItem(`ink-${partidaId}-${equipoNumero}-${userId}`)) || 0;
+        setInk(savedInk);
+        inkConsumed.current = MAX_INK - savedInk;
+        
+        Swal.fire({
+          title: 'Error',
+          text: response.error,
+          icon: 'error',
+          timer: 2000
+        });
+      } else {
+        Swal.fire({
+          title: '¡Tinta recargada!',
+          icon: 'success',
+          timer: 1000,
+          showConfirmButton: false
+        });
+      }
+    });
   };
 
   // Eventos del mouse/touch
   const handleMouseDown = (e) => {
-    if (tinta <= 0) return;
+    if (ink <= 0) return;
     
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
@@ -472,234 +371,45 @@ const clearLocalDrawing = () => {
     endDrawing();
   };
 
-  // Limpiar dibujos
-  const clearUserDrawing = () => {
-    isResetting.current = true; // Activamos flag de reset
-    
-    // 1. Limpiar estado local
-    setLines([]);
-    
-    // 2. Limpiar localStorage
-    localStorage.removeItem(`lines-${partidaId}-${equipoNumero}-${userId}`);
-    localStorage.setItem(`tinta-${partidaId}-${equipoNumero}-${userId}`, MAX_TINTA.toString());
-
-    // 3. Resetear contadores locales
-    tintaConsumida.current = 0;
-    setTinta(MAX_TINTA);
-
-    // 4. Notificar al servidor con bandera explícita
-    socket.emit('drawingAction', {
-      partidaId,
-      equipoNumero,
-      userId,
-      action: {
-        type: 'clear',
-        userId,
-        isLocalReset: true, // BANDERA CLAVE
-        tinta: MAX_TINTA
-      }
-    });
-
-    // 5. Limpiar trazos remotos del usuario (opcional)
-    setRemoteLines(prev => {
-      const updated = { ...prev };
-      delete updated[userId];
-      return updated;
-    });
-
-    // 6. Feedback visual
-    Swal.fire({
-      title: 'Dibujo borrado',
-      text: 'Tu tinta ha sido recargada',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false
-    });
-
-    setTimeout(() => {
-      isResetting.current = false; // Desactivamos flag después de 1seg
-    }, 1000);
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleTintaUpdate = ({ userId: updatedUserId, tinta: newTinta }) => {
-      if (updatedUserId === userId) { // Solo actualizar si es nuestro usuario
-        setTinta(newTinta);
-        tintaConsumida.current = MAX_TINTA - newTinta;
-      }
-    };
-
-    socket.on('tintaUpdate', handleTintaUpdate);
-
-    return () => {
-      socket.off('tintaUpdate', handleTintaUpdate);
-    };
-  }, [socket, userId]);
-
-  // Configuración de Socket.io
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleDrawingAction = (action) => {
-      if (!action || action.userId === userId) return;
-
-      setRemoteLines(prev => {
-        const newRemoteLines = { ...prev };
-        
-        try {
-          switch (action.type) {
-            case 'pathStart':
-              if (!newRemoteLines[action.userId]) {
-                newRemoteLines[action.userId] = [];
-              }
-              if (action.path) {
-                newRemoteLines[action.userId].push(action.path);
-              }
-              break;
-              
-            case 'pathUpdate':
-            case 'pathComplete':
-              if (Array.isArray(newRemoteLines[action.userId])) {
-                const index = newRemoteLines[action.userId].findIndex(
-                  line => line.id === action.path?.id
-                );
-                if (index >= 0 && action.path) {
-                  newRemoteLines[action.userId][index] = action.path;
-                }
-              }
-              break;
-              
-            case 'clear':
-              if (newRemoteLines[action.userId]) {
-                delete newRemoteLines[action.userId];
-              }
-              break;
-          }
-        } catch (error) {
-          console.error('Error processing drawing action:', error);
-        }
-        
-        return newRemoteLines;
-      });
-    };
-
-    const handleGameState = (data) => {
-  if (!data) return;
-
-  const newRemoteLines = {};
-  
-  try {
-    // Procesar acciones remotas
-    if (Array.isArray(data.actions)) {
-      data.actions.forEach(({ userId, path }) => {
-        if (userId && path) {
-          if (!newRemoteLines[userId]) {
-            newRemoteLines[userId] = [];
-          }
-          newRemoteLines[userId].push(path);
-        }
-      });
-    }
-    
-    setRemoteLines(newRemoteLines);
-    
-    // Solo actualizar tinta si no estamos dibujando actualmente
-    if (!isDrawing.current && data.tintaState?.[userId]) {
-      const newTinta = parseInt(data.tintaState[userId]);
-      if (!isNaN(newTinta)) {
-        // Mantener consistencia entre estado local y remoto
-        const delta = tintaConsumida.current - (MAX_TINTA - newTinta);
-        
-        // Solo actualizar si la diferencia es significativa
-        if (Math.abs(delta) > 10) { // Umbral de 10 unidades
-          setTinta(newTinta);
-          tintaConsumida.current = MAX_TINTA - newTinta;
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error processing game state:', error);
-  }
-};
-
-    socket.on('drawingAction', handleDrawingAction);
-    socket.on('drawingGameState', handleGameState);
-    
-    // Solicitar estado inicial
-    socket.emit('initDrawingGame', { 
-      partidaId, 
-      equipoNumero, 
-      userId 
-    });
-
-    return () => {
-      socket.off('drawingAction', handleDrawingAction);
-      socket.off('drawingGameState', handleGameState);
-      
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [socket, partidaId, equipoNumero, userId]);
-
-  
-
   // Renderizado
   return (
     <div className="drawing__container">
       <div className="container__canvas">
-        {/* Área de dibujo */}
         <div className="canvas__drawing">
           <Stage
-             width={800}
+            width={800}
             height={600}
             ref={stageRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp} 
+            onMouseLeave={handleMouseUp}
             onTouchStart={handleMouseDown}
             onTouchMove={handleMouseMove}
             onTouchEnd={handleMouseUp}
-            onTouchCancel={handleMouseUp} 
           >
             <Layer>
-              {/* Fondo blanco */}
-              <Rect 
-                width={800} 
-                height={600} 
-                fill="#ffffff" 
-                listening={false} 
-              />
+              <Rect width={800} height={600} fill="#ffffff" listening={false} />
 
-              {/* Líneas remotas */}
               {Object.entries(remoteLines).flatMap(([userId, userLines]) =>
-                Array.isArray(userLines)
-                  ? userLines
-                      .filter(line => line?.points?.length > 1)
-                      .map(line => (
-                        <Line
-                          key={`remote-${userId}-${line.id}`}
-                          points={line.points}
-                          stroke={line.color}
-                          strokeWidth={line.strokeWidth}
-                          tension={0.5}
-                          lineCap="round"
-                          lineJoin="round"
-                          listening={false}
-                          globalCompositeOperation={
-                            line.color === '#ffffff' ? 'destination-out' : 'source-over'
-                          }
-                        />
-                      ))
-                  : []
+                userLines?.filter(line => line?.points?.length > 1).map(line => (
+                  <Line
+                    key={`remote-${userId}-${line.id}`}
+                    points={line.points}
+                    stroke={line.color}
+                    strokeWidth={line.strokeWidth}
+                    tension={0.5}
+                    lineCap="round"
+                    lineJoin="round"
+                    listening={false}
+                    globalCompositeOperation={
+                      line.color === '#ffffff' ? 'destination-out' : 'source-over'
+                    }
+                  />
+                ))
               )}
 
-
-              {/* Líneas locales */}
-              {lines.map((line) => (
+              {lines.map(line => (
                 line?.points?.length > 1 && (
                   <Line
                     key={`local-${line.id}`}
@@ -720,88 +430,92 @@ const clearLocalDrawing = () => {
           </Stage>
         </div>
       </div>
+
       <div className="details__group">
         <p>Número de grupo</p>
         <span>{equipoNumero}</span>
-      </div>      
-      <div className="container__theme">                    
-          <div className="container__header">
-              <h3>Tema:</h3>
-          </div>
-          <div className="container__body">
-              <span>{currentGameInfo?.tema || 'Sin tema'}</span>
-          </div>
-      </div>      
-      {/* Barra de herramientas */}
+      </div>
+
+      <div className="container__theme">
+        <div className="container__header">
+          <h3>Tema:</h3>
+        </div>
+        <div className="container__body">
+          <span>{currentGameInfo?.tema || 'Sin tema'}</span>
+        </div>
+      </div>
+
       <div className="drawing__tools">
-          {/* Sección de colores */}
-          <div className="colors-section-extended">
-            <div className="color-palette-wide">
-              <div className="color-rows-container">
-                <div className="color-row">
-                  {colorPalette.map((colorHex, index) => (
-                    <button
-                      key={`color-${index}`}
-                      className={`color-chip ${color === colorHex ? 'active' : ''}`}
-                      style={{ backgroundColor: colorHex }}
-                      onClick={() => handleColorSelect(colorHex)}
-                      title={`Color ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="custom-color-container">                
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => handleColorSelect(e.target.value)}
-                  className="custom-color-picker-large"
-                  onBlur={() => setShowColorPicker(false)}
-                />
+        <div className="colors-section-extended">
+          <div className="color-palette-wide">
+            <div className="color-rows-container">
+              <div className="color-row">
+                {colorPalette.map((colorHex, index) => (
+                  <button
+                    key={`color-${index}`}
+                    className={`color-chip ${color === colorHex ? 'active' : ''}`}
+                    style={{ backgroundColor: colorHex }}
+                    onClick={() => handleColorSelect(colorHex)}
+                    title={`Color ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
-          </div>
-              
-          {/* Sección de herramientas */}
-          <div className="tools__section">                    
-            <button 
-                className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
-                onClick={() => handleToolSelect('brush')}
-                title="Pincel"
-              >
-                <i className="fas fa-paint-brush"></i>
-            </button>
-            <button 
-                className="tool-btn"
-                onClick={clearUserDrawing}
-                title="Limpiar mi dibujo"
-              >
-                <i className="fas fa-trash-alt"></i>
-            </button>              
-            {/* Indicador de tinta */}
-            <div className="ink__tank">
-              <div
-                className={`tank__fill ${
-                  tinta <= 1000 ? 'tank__critical' : 
-                  tinta <= 3000 ? 'tank__low' : ''
-                }`}
-                style={{ height: `${(tinta / MAX_TINTA) * 100}%` }}
+            <div className="custom-color-container">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => handleColorSelect(e.target.value)}
+                className="custom-color-picker-large"
               />
             </div>
           </div>
-                  
-          {/* Control de tamaño */}
-          <div className="size__controls">
-            <input
-              type="range"
-              min="1"
-              max="30"
-              value={brushSize}
-              onChange={(e) => setBrushSize(parseInt(e.target.value))}
-              className="size__slider"
+        </div>
+
+        <div className="tools__section">
+          <button 
+            className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
+            onClick={() => handleToolSelect('brush')}
+            title="Pincel"
+          >
+            <i className="fas fa-paint-brush"></i>
+          </button>
+
+          <button 
+            className="tool-btn"
+            onClick={clearUserDrawing}
+            disabled={isResetting.current}
+            title="Limpiar mi dibujo"
+          >
+            {isResetting.current ? (
+              <i className="fas fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fas fa-trash-alt"></i>
+            )}
+          </button>
+
+          <div className="ink__tank">
+            <div
+              className={`tank__fill ${
+                ink <= 1000 ? 'tank__critical' : 
+                ink <= 3000 ? 'tank__low' : ''
+              }`}
+              style={{ height: `${(ink / MAX_INK) * 100}%` }}
             />
-            <span className="brush-size-label">{brushSize}px</span>
           </div>
+        </div>
+
+        <div className="size__controls">
+          <input
+            type="range"
+            min="1"
+            max="30"
+            value={brushSize}
+            onChange={(e) => setBrushSize(parseInt(e.target.value))}
+            className="size__slider"
+          />
+          <span className="brush-size-label">{brushSize}px</span>
+        </div>
       </div>
     </div>
   );

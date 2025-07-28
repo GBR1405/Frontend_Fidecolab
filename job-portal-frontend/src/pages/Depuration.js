@@ -2323,14 +2323,12 @@ const handleResetSystem = async () => {
                       </div>
                       <table className="bottom__table">
                         <thead className="table__head">
-                          <tr>
                             <th className="table__header">Nombre</th>
                             <th className="table__header">Apellidos</th>
                             <th className="table__header">Correo</th>
                             <th className="table__header">Rol</th>
                             <th className="table__header">Estado</th>
                             <th className="table__header">Acciones</th>
-                          </tr>
                         </thead>
                         <tbody className="table__body">
                           {currentItems.length > 0 ? (
@@ -2431,13 +2429,11 @@ const handleResetSystem = async () => {
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
-                      <tr>
                         <th className="table__header">Fecha</th>
                         <th className="table__header">Curso/Grupo</th>
                         <th className="table__header">Profesor</th>
                         <th className="table__header">Estudiantes</th>
                         <th className="table__header">Acciones</th>
-                      </tr>
                     </thead>
                     <tbody className="table__body">
                       {loading ? (
@@ -2462,13 +2458,6 @@ const handleResetSystem = async () => {
                                 title="Ver detalles"
                               >
                                 <i className="fa-solid fa-eye"></i>
-                              </button>
-                              <button
-                                className="button__delete"
-                                onClick={() => handleDeleteHistorial(item.id)}
-                                title="Eliminar"
-                              >
-                                <i className="fa-solid fa-trash"></i>
                               </button>
                             </td>
                           </tr>
@@ -2523,13 +2512,11 @@ const handleResetSystem = async () => {
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
-                      <tr>
                         <th className="table__header">Fecha</th>
                         <th className="table__header">Usuario</th>
                         <th className="table__header">Acción</th>
                         <th className="table__header">Error</th>
                         <th className="table__header">Acciones</th>
-                      </tr>
                     </thead>
                     <tbody className="table__body">
                       {loading ? (

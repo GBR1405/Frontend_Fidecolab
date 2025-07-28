@@ -163,6 +163,7 @@ const Depuration = () => {
 
 // Limpiar todas las personalizaciones
 const handleCleanCustomizations = async () => {
+  let timerInterval;
   const result = await Swal.fire({
     title: '¿Limpiar todas las personalizaciones?',
     html: `
@@ -176,7 +177,7 @@ const handleCleanCustomizations = async () => {
         <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 5 segundos antes de confirmar...
+        El botón se habilitará en 5 segundos...
       </div>
     `,
     icon: 'warning',
@@ -186,25 +187,27 @@ const handleCleanCustomizations = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 5000,
-    timerProgressBar: true,
+    focusConfirm: false,
     didOpen: () => {
-      // Deshabilitar el botón de confirmación inicialmente
-      Swal.getConfirmButton().disabled = true;
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
       
-      // Contador regresivo
       let seconds = 5;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
-          Swal.getConfirmButton().disabled = false;
-          Swal.getConfirmButton().textContent = 'Confirmar';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
@@ -234,6 +237,7 @@ const handleCleanCustomizations = async () => {
 
 // Limpiar toda la bitácora
 const handleCleanLogs = async () => {
+  let timerInterval;
   const result = await Swal.fire({
     title: '¿Limpiar toda la bitácora?',
     html: `
@@ -242,7 +246,7 @@ const handleCleanLogs = async () => {
         <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 5 segundos antes de confirmar...
+        El botón se habilitará en 5 segundos...
       </div>
     `,
     icon: 'warning',
@@ -252,22 +256,27 @@ const handleCleanLogs = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 5000,
-    timerProgressBar: true,
+    focusConfirm: false,
     didOpen: () => {
-      Swal.getConfirmButton().disabled = true;
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
+      
       let seconds = 5;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
-          Swal.getConfirmButton().disabled = false;
-          Swal.getConfirmButton().textContent = 'Confirmar';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
@@ -295,8 +304,10 @@ const handleCleanLogs = async () => {
   }
 };
 
+
 // Eliminar todo el historial
 const handleCleanHistory = async () => {
+  let timerInterval;
   const result = await Swal.fire({
     title: '¿Eliminar todo el historial?',
     html: `
@@ -310,7 +321,7 @@ const handleCleanHistory = async () => {
         <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 5 segundos antes de confirmar...
+        El botón se habilitará en 5 segundos...
       </div>
     `,
     icon: 'warning',
@@ -320,22 +331,27 @@ const handleCleanHistory = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 5000,
-    timerProgressBar: true,
+    focusConfirm: false,
     didOpen: () => {
-      Swal.getConfirmButton().disabled = true;
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
+      
       let seconds = 5;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
-          Swal.getConfirmButton().disabled = false;
-          Swal.getConfirmButton().textContent = 'Confirmar';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
@@ -366,6 +382,7 @@ const handleCleanHistory = async () => {
 
 // Eliminar todos los estudiantes
 const handleDeleteAllStudents = async () => {
+  let timerInterval;
   const result = await Swal.fire({
     title: '¿Eliminar todos los estudiantes?',
     html: `
@@ -380,7 +397,7 @@ const handleDeleteAllStudents = async () => {
         <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 5 segundos antes de confirmar...
+        El botón se habilitará en 5 segundos...
       </div>
     `,
     icon: 'warning',
@@ -390,22 +407,27 @@ const handleDeleteAllStudents = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 5000,
-    timerProgressBar: true,
+    focusConfirm: false,
     didOpen: () => {
-      Swal.getConfirmButton().disabled = true;
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
+      
       let seconds = 5;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
-          Swal.getConfirmButton().disabled = false;
-          Swal.getConfirmButton().textContent = 'Confirmar';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
@@ -436,6 +458,7 @@ const handleDeleteAllStudents = async () => {
 
 // Eliminar todos los profesores
 const handleDeleteAllProfessors = async () => {
+  let timerInterval;
   const result = await Swal.fire({
     title: '¿Eliminar todos los profesores?',
     html: `
@@ -450,7 +473,7 @@ const handleDeleteAllProfessors = async () => {
         <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 5 segundos antes de confirmar...
+        El botón se habilitará en 5 segundos...
       </div>
     `,
     icon: 'warning',
@@ -460,22 +483,27 @@ const handleDeleteAllProfessors = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 5000,
-    timerProgressBar: true,
+    focusConfirm: false,
     didOpen: () => {
-      Swal.getConfirmButton().disabled = true;
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
+      
       let seconds = 5;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
-          Swal.getConfirmButton().disabled = false;
-          Swal.getConfirmButton().textContent = 'Confirmar';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
@@ -506,6 +534,7 @@ const handleDeleteAllProfessors = async () => {
 
 // Reiniciar sistema completo
 const handleResetSystem = async () => {
+  let timerInterval;
   const { value: password } = await Swal.fire({
     title: '¡PELIGRO - REINICIAR SISTEMA COMPLETO!',
     html: `
@@ -521,7 +550,7 @@ const handleResetSystem = async () => {
         <p style="color: #dc3545; font-weight: bold;">ESTA ACCIÓN ES IRREVERSIBLE Y DEJA EL SISTEMA EN ESTADO INICIAL.</p>
       </div>
       <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
-        Espera 10 segundos antes de poder confirmar...
+        El botón se habilitará en 10 segundos...
       </div>
       <input type="password" id="password" class="swal2-input" placeholder="Ingresa 'fidecolab' para confirmar">
     `,
@@ -532,8 +561,6 @@ const handleResetSystem = async () => {
     confirmButtonColor: '#d33',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    timer: 10000,
-    timerProgressBar: true,
     focusConfirm: false,
     preConfirm: () => {
       const passwordInput = document.getElementById('password').value;
@@ -548,23 +575,28 @@ const handleResetSystem = async () => {
       confirmButton.disabled = true;
       
       let seconds = 10;
-      const timerInterval = setInterval(() => {
+      timerInterval = setInterval(() => {
         Swal.getHtmlContainer().querySelector('#timer').textContent = 
-          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+          `El botón se habilitará en ${seconds} segundo${seconds !== 1 ? 's' : ''}...`;
         seconds--;
         
         if (seconds < 0) {
           clearInterval(timerInterval);
           confirmButton.disabled = false;
           confirmButton.textContent = 'Confirmar';
+          Swal.getHtmlContainer().querySelector('#timer').textContent = '¡Ahora puedes confirmar!';
         }
       }, 1000);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
     }
   });
 
   if (!password) return;
 
   try {
+    const apiUrl = process.env.REACT_APP_API_URL;
     // Primero eliminamos todo el historial
     await fetch(`${apiUrl}/historial_D`, {
       method: "DELETE",

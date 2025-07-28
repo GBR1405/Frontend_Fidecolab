@@ -292,12 +292,7 @@ const DrawingDemoModal = ({ partidaId, isProfessor, onClose }) => {
     });
   };
 
-  // Modifica la condición de renderizado para usar la prop onClose
-  if (!isActive && !isProfessor) {
-  // Si no está activo y no es profesor, no mostramos nada
-  if (onClose) onClose(); // Notificamos al componente padre
-  return null;
-  }
+  if (!isActive && !isProfessor) return null;
 
   return (
     <div className="demo-modal-container" style={{

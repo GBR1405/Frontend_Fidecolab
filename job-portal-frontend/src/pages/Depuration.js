@@ -5,6 +5,7 @@ import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
 
 const token = Cookies.get("authToken");
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const Depuration = () => {
   const [selectedTab, setSelectedTab] = useState('users');
@@ -157,6 +158,472 @@ const Depuration = () => {
   const handleStatusFilterChange = (event) => {
     setStatusFilter(event.target.value);
   };
+
+  // Agregar estas funciones dentro del componente Depuration
+
+// Limpiar todas las personalizaciones
+const handleCleanCustomizations = async () => {
+  const result = await Swal.fire({
+    title: '¿Limpiar todas las personalizaciones?',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODAS</strong> las personalizaciones del sistema, incluyendo:</p>
+        <ul>
+          <li>Configuraciones de juego</li>
+          <li>Partidas relacionadas</li>
+          <li>Resultados asociados</li>
+        </ul>
+        <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 5 segundos antes de confirmar...
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (5s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 5000,
+    timerProgressBar: true,
+    didOpen: () => {
+      // Deshabilitar el botón de confirmación inicialmente
+      Swal.getConfirmButton().disabled = true;
+      
+      // Contador regresivo
+      let seconds = 5;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          Swal.getConfirmButton().disabled = false;
+          Swal.getConfirmButton().textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/personalizaciones_D`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al limpiar personalizaciones');
+      }
+
+      Swal.fire('Éxito', 'Todas las personalizaciones han sido eliminadas', 'success');
+    } catch (error) {
+      console.error("Error al limpiar personalizaciones:", error);
+      Swal.fire('Error', 'No se pudieron eliminar las personalizaciones', 'error');
+    }
+  }
+};
+
+// Limpiar toda la bitácora
+const handleCleanLogs = async () => {
+  const result = await Swal.fire({
+    title: '¿Limpiar toda la bitácora?',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODOS</strong> los registros de actividad del sistema.</p>
+        <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 5 segundos antes de confirmar...
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (5s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 5000,
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.getConfirmButton().disabled = true;
+      let seconds = 5;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          Swal.getConfirmButton().disabled = false;
+          Swal.getConfirmButton().textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al limpiar bitácora');
+      }
+
+      Swal.fire('Éxito', 'Toda la bitácora ha sido eliminada', 'success');
+    } catch (error) {
+      console.error("Error al limpiar bitácora:", error);
+      Swal.fire('Error', 'No se pudo eliminar la bitácora', 'error');
+    }
+  }
+};
+
+// Eliminar todo el historial
+const handleCleanHistory = async () => {
+  const result = await Swal.fire({
+    title: '¿Eliminar todo el historial?',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODO</strong> el historial de partidas del sistema, incluyendo:</p>
+        <ul>
+          <li>Resultados de partidas</li>
+          <li>Participaciones</li>
+          <li>Logros obtenidos</li>
+        </ul>
+        <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 5 segundos antes de confirmar...
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (5s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 5000,
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.getConfirmButton().disabled = true;
+      let seconds = 5;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          Swal.getConfirmButton().disabled = false;
+          Swal.getConfirmButton().textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/historial_D`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al limpiar historial');
+      }
+
+      Swal.fire('Éxito', 'Todo el historial ha sido eliminado', 'success');
+      fetchHistorial(); // Actualizar la vista si estamos en la pestaña de historial
+    } catch (error) {
+      console.error("Error al limpiar historial:", error);
+      Swal.fire('Error', 'No se pudo eliminar el historial', 'error');
+    }
+  }
+};
+
+// Eliminar todos los estudiantes
+const handleDeleteAllStudents = async () => {
+  const result = await Swal.fire({
+    title: '¿Eliminar todos los estudiantes?',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODOS</strong> los estudiantes del sistema, incluyendo:</p>
+        <ul>
+          <li>Sus participaciones en partidas</li>
+          <li>Resultados obtenidos</li>
+          <li>Logros conseguidos</li>
+          <li>Vinculaciones a cursos</li>
+        </ul>
+        <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 5 segundos antes de confirmar...
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (5s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 5000,
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.getConfirmButton().disabled = true;
+      let seconds = 5;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          Swal.getConfirmButton().disabled = false;
+          Swal.getConfirmButton().textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/estudiantes_D`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar estudiantes');
+      }
+
+      Swal.fire('Éxito', 'Todos los estudiantes han sido eliminados', 'success');
+      if (selectedTab === 'users') fetchUsers(); // Actualizar lista de usuarios
+    } catch (error) {
+      console.error("Error al eliminar estudiantes:", error);
+      Swal.fire('Error', 'No se pudieron eliminar los estudiantes', 'error');
+    }
+  }
+};
+
+// Eliminar todos los profesores
+const handleDeleteAllProfessors = async () => {
+  const result = await Swal.fire({
+    title: '¿Eliminar todos los profesores?',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODOS</strong> los profesores del sistema, incluyendo:</p>
+        <ul>
+          <li>Sus personalizaciones</li>
+          <li>Partidas creadas</li>
+          <li>Resultados asociados</li>
+          <li>Vinculaciones a cursos</li>
+        </ul>
+        <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 5 segundos antes de confirmar...
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (5s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 5000,
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.getConfirmButton().disabled = true;
+      let seconds = 5;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          Swal.getConfirmButton().disabled = false;
+          Swal.getConfirmButton().textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/profesores_D`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar profesores');
+      }
+
+      Swal.fire('Éxito', 'Todos los profesores han sido eliminados', 'success');
+      if (selectedTab === 'users') fetchUsers(); // Actualizar lista de usuarios
+    } catch (error) {
+      console.error("Error al eliminar profesores:", error);
+      Swal.fire('Error', 'No se pudieron eliminar los profesores', 'error');
+    }
+  }
+};
+
+// Reiniciar sistema completo
+const handleResetSystem = async () => {
+  const { value: password } = await Swal.fire({
+    title: '¡PELIGRO - REINICIAR SISTEMA COMPLETO!',
+    html: `
+      <div style="text-align: left; margin: 15px 0;">
+        <p>Esta acción eliminará <strong>TODOS</strong> los datos del sistema excepto administradores, incluyendo:</p>
+        <ul>
+          <li>Todos los estudiantes y profesores</li>
+          <li>Todas las personalizaciones</li>
+          <li>Todas las partidas y resultados</li>
+          <li>Toda la bitácora</li>
+          <li>Todo el historial</li>
+        </ul>
+        <p style="color: #dc3545; font-weight: bold;">ESTA ACCIÓN ES IRREVERSIBLE Y DEJA EL SISTEMA EN ESTADO INICIAL.</p>
+      </div>
+      <div id="timer" style="font-weight: bold; color: #dc3545; margin: 10px 0;">
+        Espera 10 segundos antes de poder confirmar...
+      </div>
+      <input type="password" id="password" class="swal2-input" placeholder="Ingresa 'fidecolab' para confirmar">
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar (10s)',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    timer: 10000,
+    timerProgressBar: true,
+    focusConfirm: false,
+    preConfirm: () => {
+      const passwordInput = document.getElementById('password').value;
+      if (passwordInput.toLowerCase() !== 'fidecolab') {
+        Swal.showValidationMessage('Código incorrecto');
+        return false;
+      }
+      return passwordInput;
+    },
+    didOpen: () => {
+      const confirmButton = Swal.getConfirmButton();
+      confirmButton.disabled = true;
+      
+      let seconds = 10;
+      const timerInterval = setInterval(() => {
+        Swal.getHtmlContainer().querySelector('#timer').textContent = 
+          `Espera ${seconds} segundo${seconds !== 1 ? 's' : ''} antes de confirmar...`;
+        seconds--;
+        
+        if (seconds < 0) {
+          clearInterval(timerInterval);
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar';
+        }
+      }, 1000);
+    }
+  });
+
+  if (!password) return;
+
+  try {
+    // Primero eliminamos todo el historial
+    await fetch(`${apiUrl}/historial_D`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Luego eliminamos toda la bitácora
+    await fetch(`${apiUrl}/bitacora_D`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Eliminamos todas las personalizaciones
+    await fetch(`${apiUrl}/personalizaciones_D`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Eliminamos todos los profesores
+    await fetch(`${apiUrl}/profesores_D`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Finalmente eliminamos todos los estudiantes
+    await fetch(`${apiUrl}/estudiantes_D`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    Swal.fire('Sistema Reiniciado', 'El sistema ha sido reiniciado completamente', 'success');
+    if (selectedTab === 'users') fetchUsers();
+    if (selectedTab === 'history') fetchHistorial();
+    if (selectedTab === 'logs') fetchLogs();
+  } catch (error) {
+    console.error("Error al reiniciar sistema:", error);
+    Swal.fire('Error', 'Ocurrió un error al reiniciar el sistema', 'error');
+  }
+};
 
   // Add new user
   const handleAddUser = async () => {
@@ -1612,21 +2079,21 @@ const Depuration = () => {
                     <div className="clean-buttons-row">
                       <button
                         className="clean-button clean-button--customizations"
-                        onClick={() => handleSystemClean('customizations')}
+                        onClick={handleCleanCustomizations}
                       >
                         <i className="fa-solid fa-paint-roller"></i>
                         Limpiar personalizaciones
                       </button>
                       <button
                         className="clean-button clean-button--logs"
-                        onClick={() => handleSystemClean('logs')}
+                        onClick={handleCleanLogs}
                       >
                         <i className="fa-solid fa-clipboard-list"></i>
                         Limpiar bitácora
                       </button>
                       <button
                         className="clean-button clean-button--history"
-                        onClick={() => handleSystemClean('history')}
+                        onClick={handleCleanHistory}
                       >
                         <i className="fa-solid fa-clock-rotate-left"></i>
                         Limpiar historial
@@ -1636,14 +2103,14 @@ const Depuration = () => {
                     <div className="clean-buttons-row">
                       <button
                         className="clean-button clean-button--students"
-                        onClick={() => handleSystemClean('students')}
+                        onClick={handleDeleteAllStudents}
                       >
                         <i className="fa-solid fa-user-graduate"></i>
                         Eliminar estudiantes
                       </button>
                       <button
                         className="clean-button clean-button--professors"
-                        onClick={() => handleSystemClean('professors')}
+                        onClick={handleDeleteAllProfessors}
                       >
                         <i className="fa-solid fa-user-tie"></i>
                         Eliminar profesores
@@ -1653,7 +2120,7 @@ const Depuration = () => {
 
                   <button
                     className="reset-button"
-                    onClick={() => handleSystemClean('reset')}
+                    onClick={handleResetSystem}
                   >
                     <i className="fa-solid fa-bomb"></i>
                     REINICIAR SISTEMA COMPLETO

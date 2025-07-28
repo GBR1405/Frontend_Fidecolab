@@ -866,6 +866,7 @@ const AdminProfessorCourses = () => {
     };
 
     const handleEditCourse = (course) => {
+        console.log(course)
   Swal.fire({
     title: 'Editar Curso',
     html: `
@@ -935,7 +936,7 @@ const AdminProfessorCourses = () => {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            cursoId: course.id,
+            grupoCursoId: course.id, // CAMBIO CLAVE
             nuevoNombre: newName,
             nuevoCodigo: newCode
           })
@@ -958,7 +959,9 @@ const AdminProfessorCourses = () => {
 };
 
 
-const handleDeleteCourse = (courseId) => {
+
+const handleDeleteCourse = (grupoCursoId) => {
+    console.log(grupoCursoId)
   Swal.fire({
     title: '¿Deseas eliminar este curso?',
     html: `
@@ -981,7 +984,7 @@ const handleDeleteCourse = (courseId) => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ cursoId: courseId })
+          body: JSON.stringify({ grupoCursoId }) // CAMBIO CLAVE
         });
 
         const data = await response.json();
@@ -999,6 +1002,7 @@ const handleDeleteCourse = (courseId) => {
     }
   });
 };
+
 
 
 

@@ -62,6 +62,64 @@ function ResultsTeacher() {
     fetchResults();
   }, [partidaId]);
 
+  const AchievementBadge = ({ logro }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  
+  // Determinar el icono según el tipo de logro
+  const getIcon = () => {
+    if (logro.Tipo === 'grupo') return 'fa-users';
+    
+    // Iconos para logros personales basados en el nombre
+    if (logro.Nombre.includes('Diseñador')) return 'fa-paintbrush';
+    if (logro.Nombre.includes('Localizador de parejas')) return 'fa-layer-group';
+    if (logro.Nombre.includes('Localizador de detalles')) return 'fa-puzzle-piece';
+    if (logro.Nombre.includes('Adivinador')) return 'fa-question';
+    if (logro.Nombre.includes('Jugador de partidas')) return 'fa-gamepad';
+    if (logro.Nombre.includes('Hola de nuevo')) return 'fa-handshake';
+    if (logro.Nombre.includes('Cazador de logros')) return 'fa-trophy';
+    if (logro.Nombre.includes('Gracias por jugar')) return 'fa-heart';
+    
+    return 'fa-star';
+  };
+
+  // Determinar el color del borde según el nivel (si aplica)
+  const getBorderColor = () => {
+    if (logro.Tipo === 'grupo') return '#2a40bf'; // Azul para grupales
+    
+    // Colores para niveles de logros personales
+    if (logro.Nombre.includes('Nivel 4')) return '#d4af37'; // Oro
+    if (logro.Nombre.includes('Nivel 3')) return '#c0c0c0'; // Plata
+    if (logro.Nombre.includes('Nivel 2')) return '#cd7f32'; // Bronce
+    
+    return '#2a40bf'; // Azul por defecto
+  };
+
+  return (
+    <div 
+      className="award" 
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <div 
+        className="award__border" 
+        style={{ backgroundColor: getBorderColor() }}
+      ></div>
+      <div className="award__body">
+        <i className={`fa-solid ${getIcon()}`}></i>
+      </div>
+      <div className="award__ribbon ribbon--left"></div>
+      <div className="award__ribbon ribbon--right"></div>
+      
+      {showTooltip && (
+        <div className="achievement-tooltip">
+          <h4>{logro.Nombre}</h4>
+          <p>{logro.Descripcion}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
   const isValidImage = (str) => {
     return str && typeof str === 'string' && 
           (str.startsWith('data:image/png;base64,') || 
@@ -177,18 +235,13 @@ function ResultsTeacher() {
               </div>
 
               <div className="container__box">
-                <div className="box__title"><h3>Medallas</h3></div>
+                <div className="box__title"><h3>Logros</h3></div>
                 <div className="box__content">
                   <div className="content__list">
                     <div className="list__award">
                       {(logros?.[grupoSeleccionado]?.length > 0) ? (
-                        logros[grupoSeleccionado].map((_, i) => (
-                          <div className="award" key={i}>
-                            <div className="award__border"></div>
-                            <div className="award__body"><i className="fa-solid fa-star"></i></div>
-                            <div className="award__ribbon ribbon--left"></div>
-                            <div className="award__ribbon ribbon--right"></div>
-                          </div>
+                        logros[grupoSeleccionado].map((logro, i) => (
+                          <AchievementBadge key={i} logro={logro} />
                         ))
                       ) : (
                         <div style={{
@@ -203,7 +256,7 @@ function ResultsTeacher() {
                             fontSize: '1.2rem',
                             color: '#2a40bf',
                             textAlign: 'center'
-                          }}>No hay medallas disponibles</p>
+                          }}>No hay logros disponibles</p>
                         </div>
                       )}
                     </div>

@@ -1243,41 +1243,49 @@ const Depuration = () => {
   };
   // Fetch logs from API
   const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/bitacora_D`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener logs');
+  setLoading(true);
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/bitacora_D`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
+    });
 
-      const data = await response.json();
-      const normalizedLogs = data.logs.map(log => ({
-        ...log,
-        id: log.Bitacora_ID_PK || log.id,
-        usuario: log.usuario || `${log.Nombre} ${log.Apellido1}`,
-        Accion: log.Accion || 'Acción no especificada',
-        Error: log.Error || 'No aplica',
-        Fecha: log.Fecha ? new Date(log.Fecha).toISOString() : new Date().toISOString()
-      })).reverse();
-
-      setLogs(normalizedLogs || []);
-      setFilteredLogs(normalizedLogs || []);
-    } catch (error) {
-      console.error("Error al obtener logs:", error);
-      Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error('Error al obtener logs');
     }
-  };
+
+    const data = await response.json();
+    
+    // Verificar si la respuesta tiene la estructura esperada
+    if (!data.success) {
+      throw new Error(data.message || 'Error en la respuesta del servidor');
+    }
+
+    // Normalización de los logs
+    const normalizedLogs = data.logs.map(log => ({
+      id: log.id || log.Bitacora_ID_PK,
+      fecha: log.Fecha, // Usar Fecha con mayúscula como viene del backend
+      usuario: log.usuario || `${log.Nombre} ${log.Apellido1} ${log.Apellido2 || ''}`.trim(),
+      Accion: log.Accion || 'Acción no especificada',
+      Error: log.Error || 'No aplica',
+      Correo: log.Correo || 'No disponible',
+      Rol: log.Rol || 'No especificado'
+    })).reverse();
+
+    setLogs(normalizedLogs);
+    setFilteredLogs(normalizedLogs);
+  } catch (error) {
+    console.error("Error al obtener logs:", error);
+    Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Filter historial based on search
   useEffect(() => {
@@ -1971,7 +1979,7 @@ const Depuration = () => {
                         currentItems.map((log, index) => (
                           <tr className="table__row" key={index}>
                             <td className="table__data">
-                              {log.fecha ? new Date(log.fecha).toLocaleString() : 'Fecha no disponible'}
+                              {log.Fecha ? new Date(log.Fecha).toLocaleString() : 'Fecha no disponible'}
                             </td>
                             <td className="table__data">{log.usuario}</td>
                             <td className="table__data">{log.Accion}</td>

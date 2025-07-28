@@ -1512,73 +1512,168 @@ const Depuration = () => {
 
   // System clean interface
   if (showSystemClean) {
-    return (
-      <LayoutAdmin>
-        <section className="depuration__container">
-          <div className="depuration__title">
-            <h3>Limpieza del Sistema</h3>
-          </div>
-          <div className="system-clean__container">
-            <div className="system-clean__warning">
-              <i className="fa-solid fa-triangle-exclamation"></i>
-              <p>ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES. Proceda con extrema precaución.</p>
-            </div>
-            <div className="system-clean__buttons">
-              <button
-                className="clean-button clean-button--customizations"
-                onClick={() => handleSystemClean('customizations')}
-              >
-                <i className="fa-solid fa-paint-roller"></i>
-                Limpiar todas las personalizaciones
-              </button>
-              <button
-                className="clean-button clean-button--logs"
-                onClick={() => handleSystemClean('logs')}
-              >
-                <i className="fa-solid fa-clipboard-list"></i>
-                Limpiar la Bitácora
-              </button>
-              <button
-                className="clean-button clean-button--history"
-                onClick={() => handleSystemClean('history')}
-              >
-                <i className="fa-solid fa-clock-rotate-left"></i>
-                Limpiar Historial
-              </button>
-              <button
-                className="clean-button clean-button--students"
-                onClick={() => handleSystemClean('students')}
-              >
-                <i className="fa-solid fa-user-graduate"></i>
-                Eliminar todos los Estudiantes
-              </button>
-              <button
-                className="clean-button clean-button--professors"
-                onClick={() => handleSystemClean('professors')}
-              >
-                <i className="fa-solid fa-user-tie"></i>
-                Eliminar todos los Profesores
-              </button>
+  return (
+    <LayoutAdmin>
+      <section className="depuration__container">
+        <div className="depuration__title">
+          <h3>Depuración</h3>
+        </div>
+        <div className="depuration__content">
+          {/* Left Sidebar */}
+          <div className="depuration__left">
+            <div
+              className={`left__box ${selectedTab === 'users' ? 'active' : ''}`}
+              onClick={() => {
+                setShowSystemClean(false);
+                handleTabChange('users');
+              }}
+            >
+              <div className="box__shape shape--users">
+                <i className="fa-solid fa-users"></i>
+              </div>
+              <div className="right__text">
+                <p className="text__title">Administrar Usuarios</p>
+                <p className="text__description">Gestiona todos los usuarios del sistema (profesores y estudiantes), su edición, eliminación y revisión de actividad</p>
+              </div>
             </div>
 
-            <button
-              className="reset-button"
-              onClick={() => handleSystemClean('reset')}
+            <div
+              className={`left__box ${selectedTab === 'history' ? 'active' : ''}`}
+              onClick={() => {
+                setShowSystemClean(false);
+                handleTabChange('history');
+              }}
             >
-              <i className="fa-solid fa-bomb"></i>
-              REINICIAR SISTEMA FIDECOLAB
-            </button>
+              <div className="box__shape shape--history">
+                <i className="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <div className="right__text">
+                <p className="text__title">Administrar Historial</p>
+                <p className="text__description">Desde acá se administrará todo el historial de cada partida al igual que la opción de una limpieza total o parcial.</p>
+              </div>
+            </div>
+
+            <div
+              className={`left__box ${selectedTab === 'logs' ? 'active' : ''}`}
+              onClick={() => {
+                setShowSystemClean(false);
+                handleTabChange('logs');
+              }}
+            >
+              <div className="box__shape shape--log">
+                <i className="fa-solid fa-clipboard-list"></i>
+              </div>
+              <div className="right__text">
+                <p className="text__title">Administrar Logs</p>
+                <p className="text__description">Registros detallados de todas las acciones del sistema, incluyendo errores y actividad de usuarios.</p>
+              </div>
+            </div>
+
+            <div
+              className="left__box left__box--danger active"
+            >
+              <div className="box__shape shape--danger">
+                <i className="fa-solid fa-broom"></i>
+              </div>
+              <div className="right__text">
+                <p className="text__title">Limpieza del Sistema</p>
+                <p className="text__description">Acciones avanzadas de mantenimiento y limpieza del sistema. Requiere código de seguridad.</p>
+              </div>
+            </div>
           </div>
-          <button
-            className="button__back"
-            onClick={() => setShowSystemClean(false)}
-          >
-            Regresar
-          </button>
-        </section>
-      </LayoutAdmin>
-    );
-  }
+
+          {/* Right Content */}
+          <div className="depuration__right">
+            {/* Options */}
+            <div className="depuration__top">
+              <div className="depuration__options">
+                <div className="options__top">
+                  <div className="depuration__title">
+                    <h3>Limpieza del Sistema</h3>
+                  </div>
+                </div>
+
+                <div className="options__bottom">
+                  <div className="option__search">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <span style={{marginLeft: '10px', color: '#dc3545'}}>
+                      ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* System Clean Content */}
+            <div className="depuration__bottom">
+              <div className="system-clean__container">
+                <div className="system-clean__buttons">
+                  <div className="clean-buttons-row">
+                    <button
+                      className="clean-button clean-button--customizations"
+                      onClick={() => handleSystemClean('customizations')}
+                    >
+                      <i className="fa-solid fa-paint-roller"></i>
+                      Limpiar personalizaciones
+                    </button>
+                    <button
+                      className="clean-button clean-button--logs"
+                      onClick={() => handleSystemClean('logs')}
+                    >
+                      <i className="fa-solid fa-clipboard-list"></i>
+                      Limpiar bitácora
+                    </button>
+                    <button
+                      className="clean-button clean-button--history"
+                      onClick={() => handleSystemClean('history')}
+                    >
+                      <i className="fa-solid fa-clock-rotate-left"></i>
+                      Limpiar historial
+                    </button>
+                  </div>
+                  
+                  <div className="clean-buttons-row">
+                    <button
+                      className="clean-button clean-button--students"
+                      onClick={() => handleSystemClean('students')}
+                    >
+                      <i className="fa-solid fa-user-graduate"></i>
+                      Eliminar estudiantes
+                    </button>
+                    <button
+                      className="clean-button clean-button--professors"
+                      onClick={() => handleSystemClean('professors')}
+                    >
+                      <i className="fa-solid fa-user-tie"></i>
+                      Eliminar profesores
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  className="reset-button"
+                  onClick={() => handleSystemClean('reset')}
+                >
+                  <i className="fa-solid fa-bomb"></i>
+                  REINICIAR SISTEMA COMPLETO
+                </button>
+
+                <button
+                  className="button__back"
+                  onClick={() => setShowSystemClean(false)}
+                  style={{marginTop: '20px'}}
+                >
+                  <i className="fa-solid fa-arrow-left"></i> Regresar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </LayoutAdmin>
+  );
+}
+
 
   return (
     <LayoutAdmin>

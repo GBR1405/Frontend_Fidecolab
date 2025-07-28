@@ -1675,6 +1675,7 @@ const Depuration = () => {
 }
 
 
+
   return (
     <LayoutAdmin>
       <section className="depuration__container">

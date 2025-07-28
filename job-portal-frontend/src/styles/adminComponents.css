@@ -2556,6 +2556,21 @@ body, html {
   }
 }
 
+/* Error view button */
+.button__view {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button__view:hover {
+  background-color: #138496;
+}
+
 /* Status badges */
 .status-badge {
   display: inline-block;

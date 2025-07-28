@@ -476,8 +476,6 @@ const startNewGame = async (personalization, grupoID) => {
                                                 <button type="submit" onClick={() => handleStartGame(personalization)}>Iniciar</button>
                                             </div>
                                             <div className="list__button-group">
-                                                <div className="list__button list__button-small">
-                                                </div>
                                                 <div className="list__button list__button-small_Delete">
                                                     <button type="button" onClick={() => handleDeletePersonalization(personalization.Personalizacion_ID_PK)}>
                                                         <FaTrash />

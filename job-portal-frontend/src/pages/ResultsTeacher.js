@@ -62,104 +62,26 @@ function ResultsTeacher() {
     fetchResults();
   }, [partidaId]);
 
-  const AchievementBadge = ({ logro }) => {
-  const [showTooltip, setShowTooltip] = useState(false);
-  
-  // Determinar el icono según el tipo de logro
-  const getIcon = () => {
-    if (logro.Tipo === 'grupo') return 'fa-users';
-    
-    // Iconos para logros personales basados en el nombre
-    if (logro.Nombre.includes('Diseñador')) return 'fa-paintbrush';
-    if (logro.Nombre.includes('Localizador de parejas')) return 'fa-layer-group';
-    if (logro.Nombre.includes('Localizador de detalles')) return 'fa-puzzle-piece';
-    if (logro.Nombre.includes('Adivinador')) return 'fa-question';
-    if (logro.Nombre.includes('Jugador de partidas')) return 'fa-gamepad';
-    if (logro.Nombre.includes('Hola de nuevo')) return 'fa-handshake';
-    if (logro.Nombre.includes('Cazador de logros')) return 'fa-trophy';
-    if (logro.Nombre.includes('Gracias por jugar')) return 'fa-heart';
-    
-    return 'fa-star';
-  };
-
-  // Determinar el color del borde según el nivel (si aplica)
-  const getBorderColor = () => {
-    if (logro.Tipo === 'grupo') return '#2a40bf'; // Azul para grupales
-    
-    // Colores para niveles de logros personales
-    if (logro.Nombre.includes('Nivel 4')) return '#d4af37'; // Oro
-    if (logro.Nombre.includes('Nivel 3')) return '#c0c0c0'; // Plata
-    if (logro.Nombre.includes('Nivel 2')) return '#cd7f32'; // Bronce
-    
-    return '#2a40bf'; // Azul por defecto
-  };
-
-  return (
-    <div 
-      className="award" 
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
-      <div 
-        className="award__border" 
-        style={{ backgroundColor: getBorderColor() }}
-      ></div>
-      <div className="award__body">
-        <i className={`fa-solid ${getIcon()}`}></i>
-      </div>
-      <div className="award__ribbon ribbon--left"></div>
-      <div className="award__ribbon ribbon--right"></div>
-      
-      {showTooltip && (
-        <div className="achievement-tooltip">
-          <h4>{logro.Nombre}</h4>
-          <p>{logro.Descripcion}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-  const isValidImage = (str) => {
-    return str && typeof str === 'string' && 
-          (str.startsWith('data:image/png;base64,') || 
-          str.startsWith('data:image/jpeg;base64,')) &&
-          str.length > 100;
-  };
-
-  // Y en el render:
-  {imagenesDibujo.map((src, i) => (
-    isValidImage(src) ? (
-      <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
-    ) : (
-      <div key={i}>Imagen no válida</div>
-    )
-  ))}
-
   useEffect(() => {
-  if (!grupoSeleccionado) return;
-  const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
-  if (!resultadoGrupo || !resultadoGrupo.resultados) return;
+    if (!grupoSeleccionado) return;
+    const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
+    if (!resultadoGrupo || !resultadoGrupo.resultados) return;
 
-  const imagenes = resultadoGrupo.resultados
-    .map(r => {
-      try {
-        // Verificar si ya está parseado o necesita parsearse
-        const parsed = typeof r.Resultados === 'string' ? JSON.parse(r.Resultados) : r.Resultados;
-        return parsed
-          .filter(j => j.tipoJuego === 'Dibujo' && 
-            (j.comentario?.startsWith('data:image') || j.progreso?.startsWith('data:image')))
-          .map(j => j.comentario?.startsWith('data:image') ? j.comentario : j.progreso);
-      } catch (error) {
-        console.error('Error al parsear resultados:', error);
-        return [];
-      }
-    })
-    .flat()
-    .filter(Boolean); // Eliminar valores nulos/undefined
+    const imagenes = resultadoGrupo.resultados
+      .map(r => {
+        try {
+          const parsed = JSON.parse(r.Resultados);
+          return parsed
+            .filter(j => j.tipoJuego === 'Dibujo' && j.comentario?.startsWith('data:image'))
+            .map(j => j.comentario);
+        } catch {
+          return [];
+        }
+      })
+      .flat();
 
-  setImagenesDibujo(imagenes);
-}, [grupoSeleccionado, resultados]);
+    setImagenesDibujo(imagenes);
+  }, [grupoSeleccionado, resultados]);
 
   const obtenerMiembros = (grupo) => {
     const equipo = equipos.find(e => e.equipo === grupo);
@@ -235,13 +157,18 @@ function ResultsTeacher() {
               </div>
 
               <div className="container__box">
-                <div className="box__title"><h3>Logros</h3></div>
+                <div className="box__title"><h3>Medallas</h3></div>
                 <div className="box__content">
                   <div className="content__list">
                     <div className="list__award">
                       {(logros?.[grupoSeleccionado]?.length > 0) ? (
-                        logros[grupoSeleccionado].map((logro, i) => (
-                          <AchievementBadge key={i} logro={logro} />
+                        logros[grupoSeleccionado].map((_, i) => (
+                          <div className="award" key={i}>
+                            <div className="award__border"></div>
+                            <div className="award__body"><i className="fa-solid fa-star"></i></div>
+                            <div className="award__ribbon ribbon--left"></div>
+                            <div className="award__ribbon ribbon--right"></div>
+                          </div>
                         ))
                       ) : (
                         <div style={{
@@ -256,7 +183,7 @@ function ResultsTeacher() {
                             fontSize: '1.2rem',
                             color: '#2a40bf',
                             textAlign: 'center'
-                          }}>No hay logros disponibles</p>
+                          }}>No hay medallas disponibles</p>
                         </div>
                       )}
                     </div>
@@ -347,14 +274,10 @@ function ResultsTeacher() {
                 <div className="right__slider">
                   {imagenesDibujo.length > 0 ? (
                     <>
-                      <div className="slider__images">
-                        {imagenesDibujo.length > 0 && (
-                          <img 
-                            className="image__item" 
-                            src={imagenesDibujo[active]} 
-                            alt={`Dibujo ${active + 1}`}
-                          />
-                        )}
+                      <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
+                        {imagenesDibujo.map((src, i) => (
+                          <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
+                        ))}
                       </div>
                       <div className="slider__nav">
                         <button className="nav__button" onClick={handlePrevClick}>

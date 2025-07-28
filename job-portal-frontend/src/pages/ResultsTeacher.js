@@ -1,5 +1,5 @@
 // ResultsTeacher.js
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Cookies from "js-cookie";
 import "../styles/resultsTeacher.css";
@@ -64,34 +64,39 @@ function ResultsTeacher() {
 
   const AchievementBadge = ({ logro }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const badgeRef = useRef(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-
-  // Actualizar posición del tooltip cuando se muestra
-  useEffect(() => {
-    if (showTooltip && badgeRef.current) {
-      const rect = badgeRef.current.getBoundingClientRect();
-      setTooltipPosition({
-        top: rect.top - 10, // 10px arriba del badge
-        left: rect.left + rect.width / 2 // Centrado horizontalmente
-      });
-    }
-  }, [showTooltip]);
-
-  // Determinar el icono según el tipo de logro (igual que antes)
+  
+  // Determinar el icono según el tipo de logro
   const getIcon = () => {
-    // ... (misma lógica de iconos que antes)
+    if (logro.Tipo === 'grupo') return 'fa-users';
+    
+    // Iconos para logros personales basados en el nombre
+    if (logro.Nombre.includes('Diseñador')) return 'fa-paintbrush';
+    if (logro.Nombre.includes('Localizador de parejas')) return 'fa-layer-group';
+    if (logro.Nombre.includes('Localizador de detalles')) return 'fa-puzzle-piece';
+    if (logro.Nombre.includes('Adivinador')) return 'fa-question';
+    if (logro.Nombre.includes('Jugador de partidas')) return 'fa-gamepad';
+    if (logro.Nombre.includes('Hola de nuevo')) return 'fa-handshake';
+    if (logro.Nombre.includes('Cazador de logros')) return 'fa-trophy';
+    if (logro.Nombre.includes('Gracias por jugar')) return 'fa-heart';
+    
+    return 'fa-star';
   };
 
-  // Determinar el color del borde según el nivel (igual que antes)
+  // Determinar el color del borde según el nivel (si aplica)
   const getBorderColor = () => {
-    // ... (misma lógica de colores que antes)
+    if (logro.Tipo === 'grupo') return '#2a40bf'; // Azul para grupales
+    
+    // Colores para niveles de logros personales
+    if (logro.Nombre.includes('Nivel 4')) return '#d4af37'; // Oro
+    if (logro.Nombre.includes('Nivel 3')) return '#c0c0c0'; // Plata
+    if (logro.Nombre.includes('Nivel 2')) return '#cd7f32'; // Bronce
+    
+    return '#2a40bf'; // Azul por defecto
   };
 
   return (
     <div 
       className="award" 
-      ref={badgeRef}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -106,15 +111,7 @@ function ResultsTeacher() {
       <div className="award__ribbon ribbon--right"></div>
       
       {showTooltip && (
-        <div 
-          className="achievement-tooltip floating"
-          style={{
-            top: `${tooltipPosition.top}px`,
-            left: `${tooltipPosition.left}px`,
-            transform: 'translateX(-50%) translateY(-100%)'
-          }}
-        >
-          <div className="tooltip-arrow"></div>
+        <div className="achievement-tooltip">
           <h4>{logro.Nombre}</h4>
           <p>{logro.Descripcion}</p>
         </div>

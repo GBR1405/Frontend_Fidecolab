@@ -62,26 +62,46 @@ function ResultsTeacher() {
     fetchResults();
   }, [partidaId]);
 
+  const isValidImage = (str) => {
+    return str && typeof str === 'string' && 
+          (str.startsWith('data:image/png;base64,') || 
+          str.startsWith('data:image/jpeg;base64,')) &&
+          str.length > 100;
+  };
+
+  // Y en el render:
+  {imagenesDibujo.map((src, i) => (
+    isValidImage(src) ? (
+      <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
+    ) : (
+      <div key={i}>Imagen no válida</div>
+    )
+  ))}
+
   useEffect(() => {
-    if (!grupoSeleccionado) return;
-    const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
-    if (!resultadoGrupo || !resultadoGrupo.resultados) return;
+  if (!grupoSeleccionado) return;
+  const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
+  if (!resultadoGrupo || !resultadoGrupo.resultados) return;
 
-    const imagenes = resultadoGrupo.resultados
-      .map(r => {
-        try {
-          const parsed = JSON.parse(r.Resultados);
-          return parsed
-            .filter(j => j.tipoJuego === 'Dibujo' && j.comentario?.startsWith('data:image'))
-            .map(j => j.comentario);
-        } catch {
-          return [];
-        }
-      })
-      .flat();
+  const imagenes = resultadoGrupo.resultados
+    .map(r => {
+      try {
+        // Verificar si ya está parseado o necesita parsearse
+        const parsed = typeof r.Resultados === 'string' ? JSON.parse(r.Resultados) : r.Resultados;
+        return parsed
+          .filter(j => j.tipoJuego === 'Dibujo' && 
+            (j.comentario?.startsWith('data:image') || j.progreso?.startsWith('data:image')))
+          .map(j => j.comentario?.startsWith('data:image') ? j.comentario : j.progreso);
+      } catch (error) {
+        console.error('Error al parsear resultados:', error);
+        return [];
+      }
+    })
+    .flat()
+    .filter(Boolean); // Eliminar valores nulos/undefined
 
-    setImagenesDibujo(imagenes);
-  }, [grupoSeleccionado, resultados]);
+  setImagenesDibujo(imagenes);
+}, [grupoSeleccionado, resultados]);
 
   const obtenerMiembros = (grupo) => {
     const equipo = equipos.find(e => e.equipo === grupo);
@@ -274,10 +294,14 @@ function ResultsTeacher() {
                 <div className="right__slider">
                   {imagenesDibujo.length > 0 ? (
                     <>
-                      <div className="slider__images" style={{ left: -active * 20 + 'vmax' }}>
-                        {imagenesDibujo.map((src, i) => (
-                          <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
-                        ))}
+                      <div className="slider__images">
+                        {imagenesDibujo.length > 0 && (
+                          <img 
+                            className="image__item" 
+                            src={imagenesDibujo[active]} 
+                            alt={`Dibujo ${active + 1}`}
+                          />
+                        )}
                       </div>
                       <div className="slider__nav">
                         <button className="nav__button" onClick={handlePrevClick}>

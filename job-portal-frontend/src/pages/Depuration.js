@@ -1459,6 +1459,7 @@ const Depuration = () => {
       Swal.fire('Error', 'No se pudo eliminar el registro', 'error');
     }
   };
+  
 
   // Delete log record
   const handleDeleteLog = async (logId) => {

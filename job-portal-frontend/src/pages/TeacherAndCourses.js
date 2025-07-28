@@ -865,6 +865,140 @@ const AdminProfessorCourses = () => {
         });
     };
 
+    const handleEditCourse = (course) => {
+  Swal.fire({
+    title: 'Editar Curso',
+    html: `
+      <input type="text" id="editCourseCode" class="swal2-input" value="${course.codigo}" placeholder="Ej: AL-1234" maxlength="9">
+      <input type="text" id="editCourseName" class="swal2-input" value="${course.nombre}" placeholder="Nombre del curso">
+    `,
+    confirmButtonText: 'Guardar',
+    cancelButtonText: 'Cancelar',
+    showCancelButton: true,
+    didOpen: () => {
+      const codeInput = document.getElementById("editCourseCode");
+      let previousValue = codeInput.value;
+
+      codeInput.addEventListener("input", (e) => {
+        let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+        let current = raw;
+        let parts = raw.split("-");
+
+        if (previousValue.includes("-") && !current.includes("-")) {
+          const letras = previousValue.replace(/[^A-Z]/g, "").slice(0, -1);
+          e.target.value = letras;
+          previousValue = letras;
+          return;
+        }
+
+        if (parts.length === 1 && parts[0].length <= 2) {
+          e.target.value = parts[0];
+          if (parts[0].length === 2) {
+            e.target.value = parts[0] + "-";
+          }
+          previousValue = e.target.value;
+          return;
+        }
+
+        if (parts.length === 2) {
+          let letras = parts[0].substring(0, 2);
+          let numeros = parts[1].substring(0, 4).replace(/[^0-9]/g, "");
+          e.target.value = letras + "-" + numeros;
+          previousValue = e.target.value;
+          return;
+        }
+
+        previousValue = e.target.value;
+      });
+    },
+    preConfirm: async () => {
+      const newCode = document.getElementById('editCourseCode').value.trim();
+      const newName = document.getElementById('editCourseName').value.trim();
+      const codeRegex = /^[A-Z]{2}-\d{1,4}$/;
+
+      if (!codeRegex.test(newCode)) {
+        Swal.showValidationMessage("El código debe tener formato XX-1234 (2 letras, guion, 1–4 números).");
+        return false;
+      }
+
+      if (!newName) {
+        Swal.showValidationMessage("El nombre del curso no puede estar vacío.");
+        return false;
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/editar-curso`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            cursoId: course.id,
+            nuevoNombre: newName,
+            nuevoCodigo: newCode
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Error al editar curso");
+        }
+
+        Swal.fire('Éxito', 'Curso editado correctamente', 'success').then(() => {
+          window.location.reload();
+        });
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+  });
+};
+
+
+const handleDeleteCourse = (courseId) => {
+  Swal.fire({
+    title: '¿Deseas eliminar este curso?',
+    html: `
+      <p>Todos los profesores y estudiantes vinculados a sus grupos serán <strong>desvinculados</strong>.</p>
+      <p>¿Estás seguro?</p>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${apiUrl}/eliminar-curso`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cursoId: courseId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Error al eliminar curso");
+        }
+
+        Swal.fire('Éxito', 'Curso eliminado correctamente', 'success').then(() => {
+          window.location.reload();
+        });
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+  });
+};
 
 
 
@@ -1076,14 +1210,27 @@ const AdminProfessorCourses = () => {
                                                 <i className="fa-solid fa-link-slash"></i>
                                                 </button>
                                             ) : (
-                                                <button className="data__button button--edit"
-                                                onClick={(e) => {
+                                                <>
+                                                <button
+                                                    className="data__button button--edit"
+                                                    onClick={(e) => {
                                                     e.stopPropagation();
-                                                    Swal.fire("Editar curso aún no implementado", "", "info");
-                                                }}
+                                                    handleEditCourse(course);
+                                                    }}
                                                 >
-                                                <i className="fa-solid fa-pen-to-square"></i>
+                                                    <i className="fa-solid fa-pen-to-square"></i>
                                                 </button>
+                                                <button
+                                                    className="data__button button--desactive"
+                                                    onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteCourse(course.Curso_ID_FK || course.id);
+                                                    }}
+                                                >
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </button>
+                                                </>
+                                                
                                             )}
                                             </td>
                                         </tr>

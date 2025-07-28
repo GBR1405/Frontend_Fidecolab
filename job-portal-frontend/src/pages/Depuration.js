@@ -1243,49 +1243,49 @@ const Depuration = () => {
   };
   // Fetch logs from API
   const fetchLogs = async () => {
-  setLoading(true);
-  try {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/bitacora_D`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
+    setLoading(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/bitacora_D`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener logs');
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Error al obtener logs');
+      const data = await response.json();
+
+      // Verificar si la respuesta tiene la estructura esperada
+      if (!data.success) {
+        throw new Error(data.message || 'Error en la respuesta del servidor');
+      }
+
+      // Normalización de los logs
+      const normalizedLogs = data.logs.map(log => ({
+        id: log.id,
+        Fecha: log.Fecha,
+        usuario: log.usuario,
+        Accion: log.Accion,
+        Error: log.Error || 'No aplica',
+        Correo: log.Correo,
+        Rol: log.Rol
+      }));
+
+      setLogs(normalizedLogs);
+      setFilteredLogs(normalizedLogs);
+    } catch (error) {
+      console.error("Error al obtener logs:", error);
+      Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    
-    // Verificar si la respuesta tiene la estructura esperada
-    if (!data.success) {
-      throw new Error(data.message || 'Error en la respuesta del servidor');
-    }
-
-    // Normalización de los logs
-    const normalizedLogs = data.logs.map(log => ({
-      id: log.id || log.Bitacora_ID_PK,
-      fecha: log.Fecha, // Usar Fecha con mayúscula como viene del backend
-      usuario: log.usuario || `${log.Nombre} ${log.Apellido1} ${log.Apellido2 || ''}`.trim(),
-      Accion: log.Accion || 'Acción no especificada',
-      Error: log.Error || 'No aplica',
-      Correo: log.Correo || 'No disponible',
-      Rol: log.Rol || 'No especificado'
-    })).reverse();
-
-    setLogs(normalizedLogs);
-    setFilteredLogs(normalizedLogs);
-  } catch (error) {
-    console.error("Error al obtener logs:", error);
-    Swal.fire('Error', 'No se pudieron obtener los registros de bitácora', 'error');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Filter historial based on search
   useEffect(() => {
@@ -1459,7 +1459,7 @@ const Depuration = () => {
       Swal.fire('Error', 'No se pudo eliminar el registro', 'error');
     }
   };
-  
+
 
   // Delete log record
   const handleDeleteLog = async (logId) => {
@@ -1513,167 +1513,167 @@ const Depuration = () => {
 
   // System clean interface
   if (showSystemClean) {
-  return (
-    <LayoutAdmin>
-      <section className="depuration__container">
-        <div className="depuration__title">
-          <h3>Depuración</h3>
-        </div>
-        <div className="depuration__content">
-          {/* Left Sidebar */}
-          <div className="depuration__left">
-            <div
-              className={`left__box ${selectedTab === 'users' ? 'active' : ''}`}
-              onClick={() => {
-                setShowSystemClean(false);
-                handleTabChange('users');
-              }}
-            >
-              <div className="box__shape shape--users">
-                <i className="fa-solid fa-users"></i>
+    return (
+      <LayoutAdmin>
+        <section className="depuration__container">
+          <div className="depuration__title">
+            <h3>Depuración</h3>
+          </div>
+          <div className="depuration__content">
+            {/* Left Sidebar */}
+            <div className="depuration__left">
+              <div
+                className={`left__box ${selectedTab === 'users' ? 'active' : ''}`}
+                onClick={() => {
+                  setShowSystemClean(false);
+                  handleTabChange('users');
+                }}
+              >
+                <div className="box__shape shape--users">
+                  <i className="fa-solid fa-users"></i>
+                </div>
+                <div className="right__text">
+                  <p className="text__title">Administrar Usuarios</p>
+                  <p className="text__description">Gestiona todos los usuarios del sistema (profesores y estudiantes), su edición, eliminación y revisión de actividad</p>
+                </div>
               </div>
-              <div className="right__text">
-                <p className="text__title">Administrar Usuarios</p>
-                <p className="text__description">Gestiona todos los usuarios del sistema (profesores y estudiantes), su edición, eliminación y revisión de actividad</p>
+
+              <div
+                className={`left__box ${selectedTab === 'history' ? 'active' : ''}`}
+                onClick={() => {
+                  setShowSystemClean(false);
+                  handleTabChange('history');
+                }}
+              >
+                <div className="box__shape shape--history">
+                  <i className="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div className="right__text">
+                  <p className="text__title">Administrar Historial</p>
+                  <p className="text__description">Desde acá se administrará todo el historial de cada partida al igual que la opción de una limpieza total o parcial.</p>
+                </div>
+              </div>
+
+              <div
+                className={`left__box ${selectedTab === 'logs' ? 'active' : ''}`}
+                onClick={() => {
+                  setShowSystemClean(false);
+                  handleTabChange('logs');
+                }}
+              >
+                <div className="box__shape shape--log">
+                  <i className="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div className="right__text">
+                  <p className="text__title">Administrar Logs</p>
+                  <p className="text__description">Registros detallados de todas las acciones del sistema, incluyendo errores y actividad de usuarios.</p>
+                </div>
+              </div>
+
+              <div
+                className="left__box left__box--danger active"
+              >
+                <div className="box__shape shape--danger">
+                  <i className="fa-solid fa-broom"></i>
+                </div>
+                <div className="right__text">
+                  <p className="text__title">Limpieza del Sistema</p>
+                  <p className="text__description">Acciones avanzadas de mantenimiento y limpieza del sistema. Requiere código de seguridad.</p>
+                </div>
               </div>
             </div>
 
-            <div
-              className={`left__box ${selectedTab === 'history' ? 'active' : ''}`}
-              onClick={() => {
-                setShowSystemClean(false);
-                handleTabChange('history');
-              }}
-            >
-              <div className="box__shape shape--history">
-                <i className="fa-solid fa-clock-rotate-left"></i>
-              </div>
-              <div className="right__text">
-                <p className="text__title">Administrar Historial</p>
-                <p className="text__description">Desde acá se administrará todo el historial de cada partida al igual que la opción de una limpieza total o parcial.</p>
-              </div>
-            </div>
+            {/* Right Content */}
+            <div className="depuration__right">
+              {/* Options */}
+              <div className="depuration__top">
+                <div className="depuration__options">
+                  <div className="options__top">
+                    <div className="depuration__title">
+                      <h3>Limpieza del Sistema</h3>
+                    </div>
+                  </div>
 
-            <div
-              className={`left__box ${selectedTab === 'logs' ? 'active' : ''}`}
-              onClick={() => {
-                setShowSystemClean(false);
-                handleTabChange('logs');
-              }}
-            >
-              <div className="box__shape shape--log">
-                <i className="fa-solid fa-clipboard-list"></i>
+                  <div className="options__bottom">
+                    <div className="option__search">
+                      <i className="fa-solid fa-triangle-exclamation"></i>
+                      <span style={{ marginLeft: '10px', color: '#dc3545' }}>
+                        ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="right__text">
-                <p className="text__title">Administrar Logs</p>
-                <p className="text__description">Registros detallados de todas las acciones del sistema, incluyendo errores y actividad de usuarios.</p>
-              </div>
-            </div>
 
-            <div
-              className="left__box left__box--danger active"
-            >
-              <div className="box__shape shape--danger">
-                <i className="fa-solid fa-broom"></i>
-              </div>
-              <div className="right__text">
-                <p className="text__title">Limpieza del Sistema</p>
-                <p className="text__description">Acciones avanzadas de mantenimiento y limpieza del sistema. Requiere código de seguridad.</p>
+              {/* System Clean Content */}
+              <div className="depuration__bottom">
+                <div className="system-clean__container">
+                  <div className="system-clean__buttons">
+                    <div className="clean-buttons-row">
+                      <button
+                        className="clean-button clean-button--customizations"
+                        onClick={() => handleSystemClean('customizations')}
+                      >
+                        <i className="fa-solid fa-paint-roller"></i>
+                        Limpiar personalizaciones
+                      </button>
+                      <button
+                        className="clean-button clean-button--logs"
+                        onClick={() => handleSystemClean('logs')}
+                      >
+                        <i className="fa-solid fa-clipboard-list"></i>
+                        Limpiar bitácora
+                      </button>
+                      <button
+                        className="clean-button clean-button--history"
+                        onClick={() => handleSystemClean('history')}
+                      >
+                        <i className="fa-solid fa-clock-rotate-left"></i>
+                        Limpiar historial
+                      </button>
+                    </div>
+
+                    <div className="clean-buttons-row">
+                      <button
+                        className="clean-button clean-button--students"
+                        onClick={() => handleSystemClean('students')}
+                      >
+                        <i className="fa-solid fa-user-graduate"></i>
+                        Eliminar estudiantes
+                      </button>
+                      <button
+                        className="clean-button clean-button--professors"
+                        onClick={() => handleSystemClean('professors')}
+                      >
+                        <i className="fa-solid fa-user-tie"></i>
+                        Eliminar profesores
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    className="reset-button"
+                    onClick={() => handleSystemClean('reset')}
+                  >
+                    <i className="fa-solid fa-bomb"></i>
+                    REINICIAR SISTEMA COMPLETO
+                  </button>
+
+                  <button
+                    className="button__back"
+                    onClick={() => setShowSystemClean(false)}
+                    style={{ marginTop: '20px' }}
+                  >
+                    <i className="fa-solid fa-arrow-left"></i> Regresar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Right Content */}
-          <div className="depuration__right">
-            {/* Options */}
-            <div className="depuration__top">
-              <div className="depuration__options">
-                <div className="options__top">
-                  <div className="depuration__title">
-                    <h3>Limpieza del Sistema</h3>
-                  </div>
-                </div>
-
-                <div className="options__bottom">
-                  <div className="option__search">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                    <span style={{marginLeft: '10px', color: '#dc3545'}}>
-                      ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* System Clean Content */}
-            <div className="depuration__bottom">
-              <div className="system-clean__container">
-                <div className="system-clean__buttons">
-                  <div className="clean-buttons-row">
-                    <button
-                      className="clean-button clean-button--customizations"
-                      onClick={() => handleSystemClean('customizations')}
-                    >
-                      <i className="fa-solid fa-paint-roller"></i>
-                      Limpiar personalizaciones
-                    </button>
-                    <button
-                      className="clean-button clean-button--logs"
-                      onClick={() => handleSystemClean('logs')}
-                    >
-                      <i className="fa-solid fa-clipboard-list"></i>
-                      Limpiar bitácora
-                    </button>
-                    <button
-                      className="clean-button clean-button--history"
-                      onClick={() => handleSystemClean('history')}
-                    >
-                      <i className="fa-solid fa-clock-rotate-left"></i>
-                      Limpiar historial
-                    </button>
-                  </div>
-                  
-                  <div className="clean-buttons-row">
-                    <button
-                      className="clean-button clean-button--students"
-                      onClick={() => handleSystemClean('students')}
-                    >
-                      <i className="fa-solid fa-user-graduate"></i>
-                      Eliminar estudiantes
-                    </button>
-                    <button
-                      className="clean-button clean-button--professors"
-                      onClick={() => handleSystemClean('professors')}
-                    >
-                      <i className="fa-solid fa-user-tie"></i>
-                      Eliminar profesores
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  className="reset-button"
-                  onClick={() => handleSystemClean('reset')}
-                >
-                  <i className="fa-solid fa-bomb"></i>
-                  REINICIAR SISTEMA COMPLETO
-                </button>
-
-                <button
-                  className="button__back"
-                  onClick={() => setShowSystemClean(false)}
-                  style={{marginTop: '20px'}}
-                >
-                  <i className="fa-solid fa-arrow-left"></i> Regresar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </LayoutAdmin>
-  );
-}
+        </section>
+      </LayoutAdmin>
+    );
+  }
 
 
 
@@ -2073,7 +2073,7 @@ const Depuration = () => {
                           </td>
                         </tr>
                       ) : filteredLogs.length > 0 ? (
-                        currentItems.map((log, index) => (
+                        filteredLogs.slice(indexOfFirstItem, indexOfLastItem).map((log, index) => (
                           <tr className="table__row" key={index}>
                             <td className="table__data">
                               {log.Fecha ? new Date(log.Fecha).toLocaleString() : 'Fecha no disponible'}
@@ -2081,12 +2081,12 @@ const Depuration = () => {
                             <td className="table__data">{log.usuario}</td>
                             <td className="table__data">{log.Accion}</td>
                             <td className="table__data">
-                              {log.error === 'No aplica' ? (
+                              {log.Error === 'No aplica' ? (
                                 <span className="status-badge active">No aplica</span>
                               ) : (
                                 <button
                                   className="button__view"
-                                  onClick={() => viewErrorDetails(log.error)}
+                                  onClick={() => viewErrorDetails(log.Error)}
                                   title="Ver detalles"
                                 >
                                   <i className="fa-solid fa-eye"></i> Ver
@@ -2111,6 +2111,7 @@ const Depuration = () => {
                           </td>
                         </tr>
                       )}
+
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (

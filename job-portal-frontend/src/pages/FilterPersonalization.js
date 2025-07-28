@@ -477,12 +477,6 @@ const startNewGame = async (personalization, grupoID) => {
                                             </div>
                                             <div className="list__button-group">
                                                 <div className="list__button list__button-small">
-                                                <button 
-                                                    type="submit" 
-                                                    onClick={() => handleEditPersonalization(personalization.Personalizacion_ID_PK)}
-                                                    >
-                                                    <FaEdit />
-                                                </button>
                                                 </div>
                                                 <div className="list__button list__button-small_Delete">
                                                     <button type="button" onClick={() => handleDeletePersonalization(personalization.Personalizacion_ID_PK)}>

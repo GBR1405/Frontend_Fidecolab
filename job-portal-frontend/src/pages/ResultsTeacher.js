@@ -2,14 +2,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Cookies from "js-cookie";
-import { jsPDF } from "jspdf";
 import "../styles/resultsTeacher.css";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
 function ResultsTeacher() {
   const { partidaId } = useParams();
-  const navigate = useNavigate();
   const [equipos, setEquipos] = useState([]);
   const [resultados, setResultados] = useState([]);
   const [logros, setLogros] = useState({});
@@ -19,7 +17,6 @@ function ResultsTeacher() {
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [rol, setRol] = useState(''); // Para controlar si es profesor o estudiante
 
   const handleNextClick = useCallback(() => {
     setActive((prev) => (prev + 1 < imagenesDibujo.length ? prev + 1 : 0));
@@ -55,10 +52,6 @@ function ResultsTeacher() {
         setLogros(data.logros || {});
         setPartida(data.partida || null);
         setGrupoSeleccionado(data.equipos?.[0]?.equipo || null);
-        
-        // Obtener el rol del usuario
-        const userData = JSON.parse(Cookies.get("userData") || "{}");
-        setRol(userData.rol || '');
       } catch (err) {
         setError(err.message);
       } finally {
@@ -70,54 +63,62 @@ function ResultsTeacher() {
   }, [partidaId]);
 
   const AchievementBadge = ({ logro }) => {
-    const [showTooltip, setShowTooltip] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  
+  // Determinar el icono según el tipo de logro
+  const getIcon = () => {
+    if (logro.Tipo === 'grupo') return 'fa-users';
     
-    const getIcon = () => {
-      if (logro.Tipo === 'grupo') return 'fa-users';
-      if (logro.Nombre.includes('Diseñador')) return 'fa-paintbrush';
-      if (logro.Nombre.includes('Localizador de parejas')) return 'fa-layer-group';
-      if (logro.Nombre.includes('Localizador de detalles')) return 'fa-puzzle-piece';
-      if (logro.Nombre.includes('Adivinador')) return 'fa-question';
-      if (logro.Nombre.includes('Jugador de partidas')) return 'fa-gamepad';
-      if (logro.Nombre.includes('Hola de nuevo')) return 'fa-handshake';
-      if (logro.Nombre.includes('Cazador de logros')) return 'fa-trophy';
-      if (logro.Nombre.includes('Gracias por jugar')) return 'fa-heart';
-      return 'fa-star';
-    };
-
-    const getBorderColor = () => {
-      if (logro.Tipo === 'grupo') return '#2a40bf';
-      if (logro.Nombre.includes('Nivel 4')) return '#d4af37';
-      if (logro.Nombre.includes('Nivel 3')) return '#c0c0c0';
-      if (logro.Nombre.includes('Nivel 2')) return '#cd7f32';
-      return '#2a40bf';
-    };
-
-    return (
-      <div 
-        className="award" 
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <div 
-          className="award__border" 
-          style={{ backgroundColor: getBorderColor() }}
-        ></div>
-        <div className="award__body">
-          <i className={`fa-solid ${getIcon()}`}></i>
-        </div>
-        <div className="award__ribbon ribbon--left"></div>
-        <div className="award__ribbon ribbon--right"></div>
-        
-        {showTooltip && (
-          <div className="achievement-tooltip">
-            <h4>{logro.Nombre}</h4>
-            <p>{logro.Descripcion}</p>
-          </div>
-        )}
-      </div>
-    );
+    // Iconos para logros personales basados en el nombre
+    if (logro.Nombre.includes('Diseñador')) return 'fa-paintbrush';
+    if (logro.Nombre.includes('Localizador de parejas')) return 'fa-layer-group';
+    if (logro.Nombre.includes('Localizador de detalles')) return 'fa-puzzle-piece';
+    if (logro.Nombre.includes('Adivinador')) return 'fa-question';
+    if (logro.Nombre.includes('Jugador de partidas')) return 'fa-gamepad';
+    if (logro.Nombre.includes('Hola de nuevo')) return 'fa-handshake';
+    if (logro.Nombre.includes('Cazador de logros')) return 'fa-trophy';
+    if (logro.Nombre.includes('Gracias por jugar')) return 'fa-heart';
+    
+    return 'fa-star';
   };
+
+  // Determinar el color del borde según el nivel (si aplica)
+  const getBorderColor = () => {
+    if (logro.Tipo === 'grupo') return '#2a40bf'; // Azul para grupales
+    
+    // Colores para niveles de logros personales
+    if (logro.Nombre.includes('Nivel 4')) return '#d4af37'; // Oro
+    if (logro.Nombre.includes('Nivel 3')) return '#c0c0c0'; // Plata
+    if (logro.Nombre.includes('Nivel 2')) return '#cd7f32'; // Bronce
+    
+    return '#2a40bf'; // Azul por defecto
+  };
+
+  return (
+    <div 
+      className="award" 
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <div 
+        className="award__border" 
+        style={{ backgroundColor: getBorderColor() }}
+      ></div>
+      <div className="award__body">
+        <i className={`fa-solid ${getIcon()}`}></i>
+      </div>
+      <div className="award__ribbon ribbon--left"></div>
+      <div className="award__ribbon ribbon--right"></div>
+      
+      {showTooltip && (
+        <div className="achievement__tooltip">
+          <h4>{logro.Nombre}</h4>
+          <p>{logro.Descripcion}</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
   const isValidImage = (str) => {
     return str && typeof str === 'string' && 
@@ -126,29 +127,39 @@ function ResultsTeacher() {
           str.length > 100;
   };
 
+  // Y en el render:
+  {imagenesDibujo.map((src, i) => (
+    isValidImage(src) ? (
+      <img key={i} className="image__item" src={src} alt={`Dibujo ${i + 1}`} />
+    ) : (
+      <div key={i}>Imagen no válida</div>
+    )
+  ))}
+
   useEffect(() => {
-    if (!grupoSeleccionado) return;
-    const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
-    if (!resultadoGrupo || !resultadoGrupo.resultados) return;
+  if (!grupoSeleccionado) return;
+  const resultadoGrupo = resultados.find(r => r.equipo === grupoSeleccionado);
+  if (!resultadoGrupo || !resultadoGrupo.resultados) return;
 
-    const imagenes = resultadoGrupo.resultados
-      .map(r => {
-        try {
-          const parsed = typeof r.Resultados === 'string' ? JSON.parse(r.Resultados) : r.Resultados;
-          return parsed
-            .filter(j => j.tipoJuego === 'Dibujo' && 
-              (j.comentario?.startsWith('data:image') || j.progreso?.startsWith('data:image')))
-            .map(j => j.comentario?.startsWith('data:image') ? j.comentario : j.progreso);
-        } catch (error) {
-          console.error('Error al parsear resultados:', error);
-          return [];
-        }
-      })
-      .flat()
-      .filter(Boolean);
+  const imagenes = resultadoGrupo.resultados
+    .map(r => {
+      try {
+        // Verificar si ya está parseado o necesita parsearse
+        const parsed = typeof r.Resultados === 'string' ? JSON.parse(r.Resultados) : r.Resultados;
+        return parsed
+          .filter(j => j.tipoJuego === 'Dibujo' && 
+            (j.comentario?.startsWith('data:image') || j.progreso?.startsWith('data:image')))
+          .map(j => j.comentario?.startsWith('data:image') ? j.comentario : j.progreso);
+      } catch (error) {
+        console.error('Error al parsear resultados:', error);
+        return [];
+      }
+    })
+    .flat()
+    .filter(Boolean); // Eliminar valores nulos/undefined
 
-    setImagenesDibujo(imagenes);
-  }, [grupoSeleccionado, resultados]);
+  setImagenesDibujo(imagenes);
+}, [grupoSeleccionado, resultados]);
 
   const obtenerMiembros = (grupo) => {
     const equipo = equipos.find(e => e.equipo === grupo);
@@ -160,9 +171,7 @@ function ResultsTeacher() {
     if (!grupoResult?.resultados?.[0]) return [];
 
     try {
-      return typeof grupoResult.resultados[0].Resultados === 'string' 
-        ? JSON.parse(grupoResult.resultados[0].Resultados) 
-        : grupoResult.resultados[0].Resultados;
+      return JSON.parse(grupoResult.resultados[0].Resultados);
     } catch {
       return [];
     }
@@ -179,113 +188,7 @@ function ResultsTeacher() {
     return `${min}:${sec}`;
   };
 
-  const getGameIcon = (tipoJuego) => {
-    switch(tipoJuego) {
-      case 'Dibujo':
-        return 'fa-paintbrush';
-      case 'Parejas':
-        return 'fa-layer-group';
-      case 'Diferencias':
-        return 'fa-puzzle-piece';
-      case 'Preguntas':
-        return 'fa-question';
-      case 'Memoria':
-        return 'fa-brain';
-      default:
-        return 'fa-gamepad';
-    }
-  };
-
-  const handleSalirClick = () => {
-    navigate('/homescreen');
-  };
-
-  const generarPDF = () => {
-    const doc = new jsPDF();
-    
-    equipos.forEach((equipo, index) => {
-      if (index > 0) doc.addPage();
-      
-      // Header
-      doc.setFontSize(20);
-      doc.setTextColor(40, 53, 147);
-      doc.text('Universidad Fidelitas', 105, 20, { align: 'center' });
-      
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Grupo: ${equipo.equipo}`, 20, 35);
-      doc.text(`Fecha: ${new Date(partida?.FechaFin).toLocaleDateString()}`, 160, 35);
-      
-      // Línea divisoria
-      doc.setDrawColor(40, 53, 147);
-      doc.setLineWidth(0.5);
-      doc.line(20, 40, 190, 40);
-      
-      // Miembros del equipo
-      doc.setFontSize(14);
-      doc.text('Integrantes:', 20, 50);
-      
-      let yPos = 60;
-      equipo.miembros.forEach(miembro => {
-        doc.setFontSize(12);
-        doc.text(`${miembro.Nombre} ${miembro.Apellido1} ${miembro.Apellido2 || ''}`, 30, yPos);
-        yPos += 10;
-      });
-      
-      // Resultados del equipo
-      const resultadosEquipo = obtenerResultadosGrupo(equipo.equipo);
-      yPos += 10;
-      
-      doc.setFontSize(14);
-      doc.text('Resultados:', 20, yPos);
-      yPos += 10;
-      
-      resultadosEquipo.forEach((juego, i) => {
-        if (yPos > 250) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        doc.setFontSize(12);
-        doc.text(`Juego ${i + 1}: ${juego.tipoJuego}`, 30, yPos);
-        doc.text(`Tiempo: ${formatearTiempo(juego.tiempo || 0)}`, 30, yPos + 10);
-        doc.text(`Dificultad: ${juego.dificultad || 'No definida'}`, 30, yPos + 20);
-        
-        if (juego.progreso) {
-          doc.text(`Progreso: ${juego.progreso}`, 30, yPos + 30);
-        }
-        
-        yPos += 40;
-      });
-      
-      // Logros del equipo
-      if (logros[equipo.equipo]?.length > 0) {
-        if (yPos > 220) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        doc.setFontSize(14);
-        doc.text('Logros obtenidos:', 20, yPos);
-        yPos += 10;
-        
-        logros[equipo.equipo].forEach(logro => {
-          if (yPos > 250) {
-            doc.addPage();
-            yPos = 20;
-          }
-          
-          doc.setFontSize(12);
-          doc.text(`• ${logro.Nombre}: ${logro.Descripcion}`, 30, yPos);
-          yPos += 10;
-        });
-      }
-    });
-    
-    doc.save(`resultados_partida_${partidaId}.pdf`);
-  };
-
-  const miembros = obtenerMiembros(grupoSeleccionado);
+    const miembros = obtenerMiembros(grupoSeleccionado);
   const juegos = obtenerResultadosGrupo(grupoSeleccionado);
 
   return (
@@ -302,20 +205,20 @@ function ResultsTeacher() {
 
       <main className="main">
         {loading ? (
-          <div className="loading__container">
-            <div className="loader"></div>
-            <p className="loading__text">Cargando resultados...</p>
-          </div>
-        ) : error ? (
-          <div className="error-message">
+        <div className="loading__container">
+          <div className="loader"></div>
+          <p className="loading__text">Cargando resultados...</p>
+        </div>
+      ) : error ? (
+        <div className="error-message">
             <i className="fa-solid fa-triangle-exclamation"></i> Error: {error}
           </div>
-        ) : equipos.length === 0 ? (
-          <div className="no-results">
+      ) : equipos.length === 0 ? (
+        <div className="no-results">
             <i className="fa-solid fa-magnifying-glass"></i> No se encontraron resultados
           </div>
-        ) : (
-          <div className="results__container">
+      ) : (
+        <div className="results__container">
             {/* Lado izquierdo: Miembros y medallas */}
             <div className="container__left">
               <div className="container__box">
@@ -390,9 +293,7 @@ function ResultsTeacher() {
                   <div className="results__content">
                     {juegos.map((juego, index) => (
                       <div key={index} className="results__shape">
-                        <div className="shape__icon">
-                          <i className={`fa-solid ${getGameIcon(juego.tipoJuego)}`}></i>
-                        </div>
+                        <div className="shape__icon"><i className="fa-solid fa-bolt"></i></div>
                         <div className="shape__data">
                           <div className="data__text">
                             <h4 className="data__title">Juego #{juego.juegoNumero}</h4>
@@ -405,16 +306,6 @@ function ResultsTeacher() {
                           <div className="data__text">
                             <h4 className="data__title">Dificultad:</h4>
                             <p className="data__text">{juego.dificultad || 'No definida'}</p>
-                          </div>
-                          <div className="data__text">
-                            <h4 className="data__title">Progreso:</h4>
-                            <p className="data__text">
-                              {juego.progreso ? 
-                                (typeof juego.progreso === 'string' ? 
-                                  (juego.progreso.startsWith('data:image') ? 'Ver dibujo' : juego.progreso) 
-                                  : JSON.stringify(juego.progreso)) 
-                                : 'No disponible'}
-                            </p>
                           </div>
                         </div>
                       </div>
@@ -447,10 +338,8 @@ function ResultsTeacher() {
                   </div>
                 </div>
                 <div className="right__buttons">
-                  <button className="right__button" onClick={handleSalirClick}>Salir</button>
-                  {rol === 'Profesor' && (
-                    <button className="right__button" onClick={generarPDF}>Descargar PDF</button>
-                  )}
+                  <button className="right__button">Salir</button>
+                  <button className="right__button">Descargar PDF</button>
                 </div>
               </div>
 

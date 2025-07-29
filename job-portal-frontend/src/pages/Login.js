@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import CryptoJS from "crypto-js";
@@ -11,6 +11,17 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 const apiUrl = 'https://backend-fidecolab.onrender.com/api';
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 
+const frases = [
+  "El éxito del equipo radica en la colaboración, no en la competencia",
+  "Juntos alcanzamos más lejos que cualquier individuo solo",
+  "La innovación florece cuando las mentes colaboran"
+];
+
+const autores = [
+  "— Anónimo",
+  "— Proverbio africano",
+  "— Margaret Mead"
+];
 
 const Login = () => {
   const [correo, setCorreo] = useState("");
@@ -18,6 +29,20 @@ const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [mostrarContraseña, setMostrarContraseña] = useState(false);
+  const [fraseIndex, setFraseIndex] = useState(0);
+  const [isBlurred, setIsBlurred] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsBlurred(true);
+      setTimeout(() => {
+        setFraseIndex((prevIndex) => (prevIndex + 1) % frases.length);
+        setIsBlurred(false);
+      }, 500); // Tiempo del desenfoque antes del cambio
+    }, 10000); // Cambia cada 10 segundos
+
+    return () => clearInterval(interval);
+  }, []);
 
   const validateForm = () => {
     const errors = {};
@@ -38,7 +63,6 @@ const Login = () => {
     e.preventDefault();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      // Muestra un toast por cada error
       for (let field in validationErrors) {
         toast.error(validationErrors[field]);
       }
@@ -56,9 +80,7 @@ const Login = () => {
       if (response.data.success) {
         toast.success("Inicio de sesión exitoso!");
   
-        const { user, token } = response.data; // Recibir el JWT desde la respuesta
-  
-        // Encriptar el objeto usuario
+        const { user, token } = response.data;
         const encryptedUser = CryptoJS.AES.encrypt(JSON.stringify(user), secretKey).toString();
         const now = new Date();
         const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -67,21 +89,20 @@ const Login = () => {
   
         Cookies.set("authToken", token, {
           expires: expires,
-          secure: true,           // HTTPS obligatorio
-          sameSite: "None"        // Para cross-site (entre dominios)
+          secure: true,
+          sameSite: "None"
         });
 
         Cookies.set("IFUser_Info", encryptedUser, {
           expires: expires,
-          secure: true,           // También debe ser true
+          secure: true,
           sameSite: "None"
         });
   
-        // Verifica el rol y redirige según corresponda
         if (user.rol === "Administrador") {
-          navigate("/admin"); // Redirige a /admin si el rol es "Admin"
+          navigate("/admin");
         } else {
-          navigate("/homeScreen"); // Redirige a /homeScreen para Estudiantes o Profesores
+          navigate("/homeScreen");
         }
       } else {
         toast.error(response.data.message || "Error al iniciar sesión");
@@ -93,7 +114,6 @@ const Login = () => {
       setLoading(false); 
     }
   };
-  
 
   return (
     <div className="body-login">
@@ -174,10 +194,12 @@ const Login = () => {
       <aside className="aside-login">
         <article className="aside__article-login">
           <img className="article__quote-login" src="quote.svg" alt="Cita" />
-          <span className="article__text-login">
-            El éxito del equipo radica en la colaboración, no en la competencia
+          <span className={`article__text-login ${isBlurred ? 'blurred' : ''}`}>
+            {frases[fraseIndex]}
           </span>
-          <span className="article__author-login">— Anónimo</span>
+          <span className={`article__author-login ${isBlurred ? 'blurred' : ''}`}>
+            {autores[fraseIndex]}
+          </span>
           <img className="article__square-login" src="vector.svg" alt="Vector" />
         </article>
       </aside>

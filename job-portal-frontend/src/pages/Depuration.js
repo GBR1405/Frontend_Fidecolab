@@ -4,7 +4,7 @@ import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
 import "../styles/modal.css";
-import ResultadosAdmin from './ResultadosAdmin';
+import ResultadosAdmin from './ResultAdmin';
 
 const token = Cookies.get("authToken");
 const apiUrl = process.env.REACT_APP_API_URL;

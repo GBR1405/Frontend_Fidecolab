@@ -36,6 +36,7 @@ const Depuration = () => {
   const navigate = useNavigate();
 
   const handleViewDetails = (partidaId) => {
+    console.log("Partida ID recibida:", partidaId, typeof partidaId);
     const idNumber = Number(partidaId);
     if (isNaN(idNumber)) {
       console.error("ID de partida no es un número válido:", partidaId);

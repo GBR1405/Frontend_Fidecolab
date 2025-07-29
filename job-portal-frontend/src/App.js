@@ -79,6 +79,7 @@ const App = () => {
   // Lista de rutas que pueden mostrarse en pantallas pequeñas
   const allowedSmallScreenRoutes = [
     "/resultados/",
+    "/resultadosAdmin/"
     // puedes añadir otras rutas aquí
   ];
 

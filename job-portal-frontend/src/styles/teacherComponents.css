@@ -716,3 +716,112 @@
   background: white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* Estilos para los containers de equipo */
+.team-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #4a6bdf;
+}
+
+.team-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.team-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.team-progress-value {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+/* Barras de progreso mejoradas */
+.progress-bar-container {
+  width: 100%;
+  background: #ecf0f1;
+  border-radius: 8px;
+  height: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.5s ease, background-color 0.3s ease;
+}
+
+/* Colores para diferentes estados */
+.progress-fill.normal {
+  background: linear-gradient(90deg, #3498db, #4a6bdf);
+}
+
+.progress-fill.correct {
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.progress-fill.wrong {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+}
+
+/* Animaciones para cambios de posición */
+@keyframes moveUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes moveDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.move-up {
+  animation: moveUp 0.5s ease-out;
+}
+
+.move-down {
+  animation: moveDown 0.5s ease-out;
+}
+
+/* Indicador de posición */
+.position-indicator {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4a6bdf;
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  font-size: 0.8rem;
+  margin-right: 8px;
+  font-weight: bold;
+}

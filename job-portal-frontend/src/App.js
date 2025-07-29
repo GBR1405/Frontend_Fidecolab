@@ -80,7 +80,6 @@ const App = () => {
   const allowedSmallScreenRoutes = [
     "/resultados/",
     "/resultadosAdmin/"
-    // puedes añadir otras rutas aquí
   ];
 
   if (isSmallScreen && !allowedSmallScreenRoutes.some(route => location.pathname.includes(route))) {

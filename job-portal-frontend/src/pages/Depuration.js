@@ -2649,7 +2649,7 @@ const handleResetSystem = async () => {
               ✕
             </button>
             <iframe
-              src={`/resultados/${selectedResultId}`}
+              src={`/resultadosAdmin/${selectedResultId}`}
               title="Resultados"
               style={{ width: "100%", height: "100%", border: "none" }}
             ></iframe>

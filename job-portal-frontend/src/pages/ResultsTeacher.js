@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Cookies from "js-cookie";
+import { jsPDF } from "jspdf";
 import "../styles/resultsTeacher.css";
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -17,6 +18,114 @@ function ResultsTeacher() {
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const getGameIcon = (tipoJuego) => {
+    switch(tipoJuego) {
+      case 'Dibujo':
+        return 'fa-paintbrush';
+      case 'Parejas':
+        return 'fa-layer-group';
+      case 'Diferencias':
+        return 'fa-puzzle-piece';
+      case 'Preguntas':
+        return 'fa-question-circle';
+      case 'Memoria':
+        return 'fa-brain';
+      default:
+        return 'fa-gamepad';
+    }
+  };
+
+  const handleSalirClick = () => {
+    
+    navigate('/homescreen');
+  };
+
+  const generarPDF = () => {
+    const doc = new jsPDF();
+    
+    equipos.forEach((equipo, index) => {
+      if (index > 0) doc.addPage();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Universidad Fidelitas', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Grupo: ${equipo.equipo}`, 20, 35);
+      doc.text(`Fecha: ${new Date(partida?.FechaFin).toLocaleDateString()}`, 160, 35);
+      
+      // Línea divisoria
+      doc.setDrawColor(40, 53, 147);
+      doc.setLineWidth(0.5);
+      doc.line(20, 40, 190, 40);
+      
+      // Miembros del equipo
+      doc.setFontSize(14);
+      doc.text('Integrantes:', 20, 50);
+      
+      let yPos = 60;
+      equipo.miembros.forEach(miembro => {
+        doc.setFontSize(12);
+        doc.text(`${miembro.Nombre} ${miembro.Apellido1} ${miembro.Apellido2 || ''}`, 30, yPos);
+        yPos += 10;
+      });
+      
+      // Resultados del equipo
+      const resultadosEquipo = obtenerResultadosGrupo(equipo.equipo);
+      yPos += 10;
+      
+      doc.setFontSize(14);
+      doc.text('Resultados:', 20, yPos);
+      yPos += 10;
+      
+      resultadosEquipo.forEach((juego, i) => {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.text(`Juego ${i + 1}: ${juego.tipoJuego}`, 30, yPos);
+        doc.text(`Tiempo: ${formatearTiempo(juego.tiempo || 0)}`, 30, yPos + 10);
+        doc.text(`Dificultad: ${juego.dificultad || 'No definida'}`, 30, yPos + 20);
+        
+        if (juego.progreso) {
+          doc.text(`Progreso: ${juego.progreso}`, 30, yPos + 30);
+        }
+        
+        yPos += 40;
+      });
+      
+      // Logros del equipo
+      if (logros[equipo.equipo]?.length > 0) {
+        if (yPos > 220) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.text('Logros obtenidos:', 20, yPos);
+        yPos += 10;
+        
+        logros[equipo.equipo].forEach(logro => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFontSize(12);
+          doc.text(`• ${logro.Nombre}: ${logro.Descripcion}`, 30, yPos);
+          yPos += 10;
+        });
+      }
+    });
+    
+    doc.save(`resultados_partida_${partidaId}.pdf`);
+  };
 
   const handleNextClick = useCallback(() => {
     setActive((prev) => (prev + 1 < imagenesDibujo.length ? prev + 1 : 0));
@@ -293,7 +402,16 @@ function ResultsTeacher() {
                   <div className="results__content">
                     {juegos.map((juego, index) => (
                       <div key={index} className="results__shape">
-                        <div className="shape__icon"><i className="fa-solid fa-bolt"></i></div>
+                        <div className="shape__icon">
+                          <i className={`fa-solid ${
+                            juego.tipoJuego === 'Dibujo' ? 'fa-paintbrush' :
+                            juego.tipoJuego === 'Parejas' ? 'fa-layer-group' :
+                            juego.tipoJuego === 'Diferencias' ? 'fa-puzzle-piece' :
+                            juego.tipoJuego === 'Preguntas' ? 'fa-question-circle' :
+                            juego.tipoJuego === 'Memoria' ? 'fa-brain' :
+                            'fa-gamepad'
+                          }`}></i>
+                        </div>
                         <div className="shape__data">
                           <div className="data__text">
                             <h4 className="data__title">Juego #{juego.juegoNumero}</h4>
@@ -306,6 +424,18 @@ function ResultsTeacher() {
                           <div className="data__text">
                             <h4 className="data__title">Dificultad:</h4>
                             <p className="data__text">{juego.dificultad || 'No definida'}</p>
+                          </div>
+                          <div className="data__text">
+                            <h4 className="data__title">Progreso:</h4>
+                            <p className="data__text">
+                              {juego.progreso ? (
+                                typeof juego.progreso === 'string' ? (
+                                  juego.progreso.startsWith('data:image') ? 'Dibujo completado' : juego.progreso
+                                ) : (
+                                  typeof juego.progreso === 'number' ? `${juego.progreso}% completado` : 'Progreso registrado'
+                                )
+                              ) : 'No disponible'}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -338,8 +468,29 @@ function ResultsTeacher() {
                   </div>
                 </div>
                 <div className="right__buttons">
-                  <button className="right__button">Salir</button>
-                  <button className="right__button">Descargar PDF</button>
+                  <button 
+                    className="right__button"
+                    onClick={handleSalirClick}
+                    style={{
+                      backgroundColor: '#f44336',
+                      color: 'white',
+                      marginRight: '10px'
+                    }}
+                  >
+                    <i className="fa-solid fa-door-open" style={{marginRight: '8px'}}></i>
+                    Salir
+                  </button>
+                  <button 
+                    className="right__button"
+                    onClick={generarPDF}
+                    style={{
+                      backgroundColor: '#4CAF50',
+                      color: 'white'
+                    }}
+                  >
+                    <i className="fa-solid fa-file-pdf" style={{marginRight: '8px'}}></i>
+                    Descargar PDF
+                  </button>
                 </div>
               </div>
 

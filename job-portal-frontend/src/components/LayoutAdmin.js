@@ -21,7 +21,7 @@ const LayoutHelp = ({ children, userData }) => {
     <div className="body__admin">
       <header className="header">
         <div className="header__title">
-          <h1 className="title__text">Modo Administracion - Fidecolab</h1>
+          <h1 className="title__text">Modo Administración - Fidecolab</h1>
         </div>
       </header>
       <nav className="sidebar">

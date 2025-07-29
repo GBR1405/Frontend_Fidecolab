@@ -423,10 +423,6 @@ function ResultsTeacher() {
                             <p className="data__text">{formatearTiempo(juego.tiempo || 0)}</p>
                           </div>
                           <div className="data__text">
-                            <h4 className="data__title">Dificultad:</h4>
-                            <p className="data__text">{juego.dificultad || 'No definida'}</p>
-                          </div>
-                          <div className="data__text">
                             <h4 className="data__title">Progreso:</h4>
                             <p className="data__text">
                               {juego.progreso ? (

@@ -2642,7 +2642,7 @@ const handleResetSystem = async () => {
         <div className="modal-overlay show" onClick={closeModal}>
           <div
             className="modal-content animated slideIn"
-            style={{ width: "80%", height: "80%" }}
+            style={{ width: "90%", height: "90%" }}
             onClick={(e) => e.stopPropagation()}
           >
             <button className="modal-close-btn" onClick={closeModal}>

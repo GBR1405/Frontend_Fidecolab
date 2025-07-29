@@ -157,6 +157,7 @@ function ResultsTeacher() {
         const data = await response.json();
 
         setEquipos(data.equipos || []);
+        console.log('Equipos:', data.resultados);
         setResultados(data.resultados || []);
         setLogros(data.logros || {});
         setPartida(data.partida || null);

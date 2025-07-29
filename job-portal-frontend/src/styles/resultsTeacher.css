@@ -344,7 +344,7 @@
 }
 .shape__data {
     display: grid;
-    grid-template-columns: 18% 1fr auto;
+    grid-template-columns: repeat(4, 1fr);
     padding-right: 10%;
 }
 .data__text {

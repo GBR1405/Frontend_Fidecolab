@@ -2646,12 +2646,9 @@ const handleResetSystem = async () => {
             >
               &times;
             </button>
+            {/* En lugar de pasar el partidaId como prop, redirigimos a la ruta */}
             {selectedPartidaId && (
-              <ResultadosAdmin 
-                partidaId={selectedPartidaId} 
-                isModal={true}
-                onClose={closeModal}
-              />
+              <Navigate to={`/resultadosAdmin/${selectedPartidaId}`} replace />
             )}
           </div>
         </div>

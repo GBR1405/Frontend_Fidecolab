@@ -2541,11 +2541,11 @@ const handleResetSystem = async () => {
                   </div>
                   <table className="bottom__table">
                     <thead className="table__head">
-                        <th className="table__header">Fecha</th>
-                        <th className="table__header">Usuario</th>
-                        <th className="table__header">Acción</th>
-                        <th className="table__header">Error</th>
-                        <th className="table__header">Acciones</th>
+                        <th className="table__header" style={{ width: '20%' }}>Fecha</th>
+                        <th className="table__header" style={{ width: '20%' }}>Usuario</th>
+                        <th className="table__header" style={{ width: '36%' }}>Acción</th>
+                        <th className="table__header" style={{ width: '12%' }}>Error</th>
+                        <th className="table__header" style={{ width: '12%' }}>Acciones</th>
                     </thead>
                     <tbody className="table__body">
                       {loading ? (

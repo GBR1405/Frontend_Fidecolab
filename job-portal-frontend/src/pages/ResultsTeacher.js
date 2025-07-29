@@ -111,7 +111,7 @@ function ResultsTeacher() {
       <div className="award__ribbon ribbon--right"></div>
       
       {showTooltip && (
-        <div className="achievement-tooltip">
+        <div className="achievement__tooltip">
           <h4>{logro.Nombre}</h4>
           <p>{logro.Descripcion}</p>
         </div>

@@ -2085,87 +2085,64 @@ const handleResetSystem = async () => {
             {/* Right Content */}
             <div className="depuration__right">
               {/* Options */}
-              <div className="depuration__top">
-                <div className="depuration__options">
-                  <div className="options__top">
-                    <div className="depuration__title">
-                      <h3>Limpieza del Sistema</h3>
-                    </div>
+              <div className="depuration__message">
+                  <div className="depuration__title">
+                    <h3>Limpieza del Sistema</h3>
                   </div>
-
-                  <div className="options__bottom">
-                    <div className="option__search">
-                      <i className="fa-solid fa-triangle-exclamation"></i>
-                      <span style={{ marginLeft: '10px', color: '#dc3545' }}>
-                        ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES
-                      </span>
-                    </div>
+                  <div className="message__warning">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <span style={{ marginLeft: '10px', color: '#dc3545' }}>
+                      ADVERTENCIA: Las acciones en esta sección son IRREVERSIBLES
+                    </span>
                   </div>
-                </div>
               </div>
 
               {/* System Clean Content */}
-              <div className="depuration__bottom">
-                <div className="system-clean__container">
-                  <div className="system-clean__buttons">
-                    <div className="clean-buttons-row">
-                      <button
-                        className="clean-button clean-button--customizations"
-                        onClick={handleCleanCustomizations}
-                      >
-                        <i className="fa-solid fa-paint-roller"></i>
-                        Limpiar personalizaciones
-                      </button>
-                      <button
+              <div className="system-clean__container">
+                <div className="system-clean__buttons">
+                  <button
+                    className="clean-button clean-button--customizations"
+                    onClick={handleCleanCustomizations}
+                  >
+                    <i className="fa-solid fa-paint-roller"></i>
+                    Limpiar personalizaciones
+                  </button>
+                  <button
                         className="clean-button clean-button--logs"
                         onClick={handleCleanLogs}
                       >
                         <i className="fa-solid fa-clipboard-list"></i>
                         Limpiar bitácora
-                      </button>
-                      <button
+                  </button>
+                  <button
                         className="clean-button clean-button--history"
                         onClick={handleCleanHistory}
                       >
                         <i className="fa-solid fa-clock-rotate-left"></i>
                         Limpiar historial
-                      </button>
-                    </div>
-
-                    <div className="clean-buttons-row">
-                      <button
+                  </button>
+                  <button
                         className="clean-button clean-button--students"
                         onClick={handleDeleteAllStudents}
                       >
                         <i className="fa-solid fa-user-graduate"></i>
                         Eliminar estudiantes
-                      </button>
-                      <button
+                  </button>
+                  <button
                         className="clean-button clean-button--professors"
                         onClick={handleDeleteAllProfessors}
                       >
                         <i className="fa-solid fa-user-tie"></i>
                         Eliminar profesores
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    className="reset-button"
-                    onClick={handleResetSystem}
-                  >
-                    <i className="fa-solid fa-bomb"></i>
-                    REINICIAR SISTEMA COMPLETO
                   </button>
-
                   <button
-                    className="button__back"
-                    onClick={() => setShowSystemClean(false)}
-                    style={{ marginTop: '20px' }}
-                  >
-                    <i className="fa-solid fa-arrow-left"></i> Regresar
+                        className="clean-button clean-button--reset"
+                        onClick={handleResetSystem}
+                      >
+                        <i className="fa-solid fa-bomb"></i>
+                        REINICIAR SISTEMA COMPLETO
                   </button>
-                </div>
+                </div>   
               </div>
             </div>
           </div>
@@ -2419,35 +2396,31 @@ const handleResetSystem = async () => {
                         </tbody>
                         <tfoot className="table__foot">
                           {totalPages > 1 && (
-                            <tr>
-                              <td colSpan="6">
-                                <div className="foot__buttons">
-                                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(number => {
-                                      let pageNumber;
-                                      if (currentPage === 1 || currentPage === 2) {
-                                        pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                      }
-                                      if (currentPage > 2 && currentPage < totalPages - 1) {
-                                        pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                      }
-                                      if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                        pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                      }
-                                      return pageNumber;
-                                    })
-                                    .map(number => (
-                                      <button
-                                        className={`button__page ${currentPage === number ? "active" : ""}`}
-                                        key={number}
-                                        onClick={() => paginate(number)}
-                                      >
-                                        {number}
-                                      </button>
-                                    ))}
-                                </div>
-                              </td>
-                            </tr>
+                            <div className="foot__buttons">
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(number => {
+                                  let pageNumber;
+                                  if (currentPage === 1 || currentPage === 2) {
+                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                                  }
+                                  if (currentPage > 2 && currentPage < totalPages - 1) {
+                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                                  }
+                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                                  }
+                                  return pageNumber;
+                                })
+                                .map(number => (
+                                  <button
+                                    className={`button__page ${currentPage === number ? "active" : ""}`}
+                                    key={number}
+                                    onClick={() => paginate(number)}
+                                  >
+                                    {number}
+                                  </button>
+                                ))}
+                            </div>
                           )}
                         </tfoot>
                       </table>
@@ -2504,35 +2477,31 @@ const handleResetSystem = async () => {
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
-                        <tr>
-                          <td colSpan="4">
-                            <div className="foot__buttons">
-                              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter(number => {
-                                  let pageNumber;
-                                  if (currentPage === 1 || currentPage === 2) {
-                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                  }
-                                  if (currentPage > 2 && currentPage < totalPages - 1) {
-                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                  }
-                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                  }
-                                  return pageNumber;
-                                })
-                                .map(number => (
-                                  <button
-                                    className={`button__page ${currentPage === number ? "active" : ""}`}
-                                    key={number}
-                                    onClick={() => paginate(number)}
-                                  >
-                                    {number}
-                                  </button>
-                                ))}
-                            </div>
-                          </td>
-                        </tr>
+                        <div className="foot__buttons">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(number => {
+                              let pageNumber;
+                              if (currentPage === 1 || currentPage === 2) {
+                                pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                              }
+                              if (currentPage > 2 && currentPage < totalPages - 1) {
+                                pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                              }
+                              if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                              }
+                              return pageNumber;
+                            })
+                            .map(number => (
+                              <button
+                                className={`button__page ${currentPage === number ? "active" : ""}`}
+                                key={number}
+                                onClick={() => paginate(number)}
+                              >
+                                {number}
+                              </button>
+                            ))}
+                        </div>
                       )}
                     </tfoot>
                   </table>
@@ -2601,35 +2570,31 @@ const handleResetSystem = async () => {
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
-                        <tr>
-                          <td colSpan="5">
-                            <div className="foot__buttons">
-                              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter(number => {
-                                  let pageNumber;
-                                  if (currentPage === 1 || currentPage === 2) {
-                                    pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
-                                  }
-                                  if (currentPage > 2 && currentPage < totalPages - 1) {
-                                    pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
-                                  }
-                                  if (currentPage === totalPages - 1 || currentPage === totalPages) {
-                                    pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
-                                  }
-                                  return pageNumber;
-                                })
-                                .map(number => (
-                                  <button
-                                    className={`button__page ${currentPage === number ? "active" : ""}`}
-                                    key={number}
-                                    onClick={() => paginate(number)}
-                                  >
-                                    {number}
-                                  </button>
-                                ))}
-                            </div>
-                          </td>
-                        </tr>
+                        <div className="foot__buttons">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(number => {
+                              let pageNumber;
+                              if (currentPage === 1 || currentPage === 2) {
+                                pageNumber = currentPage === 1 ? number <= 5 : number >= currentPage - 1 && number <= currentPage + 3;
+                              }
+                              if (currentPage > 2 && currentPage < totalPages - 1) {
+                                pageNumber = number >= currentPage - 2 && number <= currentPage + 2 && number > 0 && number <= totalPages;
+                              }
+                              if (currentPage === totalPages - 1 || currentPage === totalPages) {
+                                pageNumber = currentPage === totalPages ? number >= currentPage - 4 : number >= currentPage - 3 && number <= currentPage + 1;
+                              }
+                              return pageNumber;
+                            })
+                            .map(number => (
+                              <button
+                                className={`button__page ${currentPage === number ? "active" : ""}`}
+                                key={number}
+                                onClick={() => paginate(number)}
+                              >
+                                {number}
+                              </button>
+                            ))}
+                        </div>
                       )}
                     </tfoot>
                   </table>

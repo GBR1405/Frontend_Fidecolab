@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
-import "../styles/modal.css";
+import "../styles/modalAdmin.css";
 import ResultadosAdmin from './ResultAdmin';
 
 const token = Cookies.get("authToken");

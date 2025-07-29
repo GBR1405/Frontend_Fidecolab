@@ -7,8 +7,6 @@ import Cookies from 'js-cookie';
 import "../styles/modalAdmin.css";
 import ResultadosAdmin from './ResultAdmin';
 
-const navigate = useNavigate();
-
 const token = Cookies.get("authToken");
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -35,7 +33,12 @@ const Depuration = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedPartidaId, setSelectedPartidaId] = useState(null);
   const [modalAnimation, setModalAnimation] = useState('');
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedResultId, setSelectedResultId] = useState(null);
+
   const navigate = useNavigate();
+
 
   const handleViewDetails = (partidaId) => {
     console.log("Partida ID recibida:", partidaId, typeof partidaId);
@@ -44,16 +47,13 @@ const Depuration = () => {
       console.error("ID de partida no es un número válido:", partidaId);
       return;
     }
-    setSelectedPartidaId(idNumber);
-    setModalIsOpen(true);
-    setModalAnimation('slideIn');
+    setSelectedResultId(idNumber);
+    setModalVisible(true);
   };
 
   const closeModal = () => {
-    setModalAnimation('');
-    setTimeout(() => {
-      setModalIsOpen(false);
-    }, 300); // Coincide con la duración de la animación
+    setModalVisible(false);
+    setSelectedResultId(null);
   };
 
   // Fetch users from API
@@ -2488,7 +2488,6 @@ const handleResetSystem = async () => {
                               <button
                                 className="button__view"
                                 title="Ver detalles"
-                                
                                 onClick={() => handleViewDetails(item.id)}
                               >
                                 <i className="fa-solid fa-eye"></i>
@@ -2639,19 +2638,21 @@ const handleResetSystem = async () => {
         </div>
       </section>
 
-      {modalIsOpen && (
-        <div className="modal-overlay">
-          <div className={`modal-content animated ${modalAnimation}`}>
-            <button 
-              className="modal-close-btn"
-              onClick={closeModal}
-            >
-              &times;
+      {modalVisible && (
+        <div className="modal-overlay show" onClick={closeModal}>
+          <div
+            className="modal-content animated slideIn"
+            style={{ width: "80%", height: "80%" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="modal-close-btn" onClick={closeModal}>
+              ✕
             </button>
-            {/* En lugar de pasar el partidaId como prop, redirigimos a la ruta */}
-            {selectedPartidaId && (
-              <Navigate to={`/resultadosAdmin/${selectedPartidaId}`} replace />
-            )}
+            <iframe
+              src={`/resultados/${selectedResultId}`}
+              title="Resultados"
+              style={{ width: "100%", height: "100%", border: "none" }}
+            ></iframe>
           </div>
         </div>
       )}

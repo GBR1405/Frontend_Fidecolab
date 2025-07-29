@@ -979,9 +979,9 @@ const handleResetSystem = async () => {
           <div>
             <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Género</label>
             <select id="swal-input5" style="${selectStyle}" required>
-              <option value="1" ${user.Genero === '1' ? 'selected' : ''}>Masculino</option>
-              <option value="2" ${user.Genero === '2' ? 'selected' : ''}>Femenino</option>
-              <option value="3" ${user.Genero === '3' ? 'selected' : ''}>Otro</option>
+              <option value="1" ${user.Genero == '1' ? 'selected' : ''}>Masculino</option>
+              <option value="2" ${user.Genero == '2' ? 'selected' : ''}>Femenino</option>
+              <option value="3" ${user.Genero == '3' ? 'selected' : ''}>Otro</option>
             </select>
           </div>
         </div>

@@ -65,14 +65,7 @@ const LayoutHelp = ({ children, userData }) => {
               <span className="area__text">Monitoreo y Gestión</span>
             </a>
           </li>
-          <li className={`list__item ${isActive("/admin/history") ? "list__item--active" : ""}`}>
-            <a className="item__area" href="/admin/history">
-              <i className="fa-solid fa-flag"></i>
-              <span className="area__text">Visualización en vivo</span>
-            </a>
-          </li>
-          
-          
+              
           
           
         </ul>

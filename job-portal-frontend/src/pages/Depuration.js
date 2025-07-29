@@ -2478,13 +2478,13 @@ const handleResetSystem = async () => {
                       ) : filteredHistorial.length > 0 ? (
                         filteredHistorial.slice(indexOfFirstItem, indexOfLastItem).map((item, index) => (
                           <tr className="table__row" key={index}>
-                            <td className="table__data">
+                            <td className="table__data" style={{ width: '20%' }}>
                               {item.fecha ? new Date(item.fecha).toLocaleString() : 'Fecha no disponible'}
                             </td>
-                            <td className="table__data">{item.curso}</td>
-                            <td className="table__data">{item.profesor}</td>
-                            <td className="table__data">{item.total_estudiantes}</td>
-                            <td className="table__data table__data--actions">
+                            <td className="table__data" style={{ width: '30%' }}>{item.curso}</td>
+                            <td className="table__data" style={{ width: '30%' }}>{item.profesor}</td>
+                            <td className="table__data" style={{ width: '10%' }}>{item.total_estudiantes}</td>
+                            <td className="table__data table__data--actions" style={{ width: '10%' }}>
                               <button
                                 className="button__view"
                                 title="Ver detalles"
@@ -2503,6 +2503,7 @@ const handleResetSystem = async () => {
                         </tr>
                       )}
                     </tbody>
+
                     <tfoot className="table__foot">
                       {totalPages > 1 && (
                         <div className="foot__buttons">

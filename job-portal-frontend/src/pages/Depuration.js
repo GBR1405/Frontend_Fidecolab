@@ -7,6 +7,8 @@ import Cookies from 'js-cookie';
 import "../styles/modalAdmin.css";
 import ResultadosAdmin from './ResultAdmin';
 
+const navigate = useNavigate();
+
 const token = Cookies.get("authToken");
 const apiUrl = process.env.REACT_APP_API_URL;
 

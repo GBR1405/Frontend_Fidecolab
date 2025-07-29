@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
@@ -2479,6 +2480,7 @@ const handleResetSystem = async () => {
                               <button
                                 className="button__view"
                                 title="Ver detalles"
+                                
                                 onClick={() => handleViewDetails(item.id)}
                               >
                                 <i className="fa-solid fa-eye"></i>

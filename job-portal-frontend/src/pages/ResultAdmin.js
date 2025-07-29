@@ -143,8 +143,6 @@ function ResultsTeacher() {
     const fetchResults = async () => {
       const token = Cookies.get("authToken");
       try {
-        // Cambiar la URL para usar el endpoint de admin
-        console.log("Fetching results for partidaId:", partidaId,typeof partidaId);
         const response = await fetch(`${apiUrl}/obtenerHistorialAdmin/${partidaId}`, {
           method: 'GET',
           credentials: 'include',

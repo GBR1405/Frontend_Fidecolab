@@ -36,7 +36,12 @@ const Depuration = () => {
   const navigate = useNavigate();
 
   const handleViewDetails = (partidaId) => {
-    setSelectedPartidaId(partidaId);
+    const idNumber = Number(partidaId);
+    if (isNaN(idNumber)) {
+      console.error("ID de partida no es un número válido:", partidaId);
+      return;
+    }
+    setSelectedPartidaId(idNumber);
     setModalIsOpen(true);
     setModalAnimation('slideIn');
   };
@@ -1741,7 +1746,7 @@ const handleResetSystem = async () => {
 
       // Normalización simplificada y precisa
       const normalizedHistorial = data.map(item => ({
-        id: item.id || item.Partida_ID_PK || item.id_partida, // Todos los posibles nombres de id
+        id: Number(item.id || item.Partida_ID_PK || item.id_partida), // Todos los posibles nombres de id
         fecha: item.fecha || item.FechaInicio,
         profesor: item.profesor || 'Profesor no disponible',
         curso: item.curso || item.curso_grupo || 'Curso no disponible', // <-- Aquí está el cambio clave

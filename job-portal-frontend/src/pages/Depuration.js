@@ -2558,12 +2558,12 @@ const handleResetSystem = async () => {
                       ) : filteredLogs.length > 0 ? (
                         filteredLogs.slice(indexOfFirstItem, indexOfLastItem).map((log, index) => (
                           <tr className="table__row" key={index}>
-                            <td className="table__data">
+                            <td className="table__data" style={{ width: '20%' }}>
                               {log.Fecha ? new Date(log.Fecha).toLocaleString() : 'Fecha no disponible'}
                             </td>
-                            <td className="table__data">{log.usuario}</td>
-                            <td className="table__data">{log.Accion}</td>
-                            <td className="table__data">
+                            <td className="table__data" style={{ width: '20%' }}>{log.usuario}</td>
+                            <td className="table__data" style={{ width: '36%' }}>{log.Accion}</td>
+                            <td className="table__data" style={{ width: '12%' }}>
                               {log.Error === 'No aplica' ? (
                                 <span className="status-badge active">No aplica</span>
                               ) : (
@@ -2576,7 +2576,7 @@ const handleResetSystem = async () => {
                                 </button>
                               )}
                             </td>
-                            <td className="table__data table__data--actions">
+                            <td className="table__data table__data--actions" style={{ width: '12%' }}>
                               <button
                                 className="button__delete"
                                 onClick={() => handleDeleteLog(log.id)}
@@ -2594,7 +2594,6 @@ const handleResetSystem = async () => {
                           </td>
                         </tr>
                       )}
-
                     </tbody>
                     <tfoot className="table__foot">
                       {totalPages > 1 && (

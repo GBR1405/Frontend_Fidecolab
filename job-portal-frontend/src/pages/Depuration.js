@@ -3,6 +3,8 @@ import Swal from 'sweetalert2';
 import "../styles/adminComponents.css";
 import LayoutAdmin from "../components/LayoutAdmin";
 import Cookies from 'js-cookie';
+import "../styles/modal.css";
+import ResultadosAdmin from './ResultadosAdmin';
 
 const token = Cookies.get("authToken");
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -27,7 +29,23 @@ const Depuration = () => {
   const [logErrorFilter, setLogErrorFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
 
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [selectedPartidaId, setSelectedPartidaId] = useState(null);
+  const [modalAnimation, setModalAnimation] = useState('');
+  const navigate = useNavigate();
 
+  const handleViewDetails = (partidaId) => {
+    setSelectedPartidaId(partidaId);
+    setModalIsOpen(true);
+    setModalAnimation('slideIn');
+  };
+
+  const closeModal = () => {
+    setModalAnimation('');
+    setTimeout(() => {
+      setModalIsOpen(false);
+    }, 300); // Coincide con la duración de la animación
+  };
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -2461,6 +2479,7 @@ const handleResetSystem = async () => {
                               <button
                                 className="button__view"
                                 title="Ver detalles"
+                                onClick={() => handleViewDetails(item.id)}
                               >
                                 <i className="fa-solid fa-eye"></i>
                               </button>
@@ -2609,6 +2628,27 @@ const handleResetSystem = async () => {
           </div>
         </div>
       </section>
+
+      {modalIsOpen && (
+        <div className="modal-overlay">
+          <div className={`modal-content animated ${modalAnimation}`}>
+            <button 
+              className="modal-close-btn"
+              onClick={closeModal}
+            >
+              &times;
+            </button>
+            {selectedPartidaId && (
+              <ResultadosAdmin 
+                partidaId={selectedPartidaId} 
+                isModal={true}
+                onClose={closeModal}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
     </LayoutAdmin>
   );
 };

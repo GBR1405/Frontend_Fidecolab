@@ -54,6 +54,7 @@ const AdminCursosYProfesores = lazy(() => import("./pages/TeacherAndCourses.js")
 const AdminDepuracion = lazy(() => import("./pages/Depuration.js"));
 const AdminHistorial = lazy(() => import("./pages/Historial.js"));
 const AdminReportes = lazy(() => import("./pages/Reports.js"));
+const ResultadosAdmin = lazy(() => import("./pages/ResultAdmin.js"));
 
 const AgregarContenido = lazy(() => import("./pages/AddGames.js"));
 
@@ -141,6 +142,7 @@ const App = () => {
         <Route path="/admin/reports" element={<PrivateRoute element={<AdminReportes />} allowedRoles={['Administrador']} />} />
         <Route path="/admin/depuration" element={<PrivateRoute element={<AdminDepuracion />} allowedRoles={['Administrador']} />} />
         <Route path="/admin/cursos" element={<PrivateRoute element={<AdminCursosYProfesores />} allowedRoles={['Administrador']} />} />
+        <Route path="/resultadosAdmin/:partidaId" element={<PrivateRoute element={<ResultadosAdmin />} allowedRoles={['Administrador']} />} />
 
         {/* Ruta para páginas no encontradas */}
         <Route path="*" element={<NotFound />} />

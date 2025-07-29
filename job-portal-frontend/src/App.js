@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import ErrorWindowSize from "./components/ErrorWindowSize";
@@ -61,9 +61,10 @@ const AgregarContenido = lazy(() => import("./pages/AddGames.js"));
 
 // Componente principal de la app
 const App = () => {
-  const [isSmallScreen, setIsSmallScreen] = useState(
+ const [isSmallScreen, setIsSmallScreen] = useState(
     window.innerWidth < 810 || window.innerHeight < 550
   );
+  const location = useLocation();
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -74,7 +75,13 @@ const App = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  if (isSmallScreen) {
+  // Lista de rutas que pueden mostrarse en pantallas pequeñas
+  const allowedSmallScreenRoutes = [
+    "/resultados/",
+    // puedes añadir otras rutas aquí
+  ];
+
+  if (isSmallScreen && !allowedSmallScreenRoutes.some(route => location.pathname.includes(route))) {
     return <ErrorWindowSize />;
   }
 

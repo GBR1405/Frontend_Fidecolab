@@ -188,7 +188,7 @@ html{
 .time-display-container{
   font-size: 1.1vmax;
   font-weight: bold;
-  line-height: normal;
+  line-height: 0;
 }
 
 .group-name {
@@ -852,15 +852,18 @@ html{
 }
 
 .member-row {
-  display: flex;
-  align-items: center;
   width: 100%;
+  display: grid;
+  grid-template-columns: 15% 1fr;
+  align-items: center;
+  justify-items: self-start;
+  padding-inline: 5%;
 }
 
 .member-avatar {
   background: #fff;
-  flex-shrink: 0; /* Evita que el avatar se encoja */
-  margin-right: auto;
+  width: 1vmax;
+  height: 1vmax;
 }
 
 .member-name {

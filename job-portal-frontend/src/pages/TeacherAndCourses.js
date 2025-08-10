@@ -748,8 +748,6 @@ const AdminProfessorCourses = () => {
                             confirmButtonText: 'Aceptar',
                             confirmButtonColor: '#3e8e41'
                         }).then(() => {
-                           // Descargar PDF después del mensaje de éxito
-                           descargarPDF(pdfBase64, "Credenciales_Generadas");
                            window.location.reload(); // Recargar la página después
                         });
                         } else {
@@ -797,8 +795,6 @@ const AdminProfessorCourses = () => {
                             confirmButtonText: 'Aceptar',
                             confirmButtonColor: '#3e8e41'
                             }).then(() => {
-                               // Descargar PDF después del mensaje de éxito
-                               descargarPDF(pdfBase64, "Credenciales_Generadas");
                                window.location.reload(); // Recargar la página después
                             });
                      } else {

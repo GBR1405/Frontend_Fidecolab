@@ -542,6 +542,7 @@ function randomHSL() {
       }
     };
   }, [socket, partidaId, equipoNumero, userId]);
+  
 
   useEffect(() => {
     if (!socket) return;

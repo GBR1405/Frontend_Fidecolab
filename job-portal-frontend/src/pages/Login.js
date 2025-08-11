@@ -8,7 +8,7 @@ import "../styles/login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
-const apiUrl = 'https://backend-fidecolab.onrender.com/api';
+const apiUrl = process.env.REACT_APP_API_URL;
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const frases = [

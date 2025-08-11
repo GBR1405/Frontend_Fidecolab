@@ -137,25 +137,21 @@ export default function AccessibilityWidgetFixed() {
   }, []);
 
   useEffect(() => {
-    // Aplicar configuración global
     document.documentElement.style.setProperty("--accessible-font-size", fontSize + "%");
     document.body.style.fontSize = fontSize + "%";
 
-    // Alto contraste - aplicar a toda la aplicación
     if (highContrast) {
       document.documentElement.classList.add("aw-high-contrast");
     } else {
       document.documentElement.classList.remove("aw-high-contrast");
     }
 
-    // Cursor grande - mejorado
     if (largeCursor) {
       document.documentElement.classList.add("aw-large-cursor");
     } else {
       document.documentElement.classList.remove("aw-large-cursor");
     }
 
-    // Resto de configuraciones
     if (underlineLinks) {
       document.documentElement.classList.add("aw-underline-links");
     } else {
@@ -201,7 +197,7 @@ export default function AccessibilityWidgetFixed() {
         title="Accesibilidad"
         >
         <img 
-            src="https://cdn-icons-png.flaticon.com/512/1512/1512642.png" 
+            src="https://careers.victor.org/wp-content/uploads/2022/12/accessibility-gray.png" 
             alt="Accesibilidad" 
             style={{ width: '35px', height: '35px' }} 
         />

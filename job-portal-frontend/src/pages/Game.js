@@ -16,8 +16,6 @@ import PuzzleGame from '../games/PuzzleGame';
 import DrawingGame from '../games/DrawingGame';
 import DrawingDemoModal from '../games/DrawingDemoModal';
 
-import WebRTCService from '../services/WebRTCService';
-
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
@@ -54,104 +52,92 @@ const TeamRoom = () => {
   const [showBlackout, setShowBlackout] = useState(false);
   const [demoActive, setDemoActive] = useState(false);
 
-  //Prueba ....................
-
-  const localStreamRef = useRef(null);
-  const peersRef = useRef({});
-  const [isMuted, setIsMuted] = useState(false);
-
-  const [audioConnections, setAudioConnections] = useState({});
-  const [audioError, setAudioError] = useState(null);
-  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
-
-  //Prueba ....................
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && socket) {
-        // Cuando la página vuelve a estar visible
-        console.log('Página visible, sincronizando estado...');
-
-        // Verificar estado de la partida
-        verificarEstadoPartida();
-
-        // Sincronizar tiempo
-        socket.emit('RequestTimeSync', partidaId);
-
-        // Obtener configuración actual del juego
-        socket.emit('getGameConfig', partidaId, (response) => {
-          if (!response.error && response.juegos?.length > 0) {
-            const currentIndex = response.currentIndex || 0;
-            const currentGame = response.juegos[currentIndex];
-
-            if (games[currentGame.tipo.toLowerCase()]) {
-              setCurrentGameInfo({
-                ...games[currentGame.tipo.toLowerCase()],
-                config: currentGame.configEspecifica,
-                dificultad: currentGame.dificultad,
-                tema: currentGame.tema
-              });
-
-              setGameProgress({
-                current: currentIndex + 1,
-                total: response.juegos.length
-              });
-            }
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && socket) {
+      // Cuando la página vuelve a estar visible
+      console.log('Página visible, sincronizando estado...');
+      
+      // Verificar estado de la partida
+      verificarEstadoPartida();
+      
+      // Sincronizar tiempo
+      socket.emit('RequestTimeSync', partidaId);
+      
+      // Obtener configuración actual del juego
+      socket.emit('getGameConfig', partidaId, (response) => {
+        if (!response.error && response.juegos?.length > 0) {
+          const currentIndex = response.currentIndex || 0;
+          const currentGame = response.juegos[currentIndex];
+          
+          if (games[currentGame.tipo.toLowerCase()]) {
+            setCurrentGameInfo({
+              ...games[currentGame.tipo.toLowerCase()],
+              config: currentGame.configEspecifica,
+              dificultad: currentGame.dificultad,
+              tema: currentGame.tema
+            });
+            
+            setGameProgress({
+              current: currentIndex + 1,
+              total: response.juegos.length
+            });
           }
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [socket, partidaId]);
-
-  // Verificación periódica si estamos en el último juego
-  useEffect(() => {
-    let intervalId;
-
-    if (gameProgress.current === gameProgress.total && gameProgress.total > 0) {
-      // Estamos en el último juego, verificar cada minuto si la partida terminó
-      intervalId = setInterval(() => {
-        verificarEstadoPartida();
-      }, 60000); // 60 segundos
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [gameProgress]);
-
-  // Función para verificar estado de la partida (reutilizable)
-  const verificarEstadoPartida = async () => {
-    try {
-      const res = await fetch(`${apiUrl}/check-activity`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ partidaId })
+        }
       });
-
-      const data = await res.json();
-
-      if (data.isFinished) {
-        window.location.href = `/resultados/${partidaId}`;
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error al verificar estado de la partida:', error);
-      return false;
     }
   };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [socket, partidaId]);
+
+// Verificación periódica si estamos en el último juego
+useEffect(() => {
+  let intervalId;
+
+  if (gameProgress.current === gameProgress.total && gameProgress.total > 0) {
+    // Estamos en el último juego, verificar cada minuto si la partida terminó
+    intervalId = setInterval(() => {
+      verificarEstadoPartida();
+    }, 60000); // 60 segundos
+  }
+
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [gameProgress]);
+
+// Función para verificar estado de la partida (reutilizable)
+const verificarEstadoPartida = async () => {
+  try {
+    const res = await fetch(`${apiUrl}/check-activity`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ partidaId })
+    });
+
+    const data = await res.json();
+
+    if (data.isFinished) {
+      window.location.href = `/resultados/${partidaId}`;
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error al verificar estado de la partida:', error);
+    return false;
+  }
+};
 
   useEffect(() => {
     if (!socket) return;
@@ -192,7 +178,7 @@ const TeamRoom = () => {
 
   useEffect(() => {
     if (!socket || !partidaId) return;
-
+  
     // 🔍 Verificar estado de la partida antes de ejecutar lógica
     const verificarEstadoPartida = async () => {
       try {
@@ -205,298 +191,118 @@ const TeamRoom = () => {
           },
           body: JSON.stringify({ partidaId })
         });
-
+  
         const data = await res.json();
-
+  
         if (data.isFinished) {
           window.location.href = `/resultados/${partidaId}`;
           return;
         }
-
+  
         console.log('Partida activa, obteniendo configuración...');
       } catch (error) {
         console.error('Error al verificar estado de la partida:', error);
       }
     };
-
-
-
+  
+    
+  
     verificarEstadoPartida(); // Llamado antes del emit
   }, [socket, partidaId]);
 
-  useEffect(() => {
-    if (!socket) return;
+   useEffect(() => {
+  if (!socket) return;
 
-    const onGameFinished = ({ partidaId }) => {
-      // Crear overlay
-      const overlay = document.createElement('div');
-      overlay.className = 'finish-overlay';
-      overlay.innerHTML = `
+  const onGameFinished = ({ partidaId }) => {
+  // Crear overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'finish-overlay';
+  overlay.innerHTML = `
     <div class="finish-content">
       <h1 class="finish-title">Partida Finalizada</h1>
       <div class="finish-line"></div>
       <p class="finish-countdown">Redirigiendo en <span class="finish-count">8</span> segundos...</p>
     </div>
   `;
+  
+  document.body.appendChild(overlay);
+  
+  // Activar animación
+  setTimeout(() => overlay.classList.add('active'), 10);
+  
+  // Temporizador con mejor feedback visual
+  let count = 8;
+  const countElement = overlay.querySelector('.finish-count');
+  const interval = setInterval(() => {
+    count--;
+    
+    if (countElement) {
+      countElement.textContent = count;
+      
+      // Destacar los últimos 3 segundos
+      if (count <= 3) {
+        countElement.style.color = '#ff6b6b';
+        countElement.style.animation = 'pulse 0.5s infinite alternate';
+      }
+    }
+    
+    if (count <= 0) {
+      clearInterval(interval);
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+        window.location.href = `/resultados/${partidaId}`;
+      }, 500);
+    }
+  }, 1000);
 
-      document.body.appendChild(overlay);
-
-      // Activar animación
-      setTimeout(() => overlay.classList.add('active'), 10);
-
-      // Temporizador con mejor feedback visual
-      let count = 8;
-      const countElement = overlay.querySelector('.finish-count');
-      const interval = setInterval(() => {
-        count--;
-
-        if (countElement) {
-          countElement.textContent = count;
-
-          // Destacar los últimos 3 segundos
-          if (count <= 3) {
-            countElement.style.color = '#ff6b6b';
-            countElement.style.animation = 'pulse 0.5s infinite alternate';
-          }
-        }
-
-        if (count <= 0) {
-          clearInterval(interval);
-          overlay.style.opacity = '0';
-          setTimeout(() => {
-            overlay.remove();
-            window.location.href = `/resultados/${partidaId}`;
-          }, 500);
-        }
-      }, 1000);
-
-      // Añadir estilo para el pulso
-      const style = document.createElement('style');
-      style.textContent = `
+  // Añadir estilo para el pulso
+  const style = document.createElement('style');
+  style.textContent = `
     @keyframes pulse {
       to { transform: scale(1.3); opacity: 0.8; }
     }
   `;
-      document.head.appendChild(style);
-
-      // Limpiar al desmontar
-      return () => {
-        clearInterval(interval);
-        if (document.body.contains(overlay)) {
-          document.body.removeChild(overlay);
-        }
-        document.head.removeChild(style);
-      };
-    };
-
-    socket.on('gameFinished', onGameFinished);
-    return () => socket.off('gameFinished', onGameFinished);
-  }, [socket]);
-
-  useEffect(() => {
-    const handlePopState = (event) => {
-      event.preventDefault();
-      navigate('/', { replace: true });
-    };
-
-    // Bloquear retroceso
-    window.addEventListener('popstate', handlePopState);
-
-    // Reemplazar la entrada actual en el historial (para evitar que "volver" lo lleve a atrás)
-    window.history.replaceState(null, '', window.location.href);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [navigate]);
-
-  // PRUEBA ---------------------------------------------------------------------------------
-
-  const initializeAudio = async () => {
-    try {
-      await WebRTCService.initializeMedia();
-      setIsAudioInitialized(true);
-      setAudioError(null);
-
-      // Unirse a la sala de audio
-      socket.emit('join-audio-room', {
-        partidaId,
-        equipoNumero,
-        userId
-      });
-
-    } catch (error) {
-      console.error('Error initializing audio:', error);
-      setAudioError('No se pudo acceder al micrófono. Por favor, permite el acceso en tu navegador.');
-    }
-  };
-
-  useEffect(() => {
-    if (!socket || !partidaId || !equipoNumero) return;
-
-    socket.emit('joinVoiceRoom', { partidaId, equipoNumero });
-
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        localStreamRef.current = stream;
-      });
-
-    socket.on('voiceUserJoined', handleUserJoined);
-    socket.on('voiceSignal', handleSignal);
-    socket.on('voiceUserLeft', handleUserLeft);
-    socket.on('voiceRoomClosed', handleVoiceRoomClosed);
-
-    return () => {
-      socket.emit('leaveVoiceRoom');
-      socket.off('voiceUserJoined', handleUserJoined);
-      socket.off('voiceSignal', handleSignal);
-      socket.off('voiceUserLeft', handleUserLeft);
-      socket.off('voiceRoomClosed', handleVoiceRoomClosed);
-    };
-  }, [socket, partidaId, equipoNumero]);
-
-
-  const handleUserJoined = (userId) => {
-    const peer = createPeer(userId);
-    peersRef.current[userId] = peer;
-  };
-
-  const handleSignal = ({ from, data }) => {
-    if (data.sdp) {
-      peersRef.current[from]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
-      if (data.sdp.type === 'offer') {
-        localStreamRef.current.getTracks().forEach(track => peersRef.current[from].addTrack(track, localStreamRef.current));
-        peersRef.current[from].createAnswer().then(answer => {
-          peersRef.current[from].setLocalDescription(answer);
-          socket.emit('voiceSignal', { targetId: from, data: { sdp: answer } });
-        });
-      }
-    } else if (data.candidate) {
-      peersRef.current[from]?.addIceCandidate(new RTCIceCandidate(data.candidate));
-    }
-  };
-
-  const handleUserLeft = (userId) => {
-    peersRef.current[userId]?.close();
-    delete peersRef.current[userId];
-  };
-
-  const handleVoiceRoomClosed = () => {
-    Object.values(peersRef.current).forEach(peer => peer.close());
-    peersRef.current = {};
-  };
-
-  // Crear conexión WebRTC
-  const createPeer = (userId) => {
-    const peer = new RTCPeerConnection();
-    localStreamRef.current.getTracks().forEach(track => peer.addTrack(track, localStreamRef.current));
-
-    peer.onicecandidate = e => {
-      if (e.candidate) {
-        socket.emit('voiceSignal', { targetId: userId, data: { candidate: e.candidate } });
-      }
-    };
-
-    peer.ontrack = e => {
-      const audioEl = document.createElement('audio');
-      audioEl.srcObject = e.streams[0];
-      audioEl.autoplay = true;
-      document.body.appendChild(audioEl);
-    };
-
-    peer.createOffer().then(offer => {
-      peer.setLocalDescription(offer);
-      socket.emit('voiceSignal', { targetId: userId, data: { sdp: offer } });
-    });
-
-    return peer;
-  };
-
-  // Botón para mute/desmute
-  const toggleMute = async () => {
-    if (!isAudioInitialized) {
-      await initializeAudio();
-    }
-
-    const newMuteState = WebRTCService.toggleMute();
-    setIsMuted(!newMuteState);
-
-    // Notificar a otros usuarios
-    socket.emit('mute-status', {
-      userId,
-      isMuted: !newMuteState,
-      partidaId,
-      equipoNumero
-    });
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleUserJoined = async ({ userId: newUserId }) => {
-      if (newUserId !== userId && isAudioInitialized) {
-        try {
-          const offer = await WebRTCService.createOffer(newUserId);
-          socket.emit('webrtc-offer', {
-            offer,
-            to: newUserId,
-            from: userId
-          });
-        } catch (error) {
-          console.error('Error creating offer:', error);
-        }
-      }
-    };
-
-    const handleWebrtcOffer = async ({ offer, from }) => {
-      try {
-        const answer = await WebRTCService.createAnswer(from, offer);
-        socket.emit('webrtc-answer', {
-          answer,
-          to: from,
-          from: userId
-        });
-      } catch (error) {
-        console.error('Error creating answer:', error);
-      }
-    };
-
-    const handleWebrtcAnswer = async ({ answer, from }) => {
-      await WebRTCService.handleAnswer(from, answer);
-    };
-
-    const handleIceCandidate = async ({ candidate, from }) => {
-      await WebRTCService.handleIceCandidate(from, candidate);
-    };
-
-    socket.on('user-joined-audio', handleUserJoined);
-    socket.on('webrtc-offer', handleWebrtcOffer);
-    socket.on('webrtc-answer', handleWebrtcAnswer);
-    socket.on('ice-candidate', handleIceCandidate);
-
-    return () => {
-      socket.off('user-joined-audio', handleUserJoined);
-      socket.off('webrtc-offer', handleWebrtcOffer);
-      socket.off('webrtc-answer', handleWebrtcAnswer);
-      socket.off('ice-candidate', handleIceCandidate);
-      WebRTCService.disconnect();
-    };
-  }, [socket, userId, isAudioInitialized]);
-
+  document.head.appendChild(style);
+  
   // Limpiar al desmontar
-  useEffect(() => {
-    return () => {
-      WebRTCService.disconnect();
-    };
-  }, []);
-
-  // PRUEBA ---------------------------------------------------------------------------------
-
-  useEffect(() => {
-    if (!partidaId || !equipoNumero) {
-      navigate('/', { replace: true });
+  return () => {
+    clearInterval(interval);
+    if (document.body.contains(overlay)) {
+      document.body.removeChild(overlay);
     }
-  }, [partidaId, equipoNumero]);
+    document.head.removeChild(style);
+  };
+};
+
+  socket.on('gameFinished', onGameFinished);
+  return () => socket.off('gameFinished', onGameFinished);
+}, [socket]);
+
+  useEffect(() => {
+  const handlePopState = (event) => {
+    event.preventDefault();
+    navigate('/', { replace: true });
+  };
+
+  // Bloquear retroceso
+  window.addEventListener('popstate', handlePopState);
+
+  // Reemplazar la entrada actual en el historial (para evitar que "volver" lo lleve a atrás)
+  window.history.replaceState(null, '', window.location.href);
+
+  return () => {
+    window.removeEventListener('popstate', handlePopState);
+  };
+}, [navigate]);
+
+
+
+useEffect(() => {
+  if (!partidaId || !equipoNumero) {
+    navigate('/', { replace: true });
+  }
+}, [partidaId, equipoNumero]);
 
   // Función para generar hash de un string
   const hashCode = (str) => {
@@ -508,25 +314,25 @@ const TeamRoom = () => {
   };
 
   useEffect(() => {
-    if (currentGameInfo && (!currentGameInfo.name || !currentGameInfo.config)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error de conexión interna',
-        text: 'No se pudo cargar la información del juego. Por favor, intente nuevamente en unos instantes.',
-        confirmButtonText: 'Reintentar',
-        confirmButtonColor: '#2a40bf'
-      }).then(() => {
-        window.location.reload(); // o navigate('/') si prefieres volver al inicio
-      });
-    }
-  }, [currentGameInfo]);
-
-  function randomHSL() {
-    const hue = Math.floor(Math.random() * 360); // 0 a 359 grados
-    const saturation = 70; // porcentaje de saturación (colores vivos)
-    const lightness = 50;  // porcentaje de luminosidad (tono medio)
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  if (currentGameInfo && (!currentGameInfo.name || !currentGameInfo.config)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de conexión interna',
+      text: 'No se pudo cargar la información del juego. Por favor, intente nuevamente en unos instantes.',
+      confirmButtonText: 'Reintentar',
+      confirmButtonColor: '#2a40bf'
+    }).then(() => {
+      window.location.reload(); // o navigate('/') si prefieres volver al inicio
+    });
   }
+}, [currentGameInfo]);
+
+function randomHSL() {
+  const hue = Math.floor(Math.random() * 360); // 0 a 359 grados
+  const saturation = 70; // porcentaje de saturación (colores vivos)
+  const lightness = 50;  // porcentaje de luminosidad (tono medio)
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
   // Actualizar cursor remoto
   const updateCursor = (userId, logicalX, logicalY) => {
@@ -577,7 +383,7 @@ const TeamRoom = () => {
 
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
-  };
+};
 
 
   // Obtener nombre de usuario
@@ -622,10 +428,10 @@ const TeamRoom = () => {
     if (!socket || !partidaId || !equipoNumero) return;
 
     // Unirse a la sala del equipo
-    socket.emit('JoinTeamRoom', {
-      partidaId,
+    socket.emit('JoinTeamRoom', { 
+      partidaId, 
       equipoNumero,
-      userId
+      userId 
     });
 
     // Unirse a la sala general de la partida
@@ -660,7 +466,7 @@ const TeamRoom = () => {
         remaining: 0,
         active: false
       }));
-
+      
       Swal.fire({
         title: '¡Tiempo terminado!',
         text: `Se ha acabado el tiempo para el juego ${gameType}.`,
@@ -670,7 +476,7 @@ const TeamRoom = () => {
       });
     };
 
-
+    
 
     // Configurar listeners
     socket.on('UpdateTeamMembers', handleUpdateTeamMembers);
@@ -689,7 +495,7 @@ const TeamRoom = () => {
       if (response.juegos?.length > 0) {
         const initialIndex = response.currentIndex || 0;
         const currentGame = response.juegos[initialIndex];
-
+        
         if (games[currentGame.tipo.toLowerCase()]) {
           setCurrentGameInfo({
             ...games[currentGame.tipo.toLowerCase()],
@@ -697,7 +503,7 @@ const TeamRoom = () => {
             dificultad: currentGame.dificultad,
             tema: currentGame.tema
           });
-
+          
           setGameProgress({
             current: initialIndex + 1,
             total: response.juegos.length
@@ -717,17 +523,17 @@ const TeamRoom = () => {
       socket.off('gameChanged', handleGameChange);
       socket.off('timerUpdate', handleTimerUpdate);
       socket.off('timeUp', handleTimeUp);
-
+      
       window.removeEventListener('mousemove', handleMouseMove);
-
+      
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
       }
-
+      
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-
+      
       // Limpiar cursores al desmontar
       const container = cursorContainerRef.current;
       if (container) {
@@ -736,11 +542,11 @@ const TeamRoom = () => {
       }
     };
   }, [socket, partidaId, equipoNumero, userId]);
-
+  
 
   useEffect(() => {
     if (!socket) return;
-
+  
     const handleTimerUpdate = ({ remaining, total, gameType, difficulty }) => {
       setTimer({
         remaining,
@@ -749,22 +555,22 @@ const TeamRoom = () => {
         gameType,
         difficulty
       });
-
+  
       // Solo mostrar el alert de tiempo agotado si no hay una demo activa
       if (remaining <= 0 && !demoActive) {
         handleTimeUp(gameType);
       }
     };
-
+  
     const handleTimeUp = (gameType) => {
       if (window.timeUpAlert || demoActive) return;
-
+  
       setTimer(prev => ({
         ...prev,
         remaining: 0,
         active: false
       }));
-
+      
       Swal.fire({
         title: '¡Tiempo terminado!',
         text: `Se ha acabado el tiempo para el juego ${gameType}. El profesor pasará al siguiente juego cuando todos estén listos.`,
@@ -776,7 +582,7 @@ const TeamRoom = () => {
         }
       });
     };
-
+  
     // Verificación inicial al cargar el componente
     const checkInitialTimerState = () => {
       // Si el timer ya está en 0 (por ejemplo, al recargar la página)
@@ -793,20 +599,20 @@ const TeamRoom = () => {
         }, 1000);
       }
     };
-
+  
     socket.on('timerUpdate', handleTimerUpdate);
     socket.on('timeUp', handleTimeUp);
-
+  
     // Solicitar sincronización del tiempo al conectarse
     socket.emit('RequestTimeSync', partidaId);
-
+  
     // Ejecutar la verificación inicial
     checkInitialTimerState();
-
+  
     return () => {
       socket.off('timerUpdate', handleTimerUpdate);
       socket.off('timeUp', handleTimeUp);
-
+      
       // Limpiar el alert al desmontar
       if (window.timeUpAlert) {
         Swal.close();
@@ -842,51 +648,51 @@ const TeamRoom = () => {
 
   // Transición entre juegos
   const handleGameChangeWithTransition = (data) => {
-    const nextGame = {
-      ...games[data.currentGame.tipo.toLowerCase()],
-      name: data.currentGame.tipo,
-      config: data.currentGame.configEspecifica,
-      dificultad: data.currentGame.dificultad,
-      tema: data.currentGame.tema
-    };
-
-    // Etapa 1: mostrar blur
-    setTransitionPhase('blurring');
-    setTransitionGame(nextGame);
-
-    // Esperar breve para aplicar el blur (300ms)
-    setTimeout(() => {
-      // Etapa 2: mostrar "Siguiente Juego"
-      setTransitionPhase('next-game');
-
-      // Etapa 3: después de 2.5s, cambiar fondo (juego) y preparar instrucciones
-      setTimeout(() => {
-        // Cambiar juego en background (sin quitar overlay)
-        setCurrentGameInfo(nextGame);
-        setGameProgress({
-          current: data.currentIndex + 1,
-          total: data.total
-        });
-
-        // Etapa 4: mostrar instrucciones casi de inmediato
-        setTimeout(() => {
-          setTransitionPhase('instructions');
-
-          // Etapa 5: después de 0.6s, mostrar botón
-          setTimeout(() => {
-            setTransitionPhase('ready');
-          }, 600);
-        }, 100); // solo 100ms entre cambio de juego y aparición de instrucciones
-      }, 2500); // más corto, antes era 4000ms
-    }, 300);
+  const nextGame = {
+    ...games[data.currentGame.tipo.toLowerCase()],
+    name: data.currentGame.tipo,
+    config: data.currentGame.configEspecifica,
+    dificultad: data.currentGame.dificultad,
+    tema: data.currentGame.tema
   };
+
+  // Etapa 1: mostrar blur
+  setTransitionPhase('blurring');
+  setTransitionGame(nextGame);
+
+  // Esperar breve para aplicar el blur (300ms)
+  setTimeout(() => {
+    // Etapa 2: mostrar "Siguiente Juego"
+    setTransitionPhase('next-game');
+
+    // Etapa 3: después de 2.5s, cambiar fondo (juego) y preparar instrucciones
+    setTimeout(() => {
+      // Cambiar juego en background (sin quitar overlay)
+      setCurrentGameInfo(nextGame);
+      setGameProgress({
+        current: data.currentIndex + 1,
+        total: data.total
+      });
+
+      // Etapa 4: mostrar instrucciones casi de inmediato
+      setTimeout(() => {
+        setTransitionPhase('instructions');
+
+        // Etapa 5: después de 0.6s, mostrar botón
+        setTimeout(() => {
+          setTransitionPhase('ready');
+        }, 600);
+      }, 100); // solo 100ms entre cambio de juego y aparición de instrucciones
+    }, 2500); // más corto, antes era 4000ms
+  }, 300);
+};
 
 
 
   // Pantalla de bienvenida
   useEffect(() => {
     if (!showWelcome) return;
-
+  
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -900,7 +706,7 @@ const TeamRoom = () => {
         return prev - 1;
       });
     }, 1000);
-
+  
     return () => clearInterval(timer);
   }, [showWelcome, socket, partidaId]);
 
@@ -981,7 +787,7 @@ const TeamRoom = () => {
             e.preventDefault();
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
+            
             button.classList.add('active');
             const tabId = button.getAttribute('data-tab');
             document.getElementById(`${tabId}-tab`).classList.add('active');
@@ -999,7 +805,7 @@ const TeamRoom = () => {
           <div className="welcome-content">
             <h1>¡Bienvenidos!</h1>
             <p>El juego comenzará en {countdown} segundos</p>
-
+            
             <div className="team-members">
               {teamMembers.map((member, index) => (
                 <div
@@ -1019,8 +825,8 @@ const TeamRoom = () => {
 
   return (
     <LayoutSimulation>
-      <DrawingDemoModal
-        partidaId={partidaId}
+      <DrawingDemoModal 
+        partidaId={partidaId} 
         equipoNumero={equipoNumero}
         userId={userId}
         isProfessor={false} // O puedes determinar esto basado en el rol del usuario
@@ -1130,127 +936,128 @@ const TeamRoom = () => {
         {/* Área del juego */}
         <div ref={cursorContainerRef} className="game-container">
           {/* Efecto blur durante transición */}
-          <div className={`game-display ${(transitionPhase === 'blurring' || transitionPhase === 'showing') ? '_blurring' : ''
+          <div className={`game-display ${
+              (transitionPhase === 'blurring' || transitionPhase === 'showing') ? '_blurring' : ''
             }`}>
-            {currentGameInfo ? (
-              <>
-                {currentGameInfo.name.toLowerCase().includes('dibujo') ? (
-                  <DrawingGame
-                    key={`drawing-${partidaId}-${equipoNumero}`}
-                    gameConfig={currentGameInfo}
-                    onGameComplete={(result) => {
-                      console.log('Dibujo completado:', result);
-                    }}
-                  />
-                ) : currentGameInfo.name.toLowerCase().includes('memoria') ? (
-                  <MemoryGame
-                    key={`memory-${partidaId}-${equipoNumero}`}
-                    gameConfig={currentGameInfo}
-                    onGameComplete={(result) => {
-                      console.log('Juego completado:', result);
-                    }}
-                  />
-                ) : currentGameInfo.name.toLowerCase().includes('ahorcado') ? (
-                  <HangmanGame
-                    key={`hangman-${partidaId}-${equipoNumero}`}
-                    gameConfig={currentGameInfo}
-                    onGameComplete={(result) => {
-                      console.log('Juego completado:', result);
-                    }}
-                  />
-                ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
-                  <ErrorBoundary>
-                    <PuzzleGame
-                      key={`puzzle-${partidaId}-${equipoNumero}`}
+              {currentGameInfo ? (
+                <>
+                  {currentGameInfo.name.toLowerCase().includes('dibujo') ? (
+                    <DrawingGame 
+                      key={`drawing-${partidaId}-${equipoNumero}`}
                       gameConfig={currentGameInfo}
+                      onGameComplete={(result) => {
+                        console.log('Dibujo completado:', result);
+                      }}
+                    />
+                  ) : currentGameInfo.name.toLowerCase().includes('memoria') ? (
+                    <MemoryGame 
+                      key={`memory-${partidaId}-${equipoNumero}`}
+                      gameConfig={currentGameInfo} 
+                      onGameComplete={(result) => {
+                        console.log('Juego completado:', result);
+                      }}
+                    />
+                  ) : currentGameInfo.name.toLowerCase().includes('ahorcado') ? (
+                    <HangmanGame 
+                      key={`hangman-${partidaId}-${equipoNumero}`}
+                      gameConfig={currentGameInfo} 
+                      onGameComplete={(result) => {
+                        console.log('Juego completado:', result);
+                      }}
+                    />
+                  ) : currentGameInfo.name.toLowerCase().includes('rompecabezas') ? (
+                    <ErrorBoundary>
+                    <PuzzleGame 
+                      key={`puzzle-${partidaId}-${equipoNumero}`}
+                      gameConfig={currentGameInfo} 
                       onGameComplete={(result) => {
                         console.log('Rompecabezas completado:', result);
                       }}
                     />
-                  </ErrorBoundary>
-                ) : (
-                  <div className="game-not-implemented">
-                    <h3>Juego {currentGameInfo.name} en desarrollo</h3>
-                    <p>Este juego estará disponible pronto</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="waiting-message">
-                <h2>Sala de Espera</h2>
-                <p>Esperando que el profesor inicie los juegos...</p>
-              </div>
-            )}
+                    </ErrorBoundary>
+                  ) : (
+                    <div className="game-not-implemented">
+                      <h3>Juego {currentGameInfo.name} en desarrollo</h3>
+                      <p>Este juego estará disponible pronto</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="waiting-message">
+                  <h2>Sala de Espera</h2>
+                  <p>Esperando que el profesor inicie los juegos...</p>
+                </div>
+              )}
           </div>
 
           <button className="help__button" onClick={showHelpModal}>
-            <i className="fas fa-question-circle"></i>
+            <i className="fas fa-question-circle"></i> 
             <span>Ayuda</span>
           </button>
-
-        </div>
+          
+        </div>    
 
         {/* Panel de información */}
         <div className="container__info">
           <div className="info__logo">
             <img className="logo__source" src="https://i.postimg.cc/NGzXwBp6/logo.png" alt="Logo" />
-            <h2 className="logo__text">FideColab</h2>
+            <h2 className="logo__text">FideColab</h2> 
           </div>
 
           {currentGameInfo ? (
-            <>
-              <div className="info__game">
-                <div className="game__icon">
-                  <span>{currentGameInfo.icon}</span>
-                </div>
-                <h3 className="game__title">{currentGameInfo.name.split(' ').slice(0, 1).join(' ')}</h3>
+            <>              
+              <div className="info__game">     
+                  <div className="game__icon">
+                      <span>{currentGameInfo.icon}</span>
+                  </div>                                   
+                  <h3 className="game__title">{currentGameInfo.name.split(' ').slice(0, 1).join(' ')}</h3>
               </div>
-              <div className="info__panel">
-                <div className="panel__header">
-                  <h3>Descripción</h3>
-                </div>
-                <div className="panel__body">
-                  <span>{currentGameInfo.description}</span>
-                </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Descripción</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.description}</span>
+                  </div>
               </div>
-              <div className="info__panel">
-                <div className="panel__header">
-                  <h3>Dificultad</h3>
-                </div>
-                <div className="panel__body">
-                  <span>{currentGameInfo.dificultad}</span>
-                </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Dificultad</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.dificultad}</span>
+                  </div>
               </div>
-              <div className="info__panel">
-                <div className="panel__header">
-                  <h3>Configuración</h3>
-                </div>
-                <div className="panel__body">
-                  <span>{currentGameInfo.config}</span>
-                </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Configuración</h3>
+                  </div>
+                  <div className="panel__body">
+                      <span>{currentGameInfo.config}</span>
+                  </div>
               </div>
-              <div className="info__panel">
-                <div className="panel__header">
-                  <h3>Miembros</h3>
-                </div>
-                <div className="panel__body">
-                  {teamMembers.map((member, index) => (
-                    <div className="body__row member-row" key={index}>
-                      <img
-                        src={`https://api.dicebear.com/7.x/identicon/svg?seed=${member.userId}`}
-                        alt="Avatar"
-                        className="member-avatar"
-                        width="24"
-                        height="24"
-                      />
-                      <span>
-                        {member.fullName.split(' ').slice(0, 2).join(' ')}
-                        {member.userId === userId && "(Tú)"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <div className="info__panel">                    
+                  <div className="panel__header">
+                      <h3>Miembros</h3>
+                  </div>
+                  <div className="panel__body">
+                      {teamMembers.map((member, index) => (
+                        <div className="body__row member-row" key={index}>
+                          <img 
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${member.userId}`}
+                            alt="Avatar"
+                            className="member-avatar"
+                            width="24"
+                            height="24"
+                          />
+                          <span>
+                            {member.fullName.split(' ').slice(0, 2).join(' ')} 
+                            {member.userId === userId && "(Tú)"}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+              </div>              
             </>
           ) : (
             <div className="info__panel">
@@ -1259,59 +1066,29 @@ const TeamRoom = () => {
               </div>
               <div className="panel__body">
                 <p>Esperando a que todos los miembros se unan al equipo...</p>
-              </div>
+              </div>              
             </div>
           )}
-          <div className="info__panel">
-            <div className="panel__header">
-              <h3>Tiempo Restante</h3>
-            </div>
-            <div className="panel__body">
-              <div className="time-display-container">
-                <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
-                  {timer.active ? formatTime(timer.remaining) : '--:--'}
-                  <div className="time-progress-bar">
-                    <div
-                      className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
-                      style={{ width: `${getTimePercentage()}%` }}
-                    ></div>
-                  </div>
-                </div>
+          <div className="info__panel">                    
+              <div className="panel__header">
+                  <h3>Tiempo Restante</h3>
               </div>
-            </div>
-          </div>
-        </div>
+              <div className="panel__body">
+                  <div className="time-display-container">
+                    <div className={`time-display ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}>
+                      {timer.active ? formatTime(timer.remaining) : '--:--'}
+                      <div className="time-progress-bar">
+                        <div 
+                          className={`time-progress-fill ${timer.remaining <= 30 && timer.active ? 'low-time' : ''}`}
+                          style={{ width: `${getTimePercentage()}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>    
+              </div>
+          </div>     
+        </div>       
       </div>
-      <button
-        className={`mic-button_voice ${isMuted ? 'muted_voice' : 'unmuted_voice'}`}
-        onClick={toggleMute}
-        title={isMuted ? 'Micrófono apagado' : 'Micrófono encendido'}
-        disabled={!!audioError}
-      >
-        <i className={`fas ${isMuted || audioError ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
-      </button>
-
-      {isAudioInitialized && (
-        <div className="team-audio-indicators">
-          {teamMembers.map(member => (
-            member.userId !== userId && (
-              <div key={member.userId} className="audio-indicator">
-                <div className="audio-wave">
-                  <span></span><span></span><span></span><span></span><span></span>
-                </div>
-                <span className="audio-label">{member.fullName.split(' ')[0]}</span>
-              </div>
-            )
-          ))}
-        </div>
-      )}
-
-      {audioError && (
-        <div className="audio-error">
-          <p>{audioError}</p>
-          <button onClick={() => setAudioError(null)}>Cerrar</button>
-        </div>
-      )}
     </LayoutSimulation>
   );
 };

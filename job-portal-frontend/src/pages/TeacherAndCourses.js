@@ -34,7 +34,7 @@ const AdminProfessorCourses = () => {
     const handleDeselectTeacher = () => {
         setSelectedTeacher(null);
         setLinkedCourses([]);
-        applyRowSelectionEffect(null, 'teacher'); // Esto eliminará el resaltado
+        applyRowSelectionEffect(null, 'teacher'); 
     };
 
     const handleRowClick = (id, type) => {
@@ -46,9 +46,9 @@ const AdminProfessorCourses = () => {
         if (type === 'teacher') {
             setSelectedTeacher(prev => (prev === id ? null : id));
             if (id !== null) {
-                fetchLinkedCourses(id); // Obtener cursos vinculados al profesor seleccionado
+                fetchLinkedCourses(id); 
             } else {
-                setLinkedCourses([]); // Limpiar cursos vinculados si no hay profesor seleccionado
+                setLinkedCourses([]); 
             }
         } else if (type === 'course') {
             setSelectedCourse(prev => (prev === id ? null : id));

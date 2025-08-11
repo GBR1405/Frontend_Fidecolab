@@ -52,6 +52,14 @@ const TeamRoom = () => {
   const [showBlackout, setShowBlackout] = useState(false);
   const [demoActive, setDemoActive] = useState(false);
 
+  //Prueba ....................
+
+  const localStreamRef = useRef(null);
+  const peersRef = useRef({});
+  const [isMuted, setIsMuted] = useState(false);
+
+  //Prueba ....................
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -296,7 +304,99 @@ const verificarEstadoPartida = async () => {
   };
 }, [navigate]);
 
+// PRUEBA ---------------------------------------------------------------------------------
 
+useEffect(() => {
+  if (!socket || !partidaId || !equipoNumero) return;
+
+  socket.emit('joinVoiceRoom', { partidaId, equipoNumero });
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      localStreamRef.current = stream;
+    });
+
+  socket.on('voiceUserJoined', handleUserJoined);
+  socket.on('voiceSignal', handleSignal);
+  socket.on('voiceUserLeft', handleUserLeft);
+  socket.on('voiceRoomClosed', handleVoiceRoomClosed);
+
+  return () => {
+    socket.emit('leaveVoiceRoom');
+    socket.off('voiceUserJoined', handleUserJoined);
+    socket.off('voiceSignal', handleSignal);
+    socket.off('voiceUserLeft', handleUserLeft);
+    socket.off('voiceRoomClosed', handleVoiceRoomClosed);
+  };
+}, [socket, partidaId, equipoNumero]);
+
+const handleUserJoined = (userId) => {
+  const peer = createPeer(userId);
+  peersRef.current[userId] = peer;
+};
+
+const handleSignal = ({ from, data }) => {
+  if (data.sdp) {
+    peersRef.current[from]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
+    if (data.sdp.type === 'offer') {
+      localStreamRef.current.getTracks().forEach(track => peersRef.current[from].addTrack(track, localStreamRef.current));
+      peersRef.current[from].createAnswer().then(answer => {
+        peersRef.current[from].setLocalDescription(answer);
+        socket.emit('voiceSignal', { targetId: from, data: { sdp: answer } });
+      });
+    }
+  } else if (data.candidate) {
+    peersRef.current[from]?.addIceCandidate(new RTCIceCandidate(data.candidate));
+  }
+};
+
+const handleUserLeft = (userId) => {
+  peersRef.current[userId]?.close();
+  delete peersRef.current[userId];
+};
+
+const handleVoiceRoomClosed = () => {
+  Object.values(peersRef.current).forEach(peer => peer.close());
+  peersRef.current = {};
+};
+
+// Crear conexión WebRTC
+const createPeer = (userId) => {
+  const peer = new RTCPeerConnection();
+  localStreamRef.current.getTracks().forEach(track => peer.addTrack(track, localStreamRef.current));
+
+  peer.onicecandidate = e => {
+    if (e.candidate) {
+      socket.emit('voiceSignal', { targetId: userId, data: { candidate: e.candidate } });
+    }
+  };
+
+  peer.ontrack = e => {
+    const audioEl = document.createElement('audio');
+    audioEl.srcObject = e.streams[0];
+    audioEl.autoplay = true;
+    document.body.appendChild(audioEl);
+  };
+
+  peer.createOffer().then(offer => {
+    peer.setLocalDescription(offer);
+    socket.emit('voiceSignal', { targetId: userId, data: { sdp: offer } });
+  });
+
+  return peer;
+};
+
+// Botón para mute/desmute
+const toggleMute = () => {
+  if (!localStreamRef.current) return;
+  const newMuteState = !isMuted; // Invierte el estado actual
+  setIsMuted(newMuteState);
+  localStreamRef.current.getAudioTracks().forEach(track => {
+    track.enabled = !newMuteState; // Si newMuteState es true → mutea (enabled = false)
+  });
+};
+
+// PRUEBA ---------------------------------------------------------------------------------
 
 useEffect(() => {
   if (!partidaId || !equipoNumero) {
@@ -1089,6 +1189,13 @@ function randomHSL() {
           </div>     
         </div>       
       </div>
+      <button 
+        className={`mic-button_voice ${isMuted ? 'muted_voice' : 'unmuted_voice'}`} 
+        onClick={toggleMute}
+        title={isMuted ? 'Micrófono apagado' : 'Micrófono encendido'}
+      >
+        <i className={`fas ${isMuted ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
+      </button>
     </LayoutSimulation>
   );
 };

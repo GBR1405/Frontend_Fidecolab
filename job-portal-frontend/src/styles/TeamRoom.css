@@ -903,3 +903,39 @@ html{
   align-items: center;
   gap: 4px;
 }
+
+.mic-button_voice {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #2a40bf;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  z-index: 9999;
+}
+
+.mic-button_voice:hover {
+  transform: scale(1.05);
+}
+
+.unmuted_voice {
+  background-color: #28a745; /* verde para encendido */
+}
+
+.muted_voice {
+  background-color: #dc3545; /* rojo para apagado */
+}
+
+.mic-button_voice i {
+  pointer-events: none;
+}

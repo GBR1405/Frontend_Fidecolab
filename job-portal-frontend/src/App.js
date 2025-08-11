@@ -92,6 +92,7 @@ const App = () => {
   return (
     <DelayedSuspense fallback={<FullScreenLoader />} minDuration={1200}>
       <SocketProvider>
+        <AccessibilityWidget />
       <Routes>
       
         {/* Rutas públicas */}

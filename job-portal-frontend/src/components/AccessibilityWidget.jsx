@@ -20,8 +20,8 @@ const styles = {
     position: "fixed",
     bottom: 20,
     left: 20,
-    width: 60,
-    height: 60,
+    width: 45,
+    height: 45,
     borderRadius: "50%",
     backgroundColor: "#0078d4",
     color: "white",
@@ -199,9 +199,13 @@ export default function AccessibilityWidgetFixed() {
         style={styles.floatingButton}
         aria-label="Abrir panel de accesibilidad"
         title="Accesibilidad"
-      >
-        ♿
-      </button>
+        >
+        <img 
+            src="https://cdn-icons-png.flaticon.com/512/1512/1512642.png" 
+            alt="Accesibilidad" 
+            style={{ width: '35px', height: '35px' }} 
+        />
+        </button>
 
       {open && (
         <div style={styles.widget} role="dialog" aria-labelledby="aw-title">

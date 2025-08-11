@@ -689,25 +689,34 @@ const handleResetSystem = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'Agregar Nuevo Usuario',
       html: `
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-        <input id="swal-input1" class="swal2-input" placeholder="Nombre" required>
-        <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>
-        <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>
-      </div>
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
-        <input id="swal-input4" class="swal2-input" placeholder="Correo electrónico" type="email" required>
-        <select id="swal-input5" class="swal2-input" required>
-          <option value="">Género</option>
-          <option value="1">Masculino</option>
-          <option value="2">Femenino</option>
-          <option value="3">Otro</option>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input1" class="swal2-input" placeholder="Nombre" required>
+          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>
+          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input id="swal-input4" class="swal2-input" placeholder="Correo electrónico" type="email" required>
+          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
+            <option value="">Género</option>
+            <option value="1">Masculino</option>
+            <option value="2">Femenino</option>
+            <option value="3">Otro</option>
+          </select>
+        </div>
+        <select id="swal-input6" class="swal2-input" required>
+          <option value="">Seleccione Rol</option>
+          <option value="Profesor">Profesor</option>
+          <option value="Estudiante">Estudiante</option>
+          <option value="Administrador">Administrador</option>
         </select>
-      </div>
-    `,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: 'Guardar',
-    cancelButtonText: 'Cancelar',
+      `,
+      width: '700px',
+      focusConfirm: false,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      showCancelButton: true,
+      confirmButtonText: 'Agregar',
+      cancelButtonText: 'Cancelar',
       preConfirm: () => {
         const nombre = document.getElementById('swal-input1').value;
         const apellido1 = document.getElementById('swal-input2').value;

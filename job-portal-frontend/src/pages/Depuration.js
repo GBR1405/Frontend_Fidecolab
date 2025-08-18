@@ -688,32 +688,32 @@ const handleResetSystem = async () => {
   const handleAddUser = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'Agregar Nuevo Usuario',
+      customClass: {
+        popup: 'alert__add'
+      },
       html: `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input1" class="swal2-input" placeholder="Nombre" required>
-          <input id="swal-input2" class="swal2-input" placeholder="Primer Apellido" required>
-          <input id="swal-input3" class="swal2-input" placeholder="Segundo Apellido" required>
-        </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <input id="swal-input4" class="swal2-input" placeholder="Correo electrónico" type="email" required>
-          <select id="swal-input5" class="swal2-input" style="width: 100%;" required>
+        <div class="add__form">
+          <input id="swal-input1" class="add__input" placeholder="Nombre" required>
+          <input id="swal-input2" class="add__input" placeholder="Primer Apellido" required>
+          <input id="swal-input3" class="add__input" placeholder="Segundo Apellido" required>
+          <input id="swal-input4" class="add__input" placeholder="Correo electrónico" type="email" required>
+          <select id="swal-input5" class="add__select">
             <option value="">Género</option>
             <option value="1">Masculino</option>
             <option value="2">Femenino</option>
             <option value="3">Otro</option>
           </select>
-        </div>
-        <select id="swal-input6" class="swal2-input" required>
-          <option value="">Seleccione Rol</option>
-          <option value="Profesor">Profesor</option>
-          <option value="Estudiante">Estudiante</option>
-          <option value="Administrador">Administrador</option>
-        </select>
+          <select id="swal-input6" class="add__select" required>
+            <option value="">Seleccione Rol</option>
+            <option value="Profesor">Profesor</option>
+            <option value="Estudiante">Estudiante</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>        
       `,
-      width: '700px',
       focusConfirm: false,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#1935ca',
+      cancelButtonColor: '#f2a007',
       showCancelButton: true,
       confirmButtonText: 'Agregar',
       cancelButtonText: 'Cancelar',

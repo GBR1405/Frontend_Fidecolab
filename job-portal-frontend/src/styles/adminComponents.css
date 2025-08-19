@@ -2554,3 +2554,85 @@ body, html {
     }
 }
 
+.alert__unlink{
+    background-color: var(--white-smoke-clr);
+    width: 35vmax;
+    max-width: 35vmax;
+    height: 40vmax;
+    display: grid;
+    grid-template-rows: 10% 1fr 10%;
+    
+    .swal2-html-container{
+        margin: 0;
+        padding: 0;
+        overflow: none;
+        width: 100%;
+        height: 100%;
+    }
+
+    .swal2-title{
+        padding: 0;
+        color: var(--blue-royal-clr);
+        align-self: center;
+        font-size: 2vmax;
+    }    
+
+    .unlink__group{
+        height: 100%;
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+
+    .unlink__button{
+        all: unset;
+        width: 46vmin;
+        height: 8vmin;
+        border-radius: 5px;
+
+        font-size: 1vmax;
+        color: white;
+
+        display: grid;
+        grid-template-columns: 15% 1fr;
+        align-items: center;
+        justify-items: center;
+        padding-inline: 2vmin;
+        cursor: pointer;
+    }
+    
+    .swal2-actions{
+        flex-wrap: none; 
+        margin: 0; 
+    }
+
+    .swal2-cancel{
+        all: unset;
+        width: 50vmin;
+        height: 8vmin;
+        text-align: center;
+        border-radius: 5px;
+        background-color: #f2a007;
+        cursor: pointer;
+
+        font-size: 1vmax;
+        color: white;
+    }
+
+    .unlink--teacher{
+        background-color: var(--blue-royal-clr);
+    }
+
+    .unlink--student{
+        background-color: #17a2b8;
+    }
+
+    .unlink--user{
+        background-color: #6c757d;
+    }
+}
+
+

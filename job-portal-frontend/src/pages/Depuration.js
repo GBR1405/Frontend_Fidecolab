@@ -1653,24 +1653,25 @@ const handleResetSystem = async () => {
   const handleUnlinkUsers = () => {
     Swal.fire({
       title: 'Desvincular Usuarios',
+      customClass: {
+        popup: 'alert__unlink'
+      },
       html: `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-          <button id="professors-btn" class="swal2-button swal2-confirm" style="background-color: #ffc107; color: #000; flex: 1; margin-right: 10px;">
+        <div class="unlink__group">
+          <button id="professors-btn" class="unlink__button unlink--teacher">
             <i class="fa-solid fa-user-tie"></i> Desvincular Profesores
           </button>
-          <button id="students-btn" class="swal2-button swal2-confirm" style="background-color: #17a2b8; color: #fff; flex: 1;">
+          <button id="students-btn" class="unlink__button unlink--student">
             <i class="fa-solid fa-user-graduate"></i> Desvincular Estudiantes
           </button>
+          <button id="all-users-btn" class="unlink__button unlink--user">
+            <i class="fa-solid fa-users-slash"></i> Desvincular Todos los Usuarios
+          </button>
         </div>
-        <button id="all-users-btn" class="swal2-button swal2-deny" style="background-color: #6c757d; color: #fff; width: 100%;">
-          <i class="fa-solid fa-users-slash"></i> Desvincular Todos los Usuarios
-        </button>
       `,
-      width: '700px',
       showConfirmButton: false,
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
-      cancelButtonColor: '#d33',
       willOpen: () => {
         document.getElementById('professors-btn').addEventListener('click', () => {
           Swal.fire('Éxito', 'Todos los profesores han sido desvinculados', 'success');

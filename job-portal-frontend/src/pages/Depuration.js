@@ -686,108 +686,104 @@ const handleResetSystem = async () => {
 
   // Add new user
   const handleAddUser = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: 'Agregar Nuevo Usuario',
-      customClass: {
-        popup: 'alert__add'
-      },
-      html: `
-        <div class="add__form">
-          <input id="swal-input1" class="add__input" placeholder="Nombre" required>
-          <input id="swal-input2" class="add__input" placeholder="Primer Apellido" required>
-          <input id="swal-input3" class="add__input" placeholder="Segundo Apellido" required>
-          <input id="swal-input4" class="add__input" placeholder="Correo electrónico" type="email" required>
-          <select id="swal-input5" class="add__select">
-            <option value="">Género</option>
-            <option value="1">Masculino</option>
-            <option value="2">Femenino</option>
-            <option value="3">Otro</option>
-          </select>
-          <select id="swal-input6" class="add__select" required>
-            <option value="">Seleccione Rol</option>
-            <option value="Profesor">Profesor</option>
-            <option value="Estudiante">Estudiante</option>
-            <option value="Administrador">Administrador</option>
-          </select>
-        </div>        
-      `,
-      focusConfirm: false,
-      confirmButtonColor: '#1935ca',
-      cancelButtonColor: '#f2a007',
-      showCancelButton: true,
-      confirmButtonText: 'Agregar',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        const nombre = document.getElementById('swal-input1').value;
-        const apellido1 = document.getElementById('swal-input2').value;
-        const apellido2 = document.getElementById('swal-input3').value;
-        const correo = document.getElementById('swal-input4').value;
-        const genero = document.getElementById('swal-input5').value;
-        const rol = document.getElementById('swal-input6').value;
+  const { value: formValues } = await Swal.fire({
+    title: 'Agregar Nuevo Usuario',
+    customClass: { popup: 'alert__add' },
+    html: `
+      <div class="add__form">
+        <input id="swal-input1" class="add__input" placeholder="Nombre" required>
+        <input id="swal-input2" class="add__input" placeholder="Primer Apellido" required>
+        <input id="swal-input3" class="add__input" placeholder="Segundo Apellido" required>
+        <input id="swal-input4" class="add__input" placeholder="Correo electrónico" type="email" required>
+        <select id="swal-input5" class="add__select">
+          <option value="">Género</option>
+          <option value="1">Masculino</option>
+          <option value="2">Femenino</option>
+          <option value="3">Otro</option>
+        </select>
+        <select id="swal-input6" class="add__select" required>
+          <option value="">Seleccione Rol</option>
+          <option value="Profesor">Profesor</option>
+          <option value="Estudiante">Estudiante</option>
+          <option value="Administrador">Administrador</option>
+        </select>
+      </div>        
+    `,
+    focusConfirm: false,
+    confirmButtonColor: '#1935ca',
+    cancelButtonColor: '#f2a007',
+    showCancelButton: true,
+    confirmButtonText: 'Agregar',
+    cancelButtonText: 'Cancelar',
+    preConfirm: async () => {
+      const nombre = document.getElementById('swal-input1').value.trim();
+      const apellido1 = document.getElementById('swal-input2').value.trim();
+      const apellido2 = document.getElementById('swal-input3').value.trim();
+      const correo = document.getElementById('swal-input4').value.trim();
+      const genero = document.getElementById('swal-input5').value;
+      const rol = document.getElementById('swal-input6').value;
 
-        if (!nombre || !apellido1 || !apellido2 || !correo || !genero || !rol) {
-          Swal.showValidationMessage('Todos los campos son obligatorios');
-          return false;
-        }
-
-        if (rol === 'Administrador') {
-          return Swal.fire({
-            title: 'Confirmación requerida',
-            text: 'Para crear un usuario administrador, ingrese el código de seguridad',
-            input: 'text',
-            inputPlaceholder: 'Código de seguridad',
-            width: '600px',
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#3085d6',
-            preConfirm: (code) => {
-              if (code !== 'fidecolab') {
-                Swal.showValidationMessage('Código incorrecto');
-                return false;
-              }
-              return { nombre, apellido1, apellido2, correo, genero, rol };
-            }
-          });
-        }
-
-        return { nombre, apellido1, apellido2, correo, genero, rol };
+      if (!nombre || !apellido1 || !apellido2 || !correo || !genero || !rol) {
+        Swal.showValidationMessage('Todos los campos son obligatorios');
+        return false;
       }
+
+      // 🔑 Si es administrador, pedimos el código ANTES de devolver el objeto
+      if (rol === 'Administrador') {
+        const { value: code } = await Swal.fire({
+          title: 'Confirmación requerida',
+          text: 'Para crear un usuario administrador, ingrese el código de seguridad',
+          input: 'text',
+          inputPlaceholder: 'Código de seguridad',
+          width: '600px',
+          showCancelButton: true,
+          confirmButtonText: 'Confirmar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#3085d6',
+          preConfirm: (code) => {
+            if (code !== 'fidecolab') {
+              Swal.showValidationMessage('Código incorrecto');
+              return false;
+            }
+            return code;
+          }
+        });
+
+        if (!code) return false; // canceló
+      }
+
+      // 🔥 devolver objeto correcto
+      return { nombre, apellido1, apellido2, correo, genero: parseInt(genero, 10), rol };
+    }
+  });
+
+  if (!formValues) return;
+
+  console.log("Agregando usuario:", formValues);
+
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/usuarios_D`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formValues)
     });
 
-    if (!formValues) return;
+    if (!response.ok) throw new Error('Error al agregar usuario');
 
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/usuarios_D`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          nombre: formValues.nombre,
-          apellido1: formValues.apellido1,
-          apellido2: formValues.apellido2,
-          correo: formValues.correo,
-          rol: formValues.rol,
-          genero: formValues.genero
-        })
-      });
+    await response.json();
+    Swal.fire('Éxito', 'Usuario agregado correctamente, se le envió un correo al usuario con su contraseña', 'success');
+    fetchUsers();
+  } catch (error) {
+    console.error("Error al agregar usuario:", error);
+    Swal.fire('Error', 'No se pudo agregar el usuario', 'error');
+  }
+};
 
-      if (!response.ok) {
-        throw new Error('Error al agregar usuario');
-      }
-
-      await response.json();
-      Swal.fire('Éxito', 'Usuario agregado correctamente, se le envio un correo al usuario con su contraseña', 'success');
-      fetchUsers();
-    } catch (error) {
-      console.error("Error al agregar usuario:", error);
-      Swal.fire('Error', 'No se pudo agregar el usuario', 'error');
-    }
-  };
 
   const handleDeleteItem = (itemType, id) => {
     Swal.fire({

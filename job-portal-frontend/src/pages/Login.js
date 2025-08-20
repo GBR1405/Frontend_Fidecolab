@@ -22,7 +22,7 @@ const autores = [
   "— Sebastian Barboza",
   "— Proverbio africano",
   "— Margaret Mead",
-  "— Sydney Ramirez"
+  "— Sidney Ramirez"
 ];
 
 const Login = () => {

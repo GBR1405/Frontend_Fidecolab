@@ -984,21 +984,21 @@ const handleResetSystem = async () => {
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Rol</label>
-            <select id="swal-input6" style="${selectStyle}" required>
-              <option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
-              <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
-              <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
-            </select>
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Acciones</label>
-            <button id="reset-password-btn" style="${secondaryButtonStyle} width: 100%;">
-              <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Restaurar Contraseña
-            </button>
-          </div>
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Rol</label>
+          <select id="swal-input6" style="${selectStyle}" required ${user.Rol === 'Administrador' ? 'disabled' : ''}>
+            <option value="Administrador" ${user.Rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
+            <option value="Profesor" ${user.Rol === 'Profesor' ? 'selected' : ''}>Profesor</option>
+            <option value="Estudiante" ${user.Rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
+          </select>
         </div>
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #555;">Acciones</label>
+          <button id="reset-password-btn" style="${secondaryButtonStyle} width: 100%;">
+            <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Restaurar Contraseña
+          </button>
+        </div>
+      </div>
         ${groupsTableHtml}
         ${specialActionsHtml}
       `,

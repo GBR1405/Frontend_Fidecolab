@@ -14,13 +14,17 @@ const secretKey = process.env.REACT_APP_SECRET_KEY;
 const frases = [
   "El éxito del equipo radica en la colaboración, no en la competencia",
   "Juntos alcanzamos más lejos que cualquier individuo solo",
-  "La innovación florece cuando las mentes colaboran"
+  "La innovación florece cuando las mentes colaboran",
+  "1, 2, les saco el arroz",
+  "Las personas que están lo suficientemente locas como para creer que pueden cambiar el mundo son las que lo hacen",
 ];
 
 const autores = [
   "— Anónimo",
   "— Proverbio africano",
-  "— Margaret Mead"
+  "— Margaret Mead",
+  "— Sebastian Barboza",
+  "— Sydney Ramirez"
 ];
 
 const Login = () => {

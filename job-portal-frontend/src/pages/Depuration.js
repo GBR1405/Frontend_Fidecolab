@@ -1453,83 +1453,66 @@ const handleResetSystem = async () => {
 
       // Build HTML content based on user role
       let detailsContent = `
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <h3 style="margin: 0; color: #2c3e50;">Información Básica</h3>
-          </div>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div>
-              <p><strong>Nombre completo:</strong> ${user.Nombre} ${user.Apellido1} ${user.Apellido2 || ''}</p>
-              <p><strong>Correo:</strong> ${user.Correo}</p>
-            </div>
-            <div>
-              <p><strong>Género:</strong> ${user.Genero === '1' ? 'Masculino' : user.Genero === '2' ? 'Femenino' : 'Otro'}</p>
-              <p><strong>Rol:</strong> ${user.Rol}</p>
-            </div>
-          </div>
-          
-          <div style="background-color: ${user.Estado ? '#d4edda' : '#f8d7da'}; 
-                      color: ${user.Estado ? '#155724' : '#721c24'}; 
-                      padding: 10px; 
-                      border-radius: 5px; 
-                      text-align: center;">
-            <strong>Estado:</strong> ${user.Estado ? 'Activo' : 'Inactivo'}
-          </div>
+        <div class="details__title">
+          <h3>Información Básica</h3>
+        </div>
+        
+        <div class="details__data">
+          <p><strong>Nombre:</strong> ${user.Nombre} ${user.Apellido1} ${user.Apellido2 || ''}</p>
+          <p><strong>Correo:</strong> ${user.Correo}</p>
+          <p><strong>Género:</strong> ${user.Genero === '1' ? 'Masculino' : user.Genero === '2' ? 'Femenino' : 'Otro'}</p>
+          <p><strong>Rol:</strong> ${user.Rol}</p>
+        </div>
+        
+        <div class="details__status"
+             style="background-color: ${user.Estado ? '#d4edda' : '#f8d7da'}; color: ${user.Estado ? '#155724' : '#721c24'};">
+          <strong>Estado:</strong> ${user.Estado ? 'Activo' : 'Inactivo'}
+        </div>
       `;
 
       if (user.Rol === 'Estudiante') {
         detailsContent += `
-          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <h3 style="margin: 0; color: #2c3e50;">Estadísticas</h3>
+          <div class="details__title">
+            <h3>Estadísticas</h3>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div>
-              <p><strong>Partidas jugadas:</strong> ${userDetails.totalPartidas || 0}</p>
-            </div>
-            <div>
-              <p><strong>Cursos vinculados:</strong> ${userDetails.cursos || 'Ninguno'}</p>
-            </div>
+          <div class="details__data">
+            <p><strong>Partidas jugadas:</strong> ${userDetails.totalPartidas || 0}</p>
+            <p><strong>Cursos vinculados:</strong> ${userDetails.cursos || 'Ninguno'}</p>
           </div>
         `;
       } else if (user.Rol === 'Profesor') {
         detailsContent += `
-          <div style="text-align: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <h3 style="margin: 0; color: #2c3e50;">Estadísticas</h3>
+          <div class="details__title">
+            <h3>Estadísticas</h3>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div>
-              <p><strong>Personalizaciones activas:</strong> ${userDetails.totalPersonalizaciones || 0}</p>
-            </div>
-            <div>
-              <p><strong>Cursos que imparte:</strong> ${userDetails.cursos || 'Ninguno'}</p>
-            </div>
+          <div class="details__data">
+            <p><strong>Personalizaciones activas:</strong> ${userDetails.totalPersonalizaciones || 0}</p>
+            <p><strong>Cursos que imparte:</strong> ${userDetails.cursos || 'Ninguno'}</p>
           </div>
         `;
 
         if (userDetails.estudiantes && userDetails.estudiantes.length > 0) {
           detailsContent += `
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; color: #2c3e50;">Estudiantes Vinculados</h3>
-                <input type="text" id="student-search" placeholder="Buscar estudiante..." 
-                      style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+            <div class="details__students">
+              <div class="details__header">
+                <h3>Estudiantes Vinculados</h3>
+                <input class="details__input" type="text" id="student-search" placeholder="Buscar estudiante...">
               </div>
-              <div style="max-height: 300px; overflow-y: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+              <div class="details__chart">
+                <table class="details__table">
                   <thead>
-                    <tr style="background-color: #17a2b8; color: white;">
-                      <th style="padding: 10px; border: 1px solid #ddd;">Nombre</th>
-                      <th style="padding: 10px; border: 1px solid #ddd;">Correo</th>
-                      <th style="padding: 10px; border: 1px solid #ddd;">Curso</th>
+                    <tr class="details__row" style="background-color: #17a2b8; color: white;">
+                      <th class="details__heading">Nombre</th>
+                      <th class="details__heading">Correo</th>
+                      <th class="details__heading">Curso</th>
                     </tr>
                   </thead>
-                  <tbody id="student-table-body">
+                  <tbody class="details__body" id="student-table-body">
                     ${userDetails.estudiantes.map(estudiante => `
-                      <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre} ${estudiante.Apellido1} ${estudiante.Apellido2 || ''}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Correo}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${estudiante.Nombre_Curso} G${estudiante.Codigo_Grupo}</td>
+                      <tr class="details__row">
+                        <td class="details__info">${estudiante.Nombre} ${estudiante.Apellido1} ${estudiante.Apellido2 || ''}</td>
+                        <td class="details__info">${estudiante.Correo}</td>
+                        <td class="details__info">${estudiante.Nombre_Curso} G${estudiante.Codigo_Grupo}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -1569,10 +1552,11 @@ const handleResetSystem = async () => {
         `;
       }
 
-      detailsContent += `</div>`;
-
       Swal.fire({
         title: `Detalles de ${user.Nombre}`,
+        customClass: {
+          popup: 'alert__details'
+        },
         html: detailsContent,
         width: '900px',
         confirmButtonText: 'Cerrar',

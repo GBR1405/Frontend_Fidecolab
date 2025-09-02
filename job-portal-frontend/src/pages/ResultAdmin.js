@@ -468,6 +468,8 @@ function ResultsTeacher() {
                 </div>
               </div>
 
+              {/* #Cambio Se elimina temporalmente la parte de descargar imagenes por la simulacion de direccion */}
+              {/*
               <div className="right__images">
                 <div className="right__slider">
                   {imagenesDibujo.length > 0 ? (
@@ -516,6 +518,8 @@ function ResultsTeacher() {
                   )}
                 </div>
               </div>
+              */}
+
             </div>
           </div>
         )}

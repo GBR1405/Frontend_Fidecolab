@@ -803,9 +803,18 @@ function randomHSL() {
       <LayoutSimulation>
         <div className="welcome-screen">
           <div className="welcome-content">
+            <div className="welcome-content__logo">
+              <img src="https://i.postimg.cc/NGzXwBp6/logo.png" alt="Logo institución" />
+              <span>FideColab</span>
+            </div>
+
             <h1>¡Bienvenidos!</h1>
-            <p>El juego comenzará en {countdown} segundos</p>
-            
+            <p className="welcome-content__subtitle">
+              El juego comenzará en <strong>{countdown}</strong> segundos
+            </p>
+            <div className="welcome-content__countdown-badge">{countdown}</div>
+
+            <p className="welcome-content__label">Tu equipo</p>
             <div className="team-members">
               {teamMembers.map((member, index) => (
                 <div
@@ -813,7 +822,13 @@ function randomHSL() {
                   className="member"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  {member.fullName} {member.userId === userId && "(Tú)"}
+                  <span className="member__avatar">
+                    {member.fullName.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="member__name">{member.fullName}</span>
+                  {member.userId === userId && (
+                    <span className="member__tag">Tú</span>
+                  )}
                 </div>
               ))}
             </div>

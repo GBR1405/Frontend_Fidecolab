@@ -15,6 +15,9 @@ const PuzzleGame = ({ gameConfig }) => {
   // Piezas cuyo "dueño" acaba de soltarlas, mantenidas un instante extra solo para animar la salida del icono
   const [leavingBadges, setLeavingBadges] = useState({});
   const prevOwnerMapRef = useRef({});
+  // Piezas que acaban de intercambiar posición, para darles un pequeño "pop" al asentarse
+  const [justSwappedIds, setJustSwappedIds] = useState(new Set());
+  const prevPiecesRef = useRef([]);
   const [swapsLeft, setSwapsLeft] = useState(0);
   const [progress, setProgress] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -89,13 +92,27 @@ const PuzzleGame = ({ gameConfig }) => {
     if (!socket) return;
 
     const handleInit = (game) => {
+      prevPiecesRef.current = game.state.pieces;
       setPieces(game.state.pieces);
       setSwapsLeft(game.config.swapsLeft);
       setProgress(game.state.progress);
-      setSelectedIds([]);
       setInteractionLocked(false);
-      setOtherSelections({});
       setLeavingBadges({});
+
+      // Recuperar quién tiene qué pieza seleccionada (por ejemplo, tras
+      // recargar la página) en vez de asumir que no hay nada bloqueado.
+      socket.emit('getPuzzleSelections', { partidaId, equipoNumero }, (selectionsByUser) => {
+        const byUser = selectionsByUser || {};
+        setSelectedIds(byUser[userId] || []);
+
+        const others = {};
+        Object.entries(byUser).forEach(([uid, ids]) => {
+          if (uid !== userId && Array.isArray(ids) && ids.length > 0) {
+            others[uid] = ids;
+          }
+        });
+        setOtherSelections(others);
+      });
     };
 
     socket.on('puzzleGameState', handleInit);
@@ -104,7 +121,7 @@ const PuzzleGame = ({ gameConfig }) => {
     return () => {
       socket.off('puzzleGameState', handleInit);
     };
-  }, [socket, partidaId, equipoNumero]);
+  }, [socket, partidaId, equipoNumero, userId]);
 
   // 🧩 Después de cada swap
   // El backend no reenvía un "updateSelections" vacío cuando una pareja se
@@ -115,6 +132,23 @@ const PuzzleGame = ({ gameConfig }) => {
     if (!socket) return;
 
     const handleUpdate = ({ pieces, swapsLeft, progress }) => {
+      // Detectar qué piezas cambiaron de casilla para darles un pequeño "pop" al asentarse
+      const prevPieces = prevPiecesRef.current;
+      if (prevPieces.length > 0) {
+        const changedIds = pieces
+          .filter(p => {
+            const before = prevPieces.find(pp => pp.id === p.id);
+            return before && (before.currentRow !== p.currentRow || before.currentCol !== p.currentCol);
+          })
+          .map(p => p.id);
+
+        if (changedIds.length > 0) {
+          setJustSwappedIds(new Set(changedIds));
+          setTimeout(() => setJustSwappedIds(new Set()), 420);
+        }
+      }
+      prevPiecesRef.current = pieces;
+
       setPieces(pieces);
       setSwapsLeft(swapsLeft);
       setProgress(progress);
@@ -232,6 +266,9 @@ const PuzzleGame = ({ gameConfig }) => {
     const isBlocked = !!ownerId;
     const badgeOwnerId = ownerId || leavingBadges[piece.id];
     const isBadgeLeaving = !ownerId && !!leavingBadges[piece.id];
+    const isSwapped = justSwappedIds.has(piece.id);
+    // Entrada escalonada según la posición correcta de la pieza (estable aunque se reordenen)
+    const enterDelay = (piece.correctRow * gridSize + piece.correctCol) * 10;
 
     return (
       <div
@@ -239,7 +276,8 @@ const PuzzleGame = ({ gameConfig }) => {
         className={`puzzle-piece
           ${isSelected ? 'selected' : ''}
           ${isCorrect ? 'correct' : ''}
-          ${isBlocked ? 'blocked' : ''}`}
+          ${isBlocked ? 'blocked' : ''}
+          ${isSwapped ? 'swapped' : ''}`}
         style={{
           width: `${pieceSize}px`,
           height: `${pieceSize}px`,
@@ -250,7 +288,7 @@ const PuzzleGame = ({ gameConfig }) => {
           backgroundSize: `${gridSize * 100}%`,
           backgroundPosition: `${(piece.correctCol / (gridSize - 1)) * 100}% ${(piece.correctRow / (gridSize - 1)) * 100}%`,
           cursor: interactionLocked || isBlocked ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease'
+          animationDelay: `${enterDelay}ms`
         }}
         onClick={() => handlePieceClick(piece.id)}
       >

@@ -124,29 +124,30 @@
   background-color: transparent;
   border: 2px solid rgba(0,0,0,0.1);
   box-sizing: border-box; /* Ensure borders don't affect dimensions */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
+  animation: piecePopIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+
+@keyframes piecePopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .puzzle-piece:hover {
-  transform: scale(1.02);
-  z-index: 10;
-}
-
-.puzzle-piece.correct {
-  border: 2px solid limegreen !important;
-  animation: correctFlash 0.5s ease;
-}
-
-@keyframes correctFlash {
-  0% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
-  50% { box-shadow: 0 0 20px rgba(50, 205, 50, 0.7); }
-  100% { box-shadow: 0 0 10px rgba(50, 205, 50, 0); }
-}
-
-.puzzle-piece.selected {
-  box-shadow: 0 0 15px gold;
   transform: scale(1.03);
-  z-index: 20;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  z-index: 10;
 }
 
 /* Media query for very small screens (just in case) */
@@ -160,22 +161,26 @@
 /* PIEZA SELECCIONADA */
 .puzzle-piece.selected {
   border: 3px solid gold;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
-  transform: scale(1.05);
-  z-index: 2;
+  transform: scale(1.06);
+  z-index: 20;
+  animation: selectedGlow 1.4s ease-in-out infinite;
+}
+
+@keyframes selectedGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.55); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.95); }
 }
 
 /* PIEZA BLOQUEADA POR OTRO USUARIO */
 .puzzle-piece.blocked {
-  filter: grayscale(80%) brightness(0.7);
-  animation: pulseBlocked 1s infinite;
+  filter: grayscale(75%) brightness(0.75);
+  animation: pulseBlocked 1.6s ease-in-out infinite;
   cursor: not-allowed;
 }
 
 @keyframes pulseBlocked {
-  0% { opacity: 0.9; }
-  50% { opacity: 0.4; }
-  100% { opacity: 0.9; }
+  0%, 100% { opacity: 0.92; }
+  50% { opacity: 0.55; }
 }
 
 /* Icono de quién tiene seleccionada la pieza bloqueada */
@@ -224,18 +229,43 @@
 }
 
 /* PIEZA CORRECTAMENTE COLOCADA */
+/* Un solo "asentamiento" al acertar, en vez de brillo infinito: con muchas
+   piezas correctas a la vez, un parpadeo constante en todo el tablero cansa
+   la vista. Queda con un brillo suave y fijo una vez termina. */
 .puzzle-piece.correct {
   border: 2px solid #28a745;
-  animation: correctGlow 1s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+  animation: correctSettle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes correctGlow {
-  0%, 100% {
-    box-shadow: 0 0 5px #28a745;
+@keyframes correctSettle {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(40, 167, 69, 0);
   }
-  50% {
-    box-shadow: 0 0 15px #28a745;
+  40% {
+    transform: scale(1.12);
+    box-shadow: 0 0 22px rgba(40, 167, 69, 0.9);
   }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+  }
+}
+
+/* Piezas recién intercambiadas: un pequeño "pop" al asentarse en su nueva casilla */
+.puzzle-piece.swapped {
+  animation: pieceSwapPop 0.42s ease-out;
+  z-index: 15;
+}
+
+@keyframes pieceSwapPop {
+  0% { transform: scale(1); }
+  35% {
+    transform: scale(1.16);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.85);
+  }
+  100% { transform: scale(1); }
 }
 
 /* Contenedor de puzzle */

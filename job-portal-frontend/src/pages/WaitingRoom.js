@@ -210,6 +210,7 @@ const WaitingRoom = () => {
 
     Swal.fire({
       html: `
+        <div class="countdown-stage">
         <div class="countdown">
           <div class="countdown__colored-blocks">
             <div class="countdown__colored-blocks-rotater">
@@ -237,6 +238,7 @@ const WaitingRoom = () => {
                        l0,-61 L40,28" />
             </svg>
           </div>
+        </div>
         </div>
       `,
       showConfirmButton: false,

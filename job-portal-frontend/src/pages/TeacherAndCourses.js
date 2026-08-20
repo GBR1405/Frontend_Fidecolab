@@ -12,6 +12,291 @@ import Plantilla from '../docs/Plantilla.xlsx';
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
+const PC_STYLES = `
+    .pc-page{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        height:100%;
+        min-height:0;
+    }
+    .pc-toolbar{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+    }
+    .pc-eyebrow{
+        margin:0 0 2px;
+        font-size:0.72rem;
+        font-weight:600;
+        letter-spacing:0.04em;
+        text-transform:uppercase;
+        color:var(--primary-text-clr);
+    }
+    .pc-heading{
+        margin:0;
+        font-size:1.35rem;
+        font-weight:700;
+        color:var(--blue-royal-clr);
+    }
+    .pc-toolbar-actions{
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+    .pc-btn{
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+        font-size:0.82rem;
+        font-weight:600;
+        padding:9px 16px;
+        border-radius:9px;
+        border:1px solid transparent;
+        cursor:pointer;
+        white-space:nowrap;
+        transition:background-color .15s ease, border-color .15s ease, transform .1s ease;
+        font-family:inherit;
+    }
+    .pc-btn:active{ transform:translateY(1px); }
+    .pc-btn--primary{ background:var(--blue-royal-clr); color:#fff; }
+    .pc-btn--primary:hover{ background:var(--dark-royal-clr); }
+    .pc-btn--accent{ background:var(--orange-clr); color:#fff; }
+    .pc-btn--accent:hover{ background:var(--dark--orange-clr); }
+    .pc-btn--ghost{ background:var(--white-clr); color:var(--blue-royal-clr); border-color:#dbe1f5; }
+    .pc-btn--ghost:hover{ background:#eef1fd; }
+    .pc-btn--muted{ background:var(--white-smoke-clr); color:var(--primary-text-clr); }
+    .pc-btn--muted:hover{ background:#e6e6ea; }
+    .pc-grid{
+        flex:1;
+        min-height:0;
+        display:grid;
+        grid-template-columns:minmax(0,0.85fr) minmax(0,1.3fr);
+        gap:14px;
+    }
+    .pc-panel{
+        background:var(--white-clr);
+        border:1px solid #ececf2;
+        border-radius:14px;
+        box-shadow:0 2px 12px rgba(20,11,153,0.05);
+        display:flex;
+        flex-direction:column;
+        min-height:0;
+        overflow:hidden;
+    }
+    .pc-panel-head{
+        padding:14px 16px 12px;
+        border-bottom:1px solid var(--white-smoke-clr);
+        flex-shrink:0;
+    }
+    .pc-panel-title{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:8px;
+        font-size:0.95rem;
+        font-weight:700;
+        color:var(--blue-royal-clr);
+    }
+    .pc-count-badge{
+        background:var(--white-smoke-clr);
+        color:var(--primary-text-clr);
+        font-size:0.72rem;
+        font-weight:700;
+        padding:2px 10px;
+        border-radius:999px;
+    }
+    .pc-search{
+        position:relative;
+        margin-top:10px;
+    }
+    .pc-search i{
+        position:absolute;
+        left:12px;
+        top:50%;
+        transform:translateY(-50%);
+        color:var(--primary-text-clr);
+        font-size:0.8rem;
+        pointer-events:none;
+    }
+    .pc-search input{
+        width:100%;
+        padding:9px 12px 9px 32px;
+        border-radius:9px;
+        border:1px solid #e3e3ea;
+        background:var(--white-smoke-clr);
+        font-size:0.85rem;
+        font-family:inherit;
+        color:var(--primary-text-clr);
+        outline:none;
+        transition:border-color .15s ease, background-color .15s ease;
+        box-sizing:border-box;
+    }
+    .pc-search input:focus{ border-color:var(--blue-royal-clr); background:#fff; }
+    .pc-search input:disabled{ opacity:0.55; cursor:not-allowed; }
+    .pc-detail-context{
+        margin-top:10px;
+        background:#eef1fd;
+        border:1px solid #dfe4fb;
+        border-radius:10px;
+        padding:9px 12px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+        font-size:0.78rem;
+        color:var(--dark-royal-clr);
+    }
+    .pc-detail-context strong{ color:var(--blue-royal-clr); }
+    .pc-detail-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .pc-list{
+        flex:1;
+        min-height:0;
+        overflow-y:auto;
+    }
+    .pc-list::-webkit-scrollbar{ width:6px; }
+    .pc-list::-webkit-scrollbar-track{ background:var(--white-smoke-clr); }
+    .pc-list::-webkit-scrollbar-thumb{ background-color:var(--orange-clr); border-radius:1em; }
+    .pc-row{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:10px 16px;
+        border-bottom:1px solid var(--white-smoke-clr);
+        cursor:pointer;
+        transition:background-color .12s ease;
+    }
+    .pc-row:hover{ background:#fafbff; }
+    .pc-row.is-selected{
+        background:#eef1fd;
+        border-left:3px solid var(--blue-royal-clr);
+        padding-left:13px;
+    }
+    .pc-avatar{
+        flex-shrink:0;
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        background:var(--blue-royal-clr);
+        color:#fff;
+        font-size:0.72rem;
+        font-weight:700;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+    .pc-badge-group{
+        flex-shrink:0;
+        background:var(--white-smoke-clr);
+        color:var(--blue-royal-clr);
+        font-weight:700;
+        font-size:0.72rem;
+        padding:4px 9px;
+        border-radius:7px;
+    }
+    .pc-row.is-selected .pc-badge-group{ background:var(--blue-royal-clr); color:#fff; }
+    .pc-row-body{ min-width:0; flex:1; }
+    .pc-row-name{
+        margin:0;
+        font-size:0.85rem;
+        font-weight:600;
+        color:#262b38;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+    .pc-row-sub{
+        margin:2px 0 0;
+        font-size:0.75rem;
+        color:var(--primary-text-clr);
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+    .pc-row-actions{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .pc-icon-btn{
+        border:none;
+        background:transparent;
+        width:28px;
+        height:28px;
+        border-radius:7px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        color:#9aa0ac;
+        font-size:0.85rem;
+        transition:background-color .12s ease, color .12s ease;
+    }
+    .pc-icon-btn:hover{ background:var(--white-smoke-clr); }
+    .pc-icon-btn.pc-info:hover{ color:var(--blue-royal-clr); }
+    .pc-icon-btn.pc-edit:hover{ color:var(--blue-royal-clr); }
+    .pc-icon-btn.pc-danger:hover{ color:#dc3545; }
+    .pc-icon-btn.pc-warn:hover{ color:var(--orange-clr); }
+    .pc-empty{
+        padding:40px 16px;
+        text-align:center;
+        color:var(--primary-text-clr);
+        font-size:0.85rem;
+    }
+    .pc-empty i{
+        display:block;
+        font-size:1.8rem;
+        margin-bottom:8px;
+        color:#ccd0da;
+    }
+    .pc-loading-wrap{
+        position:relative;
+        height:100%;
+        min-height:140px;
+    }
+    .pc-panel-foot{
+        flex-shrink:0;
+        padding:9px 14px;
+        border-top:1px solid var(--white-smoke-clr);
+        background:var(--white-smoke-clr);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+    }
+    .pc-foot-info{ font-size:0.72rem; color:var(--primary-text-clr); white-space:nowrap; }
+    .pc-pagination{ display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; }
+    .pc-page-btn{
+        border:none;
+        background:#fff;
+        color:var(--dark-royal-clr);
+        min-width:26px;
+        height:26px;
+        padding:0 6px;
+        border-radius:6px;
+        font-size:0.72rem;
+        font-weight:700;
+        cursor:pointer;
+        font-family:inherit;
+        transition:background-color .12s ease, color .12s ease;
+    }
+    .pc-page-btn:hover{ background:var(--blue-royal-clr); color:#fff; }
+    .pc-page-btn.is-active{ background:var(--blue-royal-clr); color:#fff; }
+    @media (max-width: 900px){
+        .pc-grid{
+            grid-template-columns:1fr;
+            grid-auto-rows:minmax(340px, 1fr);
+            overflow-y:auto;
+        }
+        .pc-heading{ font-size:1.15rem; }
+    }
+    @media (max-width: 520px){
+        .pc-toolbar{ flex-direction:column; }
+        .pc-toolbar-actions{ width:100%; }
+        .pc-btn{ flex:1; justify-content:center; }
+        .pc-panel-foot{ flex-direction:column; align-items:stretch; }
+        .pc-pagination{ justify-content:center; }
+    }
+`;
 
 const AdminProfessorCourses = () => {
     const [courses, setCourses] = useState([]);
@@ -34,7 +319,6 @@ const AdminProfessorCourses = () => {
     const handleDeselectTeacher = () => {
         setSelectedTeacher(null);
         setLinkedCourses([]);
-        applyRowSelectionEffect(null, 'teacher'); 
     };
 
     const handleRowClick = (id, type) => {
@@ -42,19 +326,20 @@ const AdminProfessorCourses = () => {
             console.error('El parámetro "type" debe ser una cadena. Se recibió:', typeof type);
             return;
         }
-        
+
         if (type === 'teacher') {
-            setSelectedTeacher(prev => (prev === id ? null : id));
-            if (id !== null) {
-                fetchLinkedCourses(id); 
-            } else {
-                setLinkedCourses([]); 
-            }
+            setSelectedTeacher(prev => {
+                const next = prev === id ? null : id;
+                if (next !== null) {
+                    fetchLinkedCourses(next);
+                } else {
+                    setLinkedCourses([]);
+                }
+                return next;
+            });
         } else if (type === 'course') {
             setSelectedCourse(prev => (prev === id ? null : id));
         }
-    
-        applyRowSelectionEffect(id, type);
     };
 
     const handleAssignGroup = async (grupoId) => {
@@ -135,21 +420,6 @@ const AdminProfessorCourses = () => {
         }
     };
     
-    const applyRowSelectionEffect = (selectedRow, type) => {
-        const rows = document.querySelectorAll(`table#table${type.charAt(0).toUpperCase() + type.slice(1)} tbody tr`);
-        
-        rows.forEach(row => {
-            const rowId = row.getAttribute("data-id");
-            if (rowId) {
-                if (selectedRow !== null && parseInt(rowId) === selectedRow) {
-                    row.classList.add("selected");
-                } else {
-                    row.classList.remove("selected");
-                }
-            }
-        });
-    };
-
     const fetchLinkedCourses = async (professorId) => {
         try {
             const response = await fetch(`${apiUrl}/get-cursos-by-profesor/${professorId}`, {
@@ -1015,7 +1285,7 @@ const handleDeleteCourse = (grupoCursoId) => {
         if (!searchProfessor) return true;
         
         const fullName = `${professor.Nombre} ${professor.Apellido1} ${professor.Apellido2}`.toLowerCase();
-        const email = professor.Correo.toLowerCase();
+        const email = (professor.Correo || '').toLowerCase();
         const searchTerm = searchProfessor.toLowerCase();
         
         return fullName.includes(searchTerm) || email.includes(searchTerm);
@@ -1052,279 +1322,273 @@ const handleDeleteCourse = (grupoCursoId) => {
     const paginateCourses = (pageNumber) => setCurrentPageCourses(pageNumber);
     const paginateLinkedCourses = (pageNumber) => setCurrentPageLinkedCourses(pageNumber);
 
+    // Evita quedar "atascado" en una página vacía cuando el filtro o la
+    // selección de profesor cambian la cantidad de resultados disponibles.
+    useEffect(() => {
+        setCurrentPageProfessors(1);
+    }, [searchProfessor]);
+
+    useEffect(() => {
+        setCurrentPageCourses(1);
+    }, [searchCourse]);
+
+    useEffect(() => {
+        setCurrentPageLinkedCourses(1);
+    }, [selectedTeacher]);
+
+    // Ventana de páginas visibles alrededor de la página actual (misma regla
+    // que antes, extraída para no repetirla tres veces).
+    const getVisiblePages = (current, total) => {
+        return Array.from({ length: total }, (_, i) => i + 1).filter(number => {
+            let show;
+            if (current === 1 || current === 2) {
+                show = current === 1 ? number <= 5 : number >= current - 1 && number <= current + 3;
+            }
+            if (current > 2 && current < total - 1) {
+                show = number >= current - 2 && number <= current + 2 && number > 0 && number <= total;
+            }
+            if (current === total - 1 || current === total) {
+                show = current === total ? number >= current - 4 : number >= current - 3 && number <= current + 1;
+            }
+            return show;
+        });
+    };
+
+    const renderPagination = (current, total, onChange) => {
+        if (total <= 1) return null;
+        return (
+            <div className="pc-pagination">
+                {getVisiblePages(current, total).map(number => (
+                    <button
+                        key={number}
+                        type="button"
+                        className={`pc-page-btn ${current === number ? "is-active" : ""}`}
+                        onClick={() => onChange(number)}
+                    >
+                        {number}
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
+    const getInitials = (name, lastName) => {
+        const first = (name || "").trim().charAt(0);
+        const second = (lastName || "").trim().charAt(0);
+        const initials = `${first}${second}`.toUpperCase();
+        return initials || "?";
+    };
+
+    const selectedTeacherData = selectedTeacher !== null
+        ? professors.find(p => p.Usuario_ID_PK === selectedTeacher)
+        : null;
+
+    const visibleCourses = selectedTeacher ? currentLinkedCourses : currentCourses;
+    const visibleCoursesTotal = selectedTeacher ? linkedCourses.length : filteredCourses.length;
+    const visibleCoursesFrom = selectedTeacher ? indexOfFirstLinkedCourse : indexOfFirstCourse;
+    const visibleCoursesTo = selectedTeacher ? indexOfLastLinkedCourse : indexOfLastCourse;
 
     return (
         <>
           <LayoutAdmin>
-            <section className="add__container">
-              <div className="container__title">
-                <h3>Profesores y Cursos</h3>
+            <style>{PC_STYLES}</style>
+            <section className="pc-page">
+
+              <div className="pc-toolbar">
+                <div className="pc-title-group">
+                  <p className="pc-eyebrow">Gestión académica</p>
+                  <h3 className="pc-heading">Profesores y Cursos</h3>
+                </div>
+                <div className="pc-toolbar-actions">
+                  <button type="button" className="pc-btn pc-btn--ghost" onClick={handleAddProfessor}>
+                    <i className="fa-solid fa-user-plus"></i> Profesor
+                  </button>
+                  <button type="button" className="pc-btn pc-btn--ghost" onClick={handleAddGroup}>
+                    <i className="fa-solid fa-layer-group"></i> Grupo
+                  </button>
+                  <button type="button" className="pc-btn pc-btn--primary" onClick={handleAddCourse}>
+                    <i className="fa-solid fa-plus"></i> Curso
+                  </button>
+                </div>
               </div>
-              <div className="container__options">
-                <div className="option__filters">
-                  <input 
-                    className="filter__input" 
-                    type="text" 
-                    placeholder="Buscar profesor..." 
-                    value={searchProfessor}
-                    onChange={(e) => setSearchProfessor(e.target.value)}
-                    disabled={selectedTeacher !== null}
-                  />
-                  <div className="filter__course">
-                    <input 
-                        className="filter__course__input"
-                        type="text" 
-                        placeholder="Buscar curso..." 
-                        value={searchCourse}
-                        onChange={(e) => setSearchCourse(e.target.value)}
+
+              <div className="pc-grid">
+
+                {/* Panel izquierdo: profesores */}
+                <div className="pc-panel">
+                  <div className="pc-panel-head">
+                    <div className="pc-panel-title">
+                      <span><i className="fa-solid fa-chalkboard-user" style={{ marginRight: 8, color: 'var(--blue-royal-clr)' }}></i>Profesores</span>
+                      <span className="pc-count-badge">{filteredProfessors.length}</span>
+                    </div>
+                    <div className="pc-search">
+                      <i className="fa-solid fa-magnifying-glass"></i>
+                      <input
+                        type="text"
+                        placeholder="Buscar por nombre o correo..."
+                        value={searchProfessor}
+                        onChange={(e) => setSearchProfessor(e.target.value)}
                         disabled={selectedTeacher !== null}
-                    />
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pc-list">
+                    {loading ? (
+                      <div className="pc-loading-wrap"><div className="loader-blue-king"></div></div>
+                    ) : currentProfessors.length === 0 ? (
+                      <div className="pc-empty">
+                        <i className="fa-solid fa-user-slash"></i>
+                        {searchProfessor ? "Sin resultados para tu búsqueda." : "Todavía no hay profesores registrados."}
+                      </div>
+                    ) : (
+                      currentProfessors.map((professor) => (
+                        <div
+                          key={professor.Usuario_ID_PK}
+                          className={`pc-row ${selectedTeacher === professor.Usuario_ID_PK ? "is-selected" : ""}`}
+                          onClick={() => handleRowClick(professor.Usuario_ID_PK, 'teacher')}
+                        >
+                          <div className="pc-avatar">{getInitials(professor.Nombre, professor.Apellido1)}</div>
+                          <div className="pc-row-body">
+                            <p className="pc-row-name">{professor.Nombre} {professor.Apellido1} {professor.Apellido2}</p>
+                            <p className="pc-row-sub">{professor.Correo}</p>
+                          </div>
+                          {selectedTeacher === professor.Usuario_ID_PK && (
+                            <i className="fa-solid fa-circle-check" style={{ color: 'var(--blue-royal-clr)', flexShrink: 0 }}></i>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="pc-panel-foot">
+                    <span className="pc-foot-info">
+                      {filteredProfessors.length === 0
+                        ? "0 resultados"
+                        : `${indexOfFirstProfessor + 1}–${Math.min(indexOfLastProfessor, filteredProfessors.length)} de ${filteredProfessors.length}`}
+                    </span>
+                    {renderPagination(currentPageProfessors, totalPagesProfessors, paginateProfessors)}
                   </div>
                 </div>
-                <div className="option__buttons">
-                  <div className="option__button">
-                    <button onClick={handleAddCourse} type="submit">Agregar Curso</button>
+
+                {/* Panel derecho: cursos / cursos del profesor seleccionado */}
+                <div className="pc-panel">
+                  <div className="pc-panel-head">
+                    <div className="pc-panel-title">
+                      <span>
+                        <i className="fa-solid fa-book" style={{ marginRight: 8, color: 'var(--blue-royal-clr)' }}></i>
+                        {selectedTeacher ? "Cursos asignados" : "Cursos"}
+                      </span>
+                      <span className="pc-count-badge">{visibleCoursesTotal}</span>
+                    </div>
+
+                    {selectedTeacher ? (
+                      <div className="pc-detail-context">
+                        <span>
+                          Grupos de <strong>{selectedTeacherData ? `${selectedTeacherData.Nombre} ${selectedTeacherData.Apellido1} ${selectedTeacherData.Apellido2}` : "profesor seleccionado"}</strong>
+                        </span>
+                        <div className="pc-detail-actions">
+                          <button type="button" className="pc-btn pc-btn--accent" onClick={handleOpenModal}>
+                            <i className="fa-solid fa-link"></i> Asignar grupo
+                          </button>
+                          <button type="button" className="pc-btn pc-btn--muted" onClick={handleDeselectTeacher}>
+                            <i className="fa-solid fa-xmark"></i> Quitar selección
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pc-search">
+                        <i className="fa-solid fa-magnifying-glass"></i>
+                        <input
+                          type="text"
+                          placeholder="Buscar por código o nombre..."
+                          value={searchCourse}
+                          onChange={(e) => setSearchCourse(e.target.value)}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="option__button">
-                    <button onClick={handleAddGroup} type="submit">Agregar Grupo</button>
+
+                  <div className="pc-list">
+                    {loading ? (
+                      <div className="pc-loading-wrap"><div className="loader-blue-king"></div></div>
+                    ) : visibleCourses.length === 0 ? (
+                      <div className="pc-empty">
+                        <i className="fa-solid fa-book-open"></i>
+                        {selectedTeacher
+                          ? "Este profesor no tiene grupos asignados."
+                          : (searchCourse ? "Sin resultados para tu búsqueda." : "Todavía no hay cursos registrados.")}
+                      </div>
+                    ) : (
+                      visibleCourses.map((course) => (
+                        <div
+                          key={course.id}
+                          className={`pc-row ${selectedCourse === course.id ? "is-selected" : ""}`}
+                          onClick={() => handleRowClick(course.id, 'course')}
+                        >
+                          <span className="pc-badge-group">G{course.grupo ?? "-"}</span>
+                          <div className="pc-row-body">
+                            <p className="pc-row-name">{course.codigo ?? "Sin código"} · {course.nombre ?? "Sin nombre"}</p>
+                          </div>
+                          <div className="pc-row-actions">
+                            <button
+                              type="button"
+                              className="pc-icon-btn pc-info"
+                              title="Ver detalles"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id);
+                              }}
+                            >
+                              <i className="fa-solid fa-circle-info"></i>
+                            </button>
+                            {selectedTeacher ? (
+                              <button
+                                type="button"
+                                className="pc-icon-btn pc-warn"
+                                title="Desvincular"
+                                onClick={(e) => { e.stopPropagation(); handleUnlinkGroup(course.id); }}
+                              >
+                                <i className="fa-solid fa-link-slash"></i>
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  className="pc-icon-btn pc-edit"
+                                  title="Editar curso"
+                                  onClick={(e) => { e.stopPropagation(); handleEditCourse(course); }}
+                                >
+                                  <i className="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="pc-icon-btn pc-danger"
+                                  title="Eliminar curso"
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.Curso_ID_FK || course.id); }}
+                                >
+                                  <i className="fa-solid fa-trash"></i>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="pc-panel-foot">
+                    <span className="pc-foot-info">
+                      {visibleCoursesTotal === 0
+                        ? "0 resultados"
+                        : `${visibleCoursesFrom + 1}–${Math.min(visibleCoursesTo, visibleCoursesTotal)} de ${visibleCoursesTotal}`}
+                    </span>
+                    {selectedTeacher
+                      ? renderPagination(currentPageLinkedCourses, totalPagesLinkedCourses, paginateLinkedCourses)
+                      : renderPagination(currentPageCourses, totalPagesCourses, paginateCourses)}
                   </div>
                 </div>
-              </div>
-              <div className="container__content">
-                    <div className="content__box">
-                            <div className="box__title">
-                                <h3>Lista Profesores</h3>
-                            </div>
-                            <table className="box__table" id="tableTeacher">
-                                <thead className="table__head">
-                                    <th className="disapear">Codigo</th>
-                                    <th className="table__header">Nombre</th>
-                                    <th className="table__header">Correo</th>
-                                </thead>
-                                <tbody className="table__body">
-                                    {loading ? (
-                                        <tr className="table__row">
-                                            <td colSpan="3">Cargando...</td>
-                                        </tr>
-                                    ) : (
-                                        currentProfessors.map((professor) => (
-                                            <tr
-                                                key={professor.Usuario_ID_PK}
-                                                data-id={professor.Usuario_ID_PK}
-                                                onClick={() => handleRowClick(professor.Usuario_ID_PK, 'teacher')}
-                                                className="table__row"
-                                            >
-                                                <td className="disapear">{professor.Usuario_ID_PK}</td>
-                                                <td className="table__data">{professor.Nombre} {professor.Apellido1} {professor.Apellido2}</td>
-                                                <td className="table__data">{professor.Correo}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                                <tfoot className="table__foot">
-                                    {totalPagesProfessors > 1 && (
-                                        <div className="foot__buttons">                            
-                                            {/* Mostrar páginas alrededor de la página actual */}
-                                            {Array.from({ length: totalPagesProfessors }, (_, i) => i + 1)
-                                                .filter(number => {
-                                                  let pageNumber;
-                                                  if (currentPageProfessors === 1 || currentPageProfessors === 2) {
-                                                    pageNumber = currentPageProfessors === 1? number <= 5 : number >= currentPageProfessors - 1 && number <= currentPageProfessors + 3;
-                                                  }
-                                                  if (currentPageProfessors > 2 && currentPageProfessors < totalPagesProfessors -1) {
-                                                    pageNumber = number >= currentPageProfessors - 2 && number <= currentPageProfessors + 2 && number > 0 && number <= totalPagesProfessors;
-                                                  }  
-                                                  if (currentPageProfessors === totalPagesProfessors - 1 || currentPageProfessors === totalPagesProfessors) {
-                                                    pageNumber = currentPageProfessors === totalPagesProfessors ? number >= currentPageProfessors - 4 : number >= currentPageProfessors - 3 && number <= currentPageProfessors + 1;
-                                                  }                                                 
-                                                  return pageNumber;                            
-                                                })
-                                                .map(number => (
-                                                    <button 
-                                                        className={`button__page ${currentPageProfessors === number ? "active" : ""}`}
-                                                        key={number}
-                                                        onClick={() => paginateProfessors(number)}
-                                                    >
-                                                        {number}
-                                                    </button>
-                                                ))}
-                                        </div>
-                                    )}
-                                </tfoot>
-                            </table>
-                    </div>
-                    <div className="content__box">
-                            <div className="box__title">
-                                <h3>Lista Cursos</h3>
-                            </div>
-                            <table className="box__table">
-                                <thead className="table__head">
-                                    <th className="table__header" style={{ width: "60%" }}>Curso</th>
-                                    <th className="table__header" style={{ width: "15%", textAlign: "center" }}>Grupo</th>
-                                    <th className="table__header" style={{ width: "12%", textAlign: "center" }}>Detalles</th>
-                                    <th className="table__header" style={{ width: "13%", textAlign: "center" }}>Acciones</th>
-                                </thead>
-                                <tbody className="table__body">
-                                    {loading ? (
-                                        <tr className="table__row">
-                                            <td colSpan={selectedTeacher ? 3 : 2}>Cargando cursos...</td>
-                                        </tr>
-                                    ) : (
-                                        (selectedTeacher ? currentLinkedCourses : currentCourses).map((course) => (
-                                            <tr
-                                            className="table__row"
-                                            key={course.id}
-                                            data-id={course.id}
-                                            onClick={() => handleRowClick(course.id, 'course')}
-                                        >
-                                            <td className="table__data" style={{ width: "60%", maxWidth: "60%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {`${course.codigo ?? "Sin código"} - ${course.nombre ?? "Sin nombre"}`}
-                                            </td>
 
-                                            <td className="table__data" style={{ width: "15%", textAlign: "center" }}>
-                                            {`G${course.grupo ?? "Sin grupo"}`}
-                                            </td>
-
-                                            {/* Detalles */}
-                                            <td className="table__data" style={{ width: "12%", textAlign: "center" }}>
-                                             <button className="data__button button--info"
-                                                onClick={(e) => {
-                                                e.stopPropagation();
-                                                console.log("Detalles del curso:", course);
-                                                handleShowCourseDetails(course.Curso_ID_FK || course.Curso_ID || course.id); // ajusta según estructura
-                                                }}
-                                            >
-                                                <i className="fa-solid fa-circle-info"></i>
-                                            </button>
-                                            </td>
-
-                                            {/* Acciones */}
-                                            <td className="table__data" style={{ width: "13%", textAlign: "center" }}>
-                                            {selectedTeacher ? (
-                                                <button className="data__button button--desactive"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleUnlinkGroup(course.id);
-                                                }}
-                                                >
-                                                <i className="fa-solid fa-link-slash"></i>
-                                                </button>
-                                            ) : (
-                                                <>
-                                                <button
-                                                    className="data__button button--edit"
-                                                    onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEditCourse(course);
-                                                    }}
-                                                >
-                                                    <i className="fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                                <button
-                                                    className="data__button button--desactive"
-                                                    onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteCourse(course.Curso_ID_FK || course.id);
-                                                    }}
-                                                >
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </button>
-                                                </>
-                                                
-                                            )}
-                                            </td>
-                                        </tr>
-                                                                                ))
-                                    )}
-                                </tbody>
-                                <tfoot className="table__foot">
-                                    {selectedTeacher ? (
-                                        // Paginación para cursos vinculados
-                                        <>                                            
-                                            {totalPagesLinkedCourses > 1 && (
-                                                <div className="foot__buttons">                            
-                                                    {/* Mostrar páginas alrededor de la página actual */}
-                                                    {Array.from({ length: totalPagesLinkedCourses }, (_, i) => i + 1)
-                                                        .filter(number => {
-                                                          let pageNumber;
-                                                          if (currentPageLinkedCourses === 1 || currentPageLinkedCourses === 2) {
-                                                            pageNumber = currentPageLinkedCourses === 1? number <= 5 : number >= currentPageLinkedCourses - 1 && number <= currentPageLinkedCourses + 3;
-                                                          }
-                                                          if (currentPageLinkedCourses > 2 && currentPageLinkedCourses < totalPagesLinkedCourses -1) {
-                                                            pageNumber = number >= currentPageLinkedCourses - 2 && number <= currentPageLinkedCourses + 2 && number > 0 && number <= totalPagesLinkedCourses;
-                                                          }  
-                                                          if (currentPageLinkedCourses === totalPagesLinkedCourses - 1 || currentPageLinkedCourses === totalPagesLinkedCourses) {
-                                                            pageNumber = currentPageLinkedCourses === totalPagesLinkedCourses ? number >= currentPageLinkedCourses - 4 : number >= currentPageLinkedCourses - 3 && number <= currentPageLinkedCourses + 1;
-                                                          }                                                 
-                                                          return pageNumber;                            
-                                                        })
-                                                        .map(number => (
-                                                            <button 
-                                                                className={`button__page ${currentPageLinkedCourses === number ? "active" : ""}`}
-                                                                key={number}
-                                                                onClick={() => paginateLinkedCourses(number)}
-                                                            >
-                                                                {number}
-                                                            </button>
-                                                        ))}
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        // Paginación para cursos normales
-                                        <>
-                                            {totalPagesCourses > 1 && (
-                                                <div className="foot__buttons">                            
-                                                    {/* Mostrar páginas alrededor de la página actual */}
-                                                    {Array.from({ length: totalPagesCourses }, (_, i) => i + 1)
-                                                        .filter(number => {
-                                                          let pageNumber;
-                                                          if (currentPageCourses === 1 || currentPageCourses === 2) {
-                                                            pageNumber = currentPageCourses === 1? number <= 5 : number >= currentPageCourses - 1 && number <= currentPageCourses + 3;
-                                                          }
-                                                          if (currentPageCourses > 2 && currentPageCourses < totalPagesCourses -1) {
-                                                            pageNumber = number >= currentPageCourses - 2 && number <= currentPageCourses + 2 && number > 0 && number <= totalPagesCourses;
-                                                          }  
-                                                          if (currentPageCourses === totalPagesCourses - 1 || currentPageCourses === totalPagesCourses) {
-                                                            pageNumber = currentPageCourses === totalPagesCourses ? number >= currentPageCourses - 4 : number >= currentPageCourses - 3 && number <= currentPageCourses + 1;
-                                                          }                                                 
-                                                          return pageNumber;                            
-                                                        })
-                                                        .map(number => (
-                                                            <button 
-                                                                className={`button__page ${currentPageCourses === number ? "active" : ""}`}
-                                                                key={number}
-                                                                onClick={() => paginateCourses(number)}
-                                                            >
-                                                                {number}
-                                                            </button>
-                                                        ))}
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </tfoot>
-                            </table>
-                    </div>
-              </div>
-              <div className="container__below">
-                        <div className="below__box">
-                            <div className="below__button">
-                                <button onClick={handleAddProfessor} type="submit">Agregar Profesor</button>
-                            </div>
-                            {selectedTeacher && (
-                                <div className="below__button">
-                                    <button onClick={handleDeselectTeacher} type="submit">Deseleccionar</button>
-                                </div>
-                            )}
-                        </div>
-                        <div className="below__box">
-                            {selectedTeacher && (
-                                <div className="below__button">
-                                    <button onClick={handleOpenModal} type="submit">Asignar</button>
-                                </div>
-                            )}
-                        </div>
               </div>
             </section>
           </LayoutAdmin>

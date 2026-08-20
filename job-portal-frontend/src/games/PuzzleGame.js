@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import '../styles/games_puzzle.css';
@@ -10,7 +10,11 @@ const PuzzleGame = ({ gameConfig }) => {
 
   const [pieces, setPieces] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [blockedPieces, setBlockedPieces] = useState(new Set());
+  // Selección de piezas de los demás miembros del equipo: { [userId]: [pieceId, ...] }
+  const [otherSelections, setOtherSelections] = useState({});
+  // Piezas cuyo "dueño" acaba de soltarlas, mantenidas un instante extra solo para animar la salida del icono
+  const [leavingBadges, setLeavingBadges] = useState({});
+  const prevOwnerMapRef = useRef({});
   const [swapsLeft, setSwapsLeft] = useState(0);
   const [progress, setProgress] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -90,7 +94,8 @@ const PuzzleGame = ({ gameConfig }) => {
       setProgress(game.state.progress);
       setSelectedIds([]);
       setInteractionLocked(false);
-      setBlockedPieces(new Set());
+      setOtherSelections({});
+      setLeavingBadges({});
     };
 
     socket.on('puzzleGameState', handleInit);
@@ -102,14 +107,30 @@ const PuzzleGame = ({ gameConfig }) => {
   }, [socket, partidaId, equipoNumero]);
 
   // 🧩 Después de cada swap
+  // El backend no reenvía un "updateSelections" vacío cuando una pareja se
+  // intercambia: solo emite puzzleUpdate. Como un swap siempre libera por
+  // completo la pareja (2 piezas) del usuario que lo generó, basta con
+  // limpiar cualquier selección (propia o ajena) que haya llegado a 2.
   useEffect(() => {
     if (!socket) return;
 
-    const handleUpdate = ({ pieces, selected, swapsLeft, progress }) => {
+    const handleUpdate = ({ pieces, swapsLeft, progress }) => {
       setPieces(pieces);
-      setSelectedIds(selected);
       setSwapsLeft(swapsLeft);
       setProgress(progress);
+
+      setSelectedIds(prev => (prev.length >= 2 ? [] : prev));
+      setOtherSelections(prev => {
+        let changed = false;
+        const updated = { ...prev };
+        Object.keys(updated).forEach(uid => {
+          if ((updated[uid]?.length || 0) >= 2) {
+            updated[uid] = [];
+            changed = true;
+          }
+        });
+        return changed ? updated : prev;
+      });
 
       if (progress === 100 || swapsLeft <= 0) {
         setInteractionLocked(true);
@@ -120,27 +141,18 @@ const PuzzleGame = ({ gameConfig }) => {
     return () => socket.off('puzzleUpdate', handleUpdate);
   }, [socket]);
 
-  // 🔁 Eventos de bloqueo y swaps agotados
+  // 🔁 Selección/deselección de piezas por parte del equipo
   useEffect(() => {
     if (!socket) return;
 
+    // El servidor manda, en cada select/deselect, la selección COMPLETA y
+    // actual de ese usuario. Reemplazar (no acumular) su entrada evita
+    // depender de temporizadores locales que se desincronizan del backend.
     const handleUpdateSelections = ({ userId: senderId, selected }) => {
       if (senderId === userId) {
         setSelectedIds(selected);
       } else {
-        setBlockedPieces(prev => {
-          const updated = new Set([...prev]);
-          selected.forEach(id => updated.add(id));
-          return updated;
-        });
-
-        setTimeout(() => {
-          setBlockedPieces(prev => {
-            const updated = new Set([...prev]);
-            selected.forEach(id => updated.delete(id));
-            return updated;
-          });
-        }, 5000);
+        setOtherSelections(prev => ({ ...prev, [senderId]: selected }));
       }
     };
 
@@ -164,9 +176,45 @@ const PuzzleGame = ({ gameConfig }) => {
     };
   }, [socket, userId]);
 
+  // 🧑‍🤝‍🧑 Mapa pieceId -> userId de quien la tiene seleccionada actualmente
+  const pieceOwnerMap = useMemo(() => {
+    const map = {};
+    Object.entries(otherSelections).forEach(([uid, ids]) => {
+      (ids || []).forEach(id => { map[id] = uid; });
+    });
+    return map;
+  }, [otherSelections]);
+
+  // 🫧 Mantener el icono un instante extra tras soltarse, solo para animar su salida
+  useEffect(() => {
+    const prevMap = prevOwnerMapRef.current;
+    const justReleased = {};
+
+    Object.keys(prevMap).forEach(pieceId => {
+      if (!pieceOwnerMap[pieceId]) {
+        justReleased[pieceId] = prevMap[pieceId];
+      }
+    });
+
+    if (Object.keys(justReleased).length > 0) {
+      setLeavingBadges(prev => ({ ...prev, ...justReleased }));
+      Object.keys(justReleased).forEach(pieceId => {
+        setTimeout(() => {
+          setLeavingBadges(prev => {
+            if (!(pieceId in prev)) return prev;
+            const { [pieceId]: _removed, ...rest } = prev;
+            return rest;
+          });
+        }, 280);
+      });
+    }
+
+    prevOwnerMapRef.current = pieceOwnerMap;
+  }, [pieceOwnerMap]);
+
   // 📌 Al hacer clic en una pieza
   const handlePieceClick = useCallback((pieceId) => {
-    if (interactionLocked || blockedPieces.has(pieceId)) return;
+    if (interactionLocked || pieceOwnerMap[pieceId]) return;
 
     socket.emit('selectPuzzlePiece', {
       partidaId,
@@ -174,20 +222,23 @@ const PuzzleGame = ({ gameConfig }) => {
       pieceId,
       userId
     });
-  }, [socket, partidaId, equipoNumero, userId, interactionLocked, blockedPieces]);
+  }, [socket, partidaId, equipoNumero, userId, interactionLocked, pieceOwnerMap]);
 
   // 🧱 Renderizar una pieza
   const renderPiece = (piece) => {
     const isSelected = selectedIds.includes(piece.id);
     const isCorrect = piece.currentRow === piece.correctRow && piece.currentCol === piece.correctCol;
-    const isBlocked = blockedPieces.has(piece.id);
+    const ownerId = pieceOwnerMap[piece.id];
+    const isBlocked = !!ownerId;
+    const badgeOwnerId = ownerId || leavingBadges[piece.id];
+    const isBadgeLeaving = !ownerId && !!leavingBadges[piece.id];
 
     return (
       <div
         key={piece.id}
-        className={`puzzle-piece 
-          ${isSelected ? 'selected' : ''} 
-          ${isCorrect ? 'correct' : ''} 
+        className={`puzzle-piece
+          ${isSelected ? 'selected' : ''}
+          ${isCorrect ? 'correct' : ''}
           ${isBlocked ? 'blocked' : ''}`}
         style={{
           width: `${pieceSize}px`,
@@ -202,7 +253,16 @@ const PuzzleGame = ({ gameConfig }) => {
           transition: 'all 0.2s ease'
         }}
         onClick={() => handlePieceClick(piece.id)}
-      />
+      >
+        {badgeOwnerId && (
+          <img
+            key={badgeOwnerId}
+            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${badgeOwnerId}`}
+            alt=""
+            className={`puzzle-piece__owner-badge ${isBadgeLeaving ? 'is-leaving' : ''}`}
+          />
+        )}
+      </div>
     );
   };
 

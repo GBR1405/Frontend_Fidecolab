@@ -178,6 +178,51 @@
   100% { opacity: 0.9; }
 }
 
+/* Icono de quién tiene seleccionada la pieza bloqueada */
+.puzzle-piece__owner-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  max-width: 32px;
+  max-height: 32px;
+  transform: translate(-50%, -50%) scale(1);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  border: 2px solid #fff;
+  pointer-events: none;
+  z-index: 5;
+  animation: ownerBadgeIn 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.puzzle-piece__owner-badge.is-leaving {
+  animation: ownerBadgeOut 0.28s ease-in forwards;
+}
+
+@keyframes ownerBadgeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes ownerBadgeOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+}
+
 /* PIEZA CORRECTAMENTE COLOCADA */
 .puzzle-piece.correct {
   border: 2px solid #28a745;

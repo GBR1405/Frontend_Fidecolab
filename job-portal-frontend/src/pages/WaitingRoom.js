@@ -202,134 +202,67 @@ const WaitingRoom = () => {
   }
 }, [teamGroups]);
 
-  // Función para mostrar el SweetAlert con el temporizador de 3 segundos
+  // Función para mostrar el countdown "Listos, 3, 2, 1, ¡Empezamos!" antes de iniciar la partida
   const showSweetAlertTimer = () => {
-    let timeLeft = 3;
-  
+    const morphDuration = 3000; // debe coincidir con la duración usada en las animaciones de simulationLayout.css
+    const holdAfterFinish = 1000; // tiempo extra mostrando "¡Empezamos!" antes de redirigir
+    const textSwapAt = morphDuration * 0.95; // justo antes de que el texto reaparezca (keyframe countdownHideText al 96%)
+
     Swal.fire({
-      title: '¡Comienza la partida!',
       html: `
-        <div class="custom-timer-container">
-          <div class="timer-text">Iniciando en...</div>
-          <div class="timer-circle">
-            <div class="timer-count">${timeLeft}</div>
-            <svg class="timer-svg" viewBox="0 0 100 100">
-              <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
-              <circle class="timer-circle-fill" cx="50" cy="50" r="45"></circle>
+        <div class="countdown">
+          <div class="countdown__colored-blocks">
+            <div class="countdown__colored-blocks-rotater">
+              <div class="countdown__colored-block"></div>
+              <div class="countdown__colored-block"></div>
+              <div class="countdown__colored-block"></div>
+            </div>
+            <div class="countdown__colored-blocks-inner"></div>
+            <div class="countdown__text">Listos</div>
+          </div>
+          <div class="countdown__inner">
+            <svg class="countdown__numbers" viewBox="0 0 100 100">
+              <defs>
+                <path class="countdown__num-path-1" d="M40,28 55,22 55,78"/>
+                <path class="countdown__num-join-1-2" d="M55,78 55,83 a17,17 0 1,0 34,0 a20,10 0 0,0 -20,-10"/>
+                <path class="countdown__num-path-2" d="M69,73 l-35,0 l30,-30 a16,16 0 0,0 -22.6,-22.6 l-7,7"/>
+                <path class="countdown__num-join-2-3" d="M28,69 Q25,44 34.4,27.4"/>
+                <path class="countdown__num-path-3" d="M30,20 60,20 40,50 a18,15 0 1,1 -12,19"/>
+              </defs>
+              <path class="countdown__numbers-path"
+                    d="M-10,20 60,20 40,50 a18,15 0 1,1 -12,19
+                       Q25,44 34.4,27.4
+                       l7,-7 a16,16 0 0,1 22.6,22.6 l-30,30 l35,0 L69,73
+                       a20,10 0 0,1 20,10 a17,17 0 0,1 -34,0 L55,83
+                       l0,-61 L40,28" />
             </svg>
           </div>
         </div>
-        <div class="particles-container"></div>
       `,
       showConfirmButton: false,
-      timer: timeLeft * 1000,
+      showCloseButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      backdrop: 'rgba(8, 6, 28, 0.92)',
+      background: 'transparent',
+      customClass: {
+        popup: 'countdown-popup'
+      },
       didOpen: () => {
-        const timerFill = Swal.getPopup().querySelector('.timer-circle-fill');
-        const timerCount = Swal.getPopup().querySelector('.timer-count');
-        const particlesContainer = Swal.getPopup().querySelector('.particles-container');
-        
-        const circumference = 2 * Math.PI * 45;
-        timerFill.style.strokeDasharray = circumference;
-        
-        const timerInterval = setInterval(() => {
-          timerCount.classList.add('changing');
-          setTimeout(() => {
-            timerCount.classList.remove('changing');
-          }, 400);
-          
-          // Crear partículas (3 grupos: centro + 2 puntos aleatorios)
-          createParticleGroup(particlesContainer, 'center');
-          createParticleGroup(particlesContainer, 'random');
-          createParticleGroup(particlesContainer, 'random');
-          
-          timeLeft -= 1;
-          timerCount.textContent = timeLeft;
-          timerFill.style.strokeDashoffset = circumference * (1 - timeLeft / 3);
-          
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            // Explosión final con 5 grupos
-            for (let i = 0; i < 5; i++) {
-              createParticleGroup(particlesContainer, i === 0 ? 'center' : 'random', true);
-            }
-          }
-        }, 1000);
+        const textEl = Swal.getPopup().querySelector('.countdown__text');
 
-        const createParticleGroup = (container, originType, isFinal = false) => {
-          const particleCount = isFinal ? 15 : 8;
-          const baseSize = isFinal ? 15 : 12;
-          
-          for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.classList.add('timer-particle');
-            
-            // Configurar origen
-            if (originType === 'random') {
-              particle.classList.add('random-origin');
-              particle.style.setProperty('--random-origin-x', Math.random());
-              particle.style.setProperty('--random-origin-y', Math.random());
-            }
-            
-            // Propiedades dinámicas
-            particle.style.setProperty('--random-x', (Math.random() * 2 - 1));
-            particle.style.setProperty('--random-y', (Math.random() * 2 - 1));
-            particle.style.width = `${Math.random() * 8 + baseSize}px`;
-            particle.style.height = particle.style.width;
-            
-            // Colores alternados para mejor efecto
-            if (i % 3 === 0) {
-              particle.style.backgroundColor = '#f59e0b'; // Amarillo
-            } else if (i % 3 === 1) {
-              particle.style.backgroundColor = '#3b82f6'; // Azul
-            } else {
-              particle.style.backgroundColor = '#ffffff'; // Blanco
-            }
-            
-            particle.style.animationDuration = `${Math.random() * 0.3 + 0.7}s`;
-            particle.style.animationDelay = `${i * 0.03}s`;
-            container.appendChild(particle);
-            
-            // Eliminar después de la animación
-            setTimeout(() => {
-              particle.remove();
-            }, 1000);
-          }
-        };
+        setTimeout(() => {
+          textEl.textContent = '¡Empezamos!';
+        }, textSwapAt);
 
+        setTimeout(() => {
+          Swal.close();
+        }, morphDuration + holdAfterFinish);
       },
       willClose: () => {
         handleTimerComplete();
       }
-
-      
     });
-  
-    const createParticles = (container) => {
-      container.innerHTML = '';
-      for (let i = 0; i < 12; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('timer-particle');
-        particle.style.setProperty('--random-x', (Math.random() * 2 - 1));
-        particle.style.setProperty('--random-y', (Math.random() * 2 - 1));
-        particle.style.animationDelay = `${i * 0.05}s`;
-        container.appendChild(particle);
-      }
-    };
-  
-    const createFinalExplosion = (container) => {
-      container.innerHTML = '';
-      for (let i = 0; i < 24; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('timer-particle');
-        particle.style.width = `${Math.random() * 10 + 5}px`;
-        particle.style.height = particle.style.width;
-        particle.style.backgroundColor = `hsl(${Math.random() * 60 + 200}, 80%, 60%)`;
-        particle.style.setProperty('--random-x', (Math.random() * 3 - 1.5));
-        particle.style.setProperty('--random-y', (Math.random() * 3 - 1.5));
-        particle.style.animationDuration = `${Math.random() * 0.5 + 0.5}s`;
-        container.appendChild(particle);
-      }
-    };
   };
 
   // Función para iniciar la partida (solo para el profesor)

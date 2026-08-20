@@ -45,6 +45,7 @@ const TeamRoom = () => {
   });
   const [initialLoad, setInitialLoad] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [welcomeExiting, setWelcomeExiting] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [initialTimerSet, setInitialTimerSet] = useState(false);
   const [firstGameConfig, setFirstGameConfig] = useState(null);
@@ -697,10 +698,11 @@ function randomHSL() {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setShowWelcome(false);
           if (socket) {
             socket.emit('RequestTimeSync', partidaId);
           }
+          setWelcomeExiting(true);
+          setTimeout(() => setShowWelcome(false), 450); // debe coincidir con la duración del fade-out en TeamRoom.css
           return 0;
         }
         return prev - 1;
@@ -801,7 +803,7 @@ function randomHSL() {
   if (showWelcome) {
     return (
       <LayoutSimulation>
-        <div className="welcome-screen">
+        <div className={`welcome-screen ${welcomeExiting ? 'welcome-screen--exiting' : ''}`}>
           <div className="welcome-content">
             <div className="welcome-content__logo">
               <img src="https://i.postimg.cc/NGzXwBp6/logo.png" alt="Logo institución" />

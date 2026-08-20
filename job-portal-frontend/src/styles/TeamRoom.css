@@ -730,6 +730,23 @@ html{
   to { transform: scale(1); opacity: 1; }
 }
 
+.welcome-screen--exiting {
+  animation: welcomeScreenOut 0.45s ease-in forwards;
+  pointer-events: none;
+}
+
+.welcome-screen--exiting .welcome-content {
+  animation: welcomeContentOut 0.4s ease-in forwards;
+}
+
+@keyframes welcomeScreenOut {
+  to { opacity: 0; }
+}
+
+@keyframes welcomeContentOut {
+  to { transform: scale(0.92); opacity: 0; }
+}
+
 @keyframes memberFade {
   to {
     opacity: 1;

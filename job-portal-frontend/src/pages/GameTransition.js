@@ -1,8 +1,8 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faBrain, 
+import {
+  faUsers,
+  faBrain,
   faFlagCheckered,
   faPaintBrush,
   faTint,
@@ -10,101 +10,101 @@ import {
   faVoteYea,
   faHeart,
   faComments,
-  faSearch,
-  faArrowsAlt,
-  faHandPaper,
+  faHandPointer,
+  faLock,
+  faExchangeAlt,
+  faShoePrints,
   faPlay
 } from '@fortawesome/free-solid-svg-icons';
 import "../styles/TransicionesSimulacion.css";
 
-const GameTransition = ({ 
-  transitionPhase, 
-  transitionGame, 
+const GAME_EMOJIS = {
+  memoria: '🧠',
+  dibujo: '🎨',
+  ahorcado: '💀',
+  rompecabezas: '🧩'
+};
+
+const INSTRUCTIONS_BY_GAME = {
+  memoria: [
+    { icon: faHandPointer, text: 'Haz clic para revelar dos piezas a la vez.' },
+    { icon: faBrain, text: 'Si coinciden se quedan reveladas; si no, se voltean de nuevo. ¡Recuerden bien sus posiciones!' },
+    { icon: faFlagCheckered, text: 'Trabajen en equipo para encontrar todas las parejas primero.' }
+  ],
+  dibujo: [
+    { icon: faPaintBrush, text: 'Dibujen entre todo el equipo el tema asignado. ¡Hablen y pónganse de acuerdo!' },
+    { icon: faTint, text: 'Tienen un tanque de tinta limitado para dibujar.' },
+    { icon: faEraser, text: 'Cuidado: si se agota la tinta, el dibujo se reinicia desde cero.' }
+  ],
+  ahorcado: [
+    { icon: faHeart, text: 'Tienen un límite de respuestas falladas, piénsenlo bien antes de arriesgar.' },
+    { icon: faComments, text: 'Investiguen y discutan en equipo antes de responder.' },
+    { icon: faVoteYea, text: 'Voten por la letra que crean que es la mejor opción.' }
+  ],
+  rompecabezas: [
+    { icon: faExchangeAlt, text: 'Selecciona dos piezas para intercambiarlas entre sí.' },
+    { icon: faLock, text: 'Si un compañero ya seleccionó una pieza, espera a que la cancele o la cambie.' },
+    { icon: faShoePrints, text: '¡Tienen un límite de movimientos, úsenlos con inteligencia!' }
+  ]
+};
+
+const getGameKey = (gameName = '') => {
+  const name = gameName.toLowerCase();
+  return Object.keys(INSTRUCTIONS_BY_GAME).find((key) => name.includes(key)) || null;
+};
+
+const GameTransition = ({
+  transitionPhase,
+  transitionGame,
   onStart,
-  currentGameInfo
+  isFirstGame = false
 }) => {
-  const getInstructions = () => {
-    if (!transitionGame) return null;
-    
-    const gameType = transitionGame.name.toLowerCase();
-    
-    if (gameType.includes('memoria')) {
-      return [
-        { icon: faUsers, text: 'Trabajen en equipo para decidir cual mover' },
-        { icon: faBrain, text: 'Recuerden donde están las parejas' },
-        { icon: faFlagCheckered, text: 'Encuentren todos para ganar' }
-      ];
-    }
-    
-    if (gameType.includes('dibujo')) {
-      return [
-        { icon: faPaintBrush, text: 'Dibujen el tema especifico' },
-        { icon: faTint, text: 'Tienen tanque de tinta limitado' },
-        { icon: faEraser, text: 'Si borran, pierden todos los trazos' }
-      ];
-    }
-    
-    if (gameType.includes('ahorcado')) {
-      return [
-        { icon: faVoteYea, text: 'Voten por la letra ganadora' },
-        { icon: faHeart, text: 'Eviten llegar a 0 intentos' },
-        { icon: faComments, text: 'La comunicación es importante' }
-      ];
-    }
-    
-    if (gameType.includes('rompecabezas')) {
-      return [
-        { icon: faSearch, text: 'Revisen las referencias' },
-        { icon: faArrowsAlt, text: 'Tienen límite de movimientos' },
-        { icon: faHandPaper, text: 'Tengan cuidado con lo que mueven' }
-      ];
-    }
-    
-    return [];
-  };
+  const gameKey = getGameKey(transitionGame?.name);
+  const instructions = gameKey ? INSTRUCTIONS_BY_GAME[gameKey] : [];
+  const emoji = gameKey ? GAME_EMOJIS[gameKey] : '';
 
   return (
-    <div className={`game-transition-overlay ${transitionPhase !== 'idle' ? 'active' : ''}`}>
-      {/* Previsualización del juego de fondo */}
-      <div className={`game-preview ${transitionPhase === 'instructions' || transitionPhase === 'ready' ? 'visible' : ''}`}>
-        {/* El juego se renderizará aquí pero semi-transparente */}
-      </div>
-
-      {/* Línea horizontal */}
-      {(transitionPhase === 'line' || transitionPhase === 'text') && (
-        <div className="center-line"></div>
+    <div className={`_est_overlay ${transitionPhase !== 'idle' ? '_est_active' : ''}`}>
+      {transitionPhase === 'next-game' && (
+        <>
+          <div className="_est_next-game">
+            <div className="_est_next-text">
+              {isFirstGame ? '¡Comencemos con el primer juego!' : 'Siguiente Juego:'}
+            </div>
+            <div className="_est_game-name">
+              {transitionGame?.name}
+              <span className="_est_game-icon">{emoji}</span>
+            </div>
+          </div>
+          <div className="_est_line-horizontal"></div>
+        </>
       )}
 
-      {/* Texto emergente */}
-      {transitionPhase === 'text' && (
-        <div className="text-emerge">
-          <div className="next-text">Siguiente Juego</div>
-          <div className="game-name">{transitionGame?.name}</div>
-        </div>
-      )}
-
-      {/* Instrucciones */}
       {(transitionPhase === 'instructions' || transitionPhase === 'ready') && (
-        <div className="instructions-container">
-          <h2 className="instruction-title">Instrucciones</h2>
-          <div className="instructions-grid">
-            {getInstructions().map((item, index) => (
-              <div key={index} className="instruction-card">
-                <div className="instruction-icon">
-                  <FontAwesomeIcon icon={item.icon} />
+        <div className="_est_instructions">
+          <span className="_est_instruction-game">{transitionGame?.name}</span>
+          <h2 className="_est_instruction-title">Instrucciones</h2>
+
+          <div className="_est_instruction-row">
+            {instructions.map((item, index) => (
+              <div key={index} className="_est_instruction-item">
+                <div className="_est_icon-badge">
+                  <FontAwesomeIcon icon={item.icon} className="_est_icon" />
                 </div>
-                <p className="instruction-text">{item.text}</p>
+                <span>{item.text}</span>
               </div>
             ))}
           </div>
 
           {transitionPhase === 'ready' && (
-            <button 
-              className="start-btn"
-              onClick={onStart}
-            >
-              <FontAwesomeIcon icon={faPlay} /> Comenzar
-            </button>
+            <div className="_est_ready-block">
+              <button className="_est_start-btn" onClick={onStart}>
+                <FontAwesomeIcon icon={faPlay} /> ¡Comenzar!
+              </button>
+              <p className="_est_start-hint">
+                <FontAwesomeIcon icon={faHandPointer} /> Haz clic en el botón para empezar a jugar
+              </p>
+            </div>
           )}
         </div>
       )}

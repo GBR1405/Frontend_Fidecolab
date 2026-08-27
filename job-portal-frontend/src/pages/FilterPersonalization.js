@@ -70,7 +70,6 @@ const FilterPersonalization = () => {
     const [teamSize, setTeamSize] = useState(4);
     const [customTeams, setCustomTeams] = useState([[], []]);
     const [searchStudent, setSearchStudent] = useState("");
-    const [filterGroupCustom, setFilterGroupCustom] = useState("all");
 
     // Cargar todos los estudiantes del profesor (para el conteo por grupo y el modo personalizado)
     useEffect(() => {
@@ -183,7 +182,6 @@ const FilterPersonalization = () => {
         setTeamSize(4);
         setCustomTeams([[], []]);
         setSearchStudent("");
-        setFilterGroupCustom("all");
         setPersonalizationDetails(null);
         setShowStartModal(true);
         fetchPersonalizationDetails(personalization.Personalizacion_ID_PK);
@@ -212,25 +210,22 @@ const FilterPersonalization = () => {
     // --- Utilidades del modo "grupos personalizados" ---
     const assignedStudentIds = new Set(customTeams.flat());
 
-    const groupOptionsForFilter = [];
-    const seenGroupKeys = new Set();
-    allStudents.forEach((est) => {
-        const key = `${est.Codigo_Curso}|${est.Codigo_Grupo}`;
-        if (!seenGroupKeys.has(key)) {
-            seenGroupKeys.add(key);
-            groupOptionsForFilter.push({ key, label: `${est.Codigo_Curso} - G${est.Codigo_Grupo}` });
-        }
-    });
+    // El pool de estudiantes personalizables se limita al grupo elegido en el paso 1
+    const grupoStudents = selectedGrupoObj
+        ? allStudents.filter(
+              (est) =>
+                  String(est.Codigo_Curso) === String(selectedGrupoObj.Codigo_Curso) &&
+                  String(est.Codigo_Grupo) === String(selectedGrupoObj.Codigo_Grupo)
+          )
+        : [];
 
-    const filteredPoolStudents = allStudents.filter((est) => {
+    const filteredPoolStudents = grupoStudents.filter((est) => {
         if (assignedStudentIds.has(est.Usuario_ID_PK)) return false;
         const term = searchStudent.trim().toLowerCase();
         const matchesSearch =
             !term ||
             `${est.Nombre} ${est.Apellido1} ${est.Apellido2} ${est.Correo}`.toLowerCase().includes(term);
-        const matchesGroup =
-            filterGroupCustom === "all" || `${est.Codigo_Curso}|${est.Codigo_Grupo}` === filterGroupCustom;
-        return matchesSearch && matchesGroup;
+        return matchesSearch;
     });
 
     const getStudentById = (id) => allStudents.find((est) => est.Usuario_ID_PK === id);
@@ -745,11 +740,7 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                                             <select
                                                 className="sim-select sim-select--big"
                                                 value={selectedGrupoId}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setSelectedGrupoId(value);
-                                                    if (value) setModalStep('form-groups');
-                                                }}
+                                                onChange={(e) => setSelectedGrupoId(e.target.value)}
                                             >
                                                 <option value="">Selecciona un grupo</option>
                                                 {gruposDisponibles.map((grupo) => (
@@ -843,21 +834,11 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                                         <div className="sim-custom__controls">
                                             <input
                                                 type="text"
-                                                placeholder="Buscar estudiante..."
+                                                placeholder="Buscar estudiante del grupo..."
                                                 className="sim-select sim-select--sm"
                                                 value={searchStudent}
                                                 onChange={(e) => setSearchStudent(e.target.value)}
                                             />
-                                            <select
-                                                className="sim-select sim-select--sm"
-                                                value={filterGroupCustom}
-                                                onChange={(e) => setFilterGroupCustom(e.target.value)}
-                                            >
-                                                <option value="all">Todos los grupos</option>
-                                                {groupOptionsForFilter.map((opt) => (
-                                                    <option key={opt.key} value={opt.key}>{opt.label}</option>
-                                                ))}
-                                            </select>
                                         </div>
 
                                         <div className="sim-custom__board">
@@ -937,7 +918,16 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                         <div className="sim-modal__footer">
                             <button type="button" className="sim-btn sim-btn--ghost" onClick={closeStartModal}>Cancelar</button>
-                            {modalStep === 'form-groups' && (
+                            {modalStep === 'select-group' ? (
+                                <button
+                                    type="button"
+                                    className="sim-btn sim-btn--primary"
+                                    disabled={!selectedGrupoId}
+                                    onClick={() => setModalStep('form-groups')}
+                                >
+                                    Siguiente
+                                </button>
+                            ) : (
                                 <button type="button" className="sim-btn sim-btn--primary" onClick={handleConfirmStart}>Iniciar partida</button>
                             )}
                         </div>
@@ -1530,6 +1520,16 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                 .sim-btn--primary:hover {
                     background: var(--dark-yellow-clr, #dfba00);
+                }
+
+                .sim-btn:disabled {
+                    opacity: 0.45;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+
+                .sim-btn--primary:disabled:hover {
+                    background: var(--yellow-clr, #f2cb05);
                 }
 
                 @media (max-width: 720px) {

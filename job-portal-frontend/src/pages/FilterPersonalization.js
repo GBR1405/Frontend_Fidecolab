@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import LayoutProfessor from "../components/Layout";
 import Cookies from "js-cookie";
-import { FaEdit, FaTrash, FaTimes, FaUsers, FaSlidersH, FaGripLines } from "react-icons/fa";
+import { FaEdit, FaTrash, FaTimes, FaUsers, FaSlidersH, FaGripLines, FaArrowLeft } from "react-icons/fa";
 import { useSocket } from '../context/SocketContext';
 
 
@@ -61,6 +61,7 @@ const FilterPersonalization = () => {
     // Estado del modal de inicio de partida
     const [allStudents, setAllStudents] = useState([]);
     const [showStartModal, setShowStartModal] = useState(false);
+    const [modalStep, setModalStep] = useState("select-group"); // 'select-group' | 'form-groups'
     const [activePersonalization, setActivePersonalization] = useState(null);
     const [personalizationDetails, setPersonalizationDetails] = useState(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -176,6 +177,7 @@ const FilterPersonalization = () => {
 
     const handleStartGame = (personalization) => {
         setActivePersonalization(personalization);
+        setModalStep("select-group");
         setSelectedGrupoId("");
         setDistributionMode("auto");
         setTeamSize(4);
@@ -695,7 +697,10 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
             {showStartModal && (
                 <div className="sim-modal-overlay" onClick={closeStartModal}>
-                    <div className="sim-modal" onClick={(e) => e.stopPropagation()}>
+                    <div
+                        className={`sim-modal ${modalStep === 'form-groups' ? 'sim-modal--wide' : ''}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="sim-modal__header">
                             <h3>{activePersonalization?.Nombre_Personalizacion || 'Configuración por defecto'}</h3>
                             <button type="button" className="sim-modal__close" onClick={closeStartModal}>
@@ -704,71 +709,104 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                         </div>
 
                         <div className="sim-modal__body">
-                            <div className="sim-modal__left">
-                                <h4><FaSlidersH /> Juegos de la partida</h4>
-                                {loadingDetails ? (
-                                    <p className="sim-modal__hint">Cargando juegos...</p>
-                                ) : personalizationDetails?.juegos?.length ? (
-                                    <ul className="sim-games-list">
-                                        {personalizationDetails.juegos
-                                            .slice()
-                                            .sort((a, b) => a.Orden - b.Orden)
-                                            .map((juego) => (
-                                                <li key={juego.ConfiguracionJuego_ID_PK} className="sim-games-list__item">
-                                                    <span className="sim-games-list__order">{juego.Orden}</span>
-                                                    <div className="sim-games-list__info">
-                                                        <span className="sim-games-list__name">{juego.Juego}</span>
-                                                        <span className={`sim-difficulty-badge sim-difficulty-badge--${juego.Dificultad}`}>
-                                                            {DIFICULTAD_LABELS[juego.Dificultad] || 'N/D'}
-                                                        </span>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                    </ul>
-                                ) : (
-                                    <p className="sim-modal__hint">No se encontraron juegos para esta configuración.</p>
-                                )}
-                            </div>
+                            {modalStep === 'select-group' ? (
+                                <div className="sim-step sim-step--group" key="step-group">
+                                    <div className="sim-panel sim-panel--games">
+                                        <div className="sim-panel__title"><FaSlidersH /> Juegos de la partida</div>
+                                        <div className="sim-panel__body">
+                                            {loadingDetails ? (
+                                                <p className="sim-modal__hint">Cargando juegos...</p>
+                                            ) : personalizationDetails?.juegos?.length ? (
+                                                <ul className="sim-games-list">
+                                                    {personalizationDetails.juegos
+                                                        .slice()
+                                                        .sort((a, b) => a.Orden - b.Orden)
+                                                        .map((juego) => (
+                                                            <li key={juego.ConfiguracionJuego_ID_PK} className="sim-games-list__item">
+                                                                <span className="sim-games-list__order">{juego.Orden}</span>
+                                                                <div className="sim-games-list__info">
+                                                                    <span className="sim-games-list__name">{juego.Juego}</span>
+                                                                    <span className={`sim-difficulty-badge sim-difficulty-badge--${juego.Dificultad}`}>
+                                                                        {DIFICULTAD_LABELS[juego.Dificultad] || 'N/D'}
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="sim-modal__hint">No se encontraron juegos para esta configuración.</p>
+                                            )}
+                                        </div>
+                                    </div>
 
-                            <div className="sim-modal__right">
-                                <div className="sim-field">
-                                    <label><FaUsers /> Selecciona el grupo</label>
-                                    <select
-                                        className="sim-select"
-                                        value={selectedGrupoId}
-                                        onChange={(e) => setSelectedGrupoId(e.target.value)}
-                                    >
-                                        <option value="">Selecciona un grupo</option>
-                                        {gruposDisponibles.map((grupo) => (
-                                            <option key={grupo.GruposEncargados_ID_PK} value={grupo.GruposEncargados_ID_PK}>
-                                                {grupo.Codigo_Curso} {grupo.Nombre_Curso} - G{grupo.Codigo_Grupo}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {selectedGrupoObj && (
-                                        <span className="sim-field__hint">
-                                            Total de estudiantes en el grupo: <strong>{grupoTotalEstudiantes}</strong>
-                                        </span>
-                                    )}
+                                    <div className="sim-panel sim-panel--group">
+                                        <div className="sim-panel__title"><FaUsers /> Selecciona el grupo</div>
+                                        <div className="sim-panel__body sim-panel__body--center">
+                                            <select
+                                                className="sim-select sim-select--big"
+                                                value={selectedGrupoId}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setSelectedGrupoId(value);
+                                                    if (value) setModalStep('form-groups');
+                                                }}
+                                            >
+                                                <option value="">Selecciona un grupo</option>
+                                                {gruposDisponibles.map((grupo) => (
+                                                    <option key={grupo.GruposEncargados_ID_PK} value={grupo.GruposEncargados_ID_PK}>
+                                                        {grupo.Codigo_Curso} {grupo.Nombre_Curso} - G{grupo.Codigo_Grupo}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {selectedGrupoObj ? (
+                                                <div className="sim-group-summary">
+                                                    <FaUsers />
+                                                    <span>Total de estudiantes: <strong>{grupoTotalEstudiantes}</strong></span>
+                                                </div>
+                                            ) : (
+                                                <p className="sim-modal__hint">Elige un grupo para continuar con la configuración de equipos.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
+                            ) : (
+                                <div className="sim-step sim-step--wide" key="step-formacion">
+                                    <div className="sim-formacion__header">
+                                        <button type="button" className="sim-back-btn" onClick={() => setModalStep('select-group')}>
+                                            <FaArrowLeft /> Cambiar grupo
+                                        </button>
+                                        {selectedGrupoObj && (
+                                            <div className="sim-formacion__group-badge">
+                                                <FaUsers /> {selectedGrupoObj.Codigo_Curso} {selectedGrupoObj.Nombre_Curso} - G{selectedGrupoObj.Codigo_Grupo}
+                                                <span>({grupoTotalEstudiantes} estudiantes)</span>
+                                            </div>
+                                        )}
+                                    </div>
 
-                                <div className="sim-tabs">
-                                    <button
-                                        type="button"
-                                        className={`sim-tabs__btn ${distributionMode === 'auto' ? 'sim-tabs__btn--active' : ''}`}
-                                        onClick={() => setDistributionMode('auto')}
-                                    >
-                                        Distribución automática
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`sim-tabs__btn ${distributionMode === 'custom' ? 'sim-tabs__btn--active' : ''}`}
-                                        onClick={() => setDistributionMode('custom')}
-                                    >
-                                        Personalizar grupos
-                                    </button>
-                                </div>
+                                    <h4 className="sim-formacion__title">¿Cómo quieres formar los grupos?</h4>
 
+                                    <div className="sim-mode-grid">
+                                        <button
+                                            type="button"
+                                            className={`sim-mode-card ${distributionMode === 'auto' ? 'sim-mode-card--active' : ''}`}
+                                            onClick={() => setDistributionMode('auto')}
+                                        >
+                                            <FaSlidersH className="sim-mode-card__icon" />
+                                            <span className="sim-mode-card__title">Distribución automática</span>
+                                            <span className="sim-mode-card__desc">Elige cuántos estudiantes por equipo y el sistema arma los grupos.</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`sim-mode-card ${distributionMode === 'custom' ? 'sim-mode-card--active' : ''}`}
+                                            onClick={() => setDistributionMode('custom')}
+                                        >
+                                            <FaGripLines className="sim-mode-card__icon" />
+                                            <span className="sim-mode-card__title">Personalizar grupos</span>
+                                            <span className="sim-mode-card__desc">Arrastra a cada estudiante al equipo que prefieras.</span>
+                                        </button>
+                                    </div>
+
+                                    <div className="sim-mode-detail" key={distributionMode}>
                                 {distributionMode === 'auto' ? (
                                     <div className="sim-auto">
                                         <div className="sim-field">
@@ -892,22 +930,42 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                                         </div>
                                     </div>
                                 )}
-                            </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="sim-modal__footer">
                             <button type="button" className="sim-btn sim-btn--ghost" onClick={closeStartModal}>Cancelar</button>
-                            <button type="button" className="sim-btn sim-btn--primary" onClick={handleConfirmStart}>Iniciar partida</button>
+                            {modalStep === 'form-groups' && (
+                                <button type="button" className="sim-btn sim-btn--primary" onClick={handleConfirmStart}>Iniciar partida</button>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
             <style>{`
+                @keyframes simFadeInScale {
+                    from { opacity: 0; transform: scale(0.94) translateY(14px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+
+                @keyframes simFadeIn {
+                    from { opacity: 0; transform: translateY(12px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                @keyframes simPopIn {
+                    from { opacity: 0; transform: scale(0.85); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+
                 .sim-modal-overlay {
                     position: fixed;
                     inset: 0;
-                    background: rgba(20, 11, 60, 0.45);
+                    background: rgba(20, 11, 60, 0.5);
+                    backdrop-filter: blur(2px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -916,63 +974,116 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                 }
 
                 .sim-modal {
-                    background: var(--white-clr, #fffffe);
-                    border-radius: 1em;
-                    box-shadow: 0px 10px 40px 5px rgba(0, 0, 0, 0.25);
-                    width: min(1000px, 100%);
+                    background: var(--white-smoke-clr, #fbf9f9);
+                    border-radius: 1.6em;
+                    box-shadow: 0px 20px 50px 5px rgba(13, 36, 161, 0.25);
+                    width: min(760px, 100%);
                     max-height: 90vh;
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
+                    animation: simFadeInScale 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+                }
+
+                .sim-modal--wide {
+                    width: min(920px, 100%);
                 }
 
                 .sim-modal__header {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 18px 24px;
-                    background: var(--blue-royal-clr, #1935ca);
+                    padding: 20px 28px;
+                    background: linear-gradient(135deg, var(--blue-royal-clr, #1935ca), var(--dark-royal-clr, #0d24a1));
                     color: white;
+                    flex-shrink: 0;
                 }
 
                 .sim-modal__header h3 {
                     margin: 0;
-                    font-size: 1.1rem;
-                    font-weight: 600;
+                    font-size: 1.15rem;
+                    font-weight: 700;
                 }
 
                 .sim-modal__close {
-                    background: none;
+                    background: rgba(255, 255, 255, 0.15);
                     border: none;
                     color: white;
                     cursor: pointer;
-                    font-size: 1rem;
+                    font-size: 0.9rem;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
                     display: flex;
                     align-items: center;
+                    justify-content: center;
+                    transition: background 0.2s ease, transform 0.2s ease;
+                }
+
+                .sim-modal__close:hover {
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: rotate(90deg);
                 }
 
                 .sim-modal__body {
-                    display: grid;
-                    grid-template-columns: 34% 66%;
-                    gap: 20px;
-                    padding: 20px 24px;
+                    padding: 24px 28px;
                     overflow-y: auto;
+                    flex: 1;
+                    min-height: 0;
                 }
 
-                .sim-modal__left {
-                    background: var(--white-smoke-clr, #fbf9f9);
-                    border-radius: 0.8em;
-                    padding: 16px;
-                    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.06);
+                .sim-step {
+                    animation: simFadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
                 }
 
-                .sim-modal__left h4 {
-                    margin: 0 0 12px 0;
-                    color: var(--blue-royal-clr, #1935ca);
-                    font-size: 0.95rem;
+                .sim-step--group {
+                    display: grid;
+                    grid-template-columns: 36% 64%;
+                    gap: 20px;
+                    min-height: 380px;
+                }
+
+                .sim-step--wide {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .sim-panel {
+                    background: white;
+                    border-radius: 1.2em;
+                    overflow: hidden;
+                    box-shadow: 0px 4px 16px 2px rgba(13, 36, 161, 0.08);
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .sim-panel__title {
+                    background: var(--blue-royal-clr, #1935ca);
+                    color: white;
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    padding: 12px 18px;
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                    flex-shrink: 0;
+                }
+
+                .sim-panel__body {
+                    padding: 16px;
+                    flex: 1;
+                }
+
+                .sim-panel__body--center {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 18px;
+                    text-align: center;
+                    min-height: 220px;
                 }
 
                 .sim-modal__hint {
@@ -993,23 +1104,27 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    background: white;
-                    border-radius: 0.6em;
+                    background: var(--white-smoke-clr, #fbf9f9);
+                    border-radius: 1em;
                     padding: 10px 12px;
-                    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.06);
+                    transition: transform 0.2s ease;
+                }
+
+                .sim-games-list__item:hover {
+                    transform: translateX(3px);
                 }
 
                 .sim-games-list__order {
                     background: var(--blue-royal-clr, #1935ca);
                     color: white;
-                    width: 24px;
-                    height: 24px;
+                    width: 26px;
+                    height: 26px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 0.75rem;
-                    font-weight: 600;
+                    font-weight: 700;
                     flex-shrink: 0;
                 }
 
@@ -1027,10 +1142,10 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                 .sim-difficulty-badge {
                     align-self: flex-start;
-                    font-size: 0.7rem;
-                    font-weight: 600;
-                    padding: 2px 8px;
-                    border-radius: 10px;
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    padding: 2px 10px;
+                    border-radius: 999px;
                     color: white;
                     background: var(--dark-royal-clr, #0d24a1);
                 }
@@ -1039,10 +1154,157 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                 .sim-difficulty-badge--2 { background: var(--dark-orange-clr, #ce8806); }
                 .sim-difficulty-badge--3 { background: #b3261e; }
 
-                .sim-modal__right {
+                .sim-select {
+                    background: white;
+                    padding: 8px 10px;
+                    border-radius: 8px;
+                    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.06);
+                    border: 1px solid #e5e5e5;
+                    color: var(--primary-text-clr, #696F79);
+                    font-size: 0.85rem;
+                }
+
+                .sim-select--sm {
+                    flex: 1;
+                }
+
+                .sim-select--big {
+                    width: 100%;
+                    max-width: 300px;
+                    padding: 14px 18px;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    border-radius: 999px;
+                    border: 2px solid transparent;
+                    box-shadow: 0px 4px 14px 2px rgba(13, 36, 161, 0.1);
+                    cursor: pointer;
+                    transition: border-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+                }
+
+                .sim-select--big:hover,
+                .sim-select--big:focus {
+                    border-color: var(--yellow-clr, #f2cb05);
+                    outline: none;
+                    transform: translateY(-2px);
+                    box-shadow: 0px 8px 18px 2px rgba(13, 36, 161, 0.18);
+                }
+
+                .sim-group-summary {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #eef1ff;
+                    padding: 10px 20px;
+                    border-radius: 999px;
+                    color: var(--blue-royal-clr, #1935ca);
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    animation: simPopIn 0.3s ease;
+                }
+
+                .sim-formacion__header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+
+                .sim-back-btn {
+                    background: white;
+                    border: none;
+                    border-radius: 999px;
+                    padding: 9px 18px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--blue-royal-clr, #1935ca);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.06);
+                    transition: background 0.2s ease, transform 0.2s ease;
+                }
+
+                .sim-back-btn:hover {
+                    background: #eef1ff;
+                    transform: translateX(-3px);
+                }
+
+                .sim-formacion__group-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #eef1ff;
+                    color: var(--blue-royal-clr, #1935ca);
+                    padding: 9px 18px;
+                    border-radius: 999px;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                }
+
+                .sim-formacion__group-badge span {
+                    color: var(--primary-text-clr, #696F79);
+                    font-weight: 500;
+                }
+
+                .sim-formacion__title {
+                    margin: 4px 0 0 0;
+                    color: var(--blue-royal-clr, #1935ca);
+                    font-size: 1.05rem;
+                    text-align: center;
+                    font-weight: 700;
+                }
+
+                .sim-mode-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 18px;
+                }
+
+                .sim-mode-card {
+                    background: white;
+                    border-radius: 1.4em;
+                    padding: 24px 18px;
+                    border: 3px solid transparent;
+                    box-shadow: 0px 4px 16px 2px rgba(13, 36, 161, 0.08);
+                    cursor: pointer;
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    align-items: center;
+                    text-align: center;
+                    gap: 10px;
+                    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                .sim-mode-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0px 10px 22px 2px rgba(13, 36, 161, 0.14);
+                }
+
+                .sim-mode-card--active {
+                    border-color: var(--yellow-clr, #f2cb05);
+                    background: linear-gradient(180deg, #fffdf1, white);
+                }
+
+                .sim-mode-card__icon {
+                    font-size: 1.7rem;
+                    color: var(--blue-royal-clr, #1935ca);
+                }
+
+                .sim-mode-card__title {
+                    font-weight: 700;
+                    color: var(--blue-royal-clr, #1935ca);
+                    font-size: 0.95rem;
+                }
+
+                .sim-mode-card__desc {
+                    font-size: 0.78rem;
+                    color: var(--primary-text-clr, #696F79);
+                }
+
+                .sim-mode-detail {
+                    animation: simFadeIn 0.3s ease;
                 }
 
                 .sim-field {
@@ -1060,57 +1322,20 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                     gap: 8px;
                 }
 
-                .sim-field__hint {
-                    font-size: 0.8rem;
-                    color: var(--primary-text-clr, #696F79);
-                }
-
-                .sim-select {
-                    background: white;
-                    padding: 8px 10px;
-                    border-radius: 6px;
-                    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.06);
-                    border: 1px solid #e5e5e5;
-                    color: var(--primary-text-clr, #696F79);
-                    font-size: 0.85rem;
-                }
-
-                .sim-select--sm {
-                    flex: 1;
-                }
-
-                .sim-tabs {
-                    display: flex;
-                    gap: 8px;
-                    border-bottom: 2px solid var(--white-smoke-clr, #fbf9f9);
-                }
-
-                .sim-tabs__btn {
-                    background: none;
-                    border: none;
-                    padding: 8px 4px;
-                    cursor: pointer;
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                    color: var(--primary-text-clr, #696F79);
-                    border-bottom: 3px solid transparent;
-                }
-
-                .sim-tabs__btn--active {
-                    color: var(--blue-royal-clr, #1935ca);
-                    border-bottom-color: var(--yellow-clr, #f2cb05);
-                }
-
                 .sim-auto {
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
+                    gap: 14px;
+                    background: white;
+                    border-radius: 1.2em;
+                    padding: 18px;
+                    box-shadow: 0px 4px 16px 2px rgba(13, 36, 161, 0.08);
                 }
 
                 .sim-preview {
                     background: var(--white-smoke-clr, #fbf9f9);
-                    border-radius: 0.6em;
-                    padding: 10px 12px;
+                    border-radius: 1em;
+                    padding: 12px 14px;
                     font-size: 0.8rem;
                     color: var(--primary-text-clr, #696F79);
                 }
@@ -1124,8 +1349,8 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                 .sim-preview__chip {
                     background: white;
-                    border-radius: 12px;
-                    padding: 4px 10px;
+                    border-radius: 999px;
+                    padding: 5px 12px;
                     font-size: 0.75rem;
                     box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.08);
                 }
@@ -1139,8 +1364,7 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                 .sim-custom {
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
-                    min-height: 0;
+                    gap: 14px;
                 }
 
                 .sim-custom__controls {
@@ -1150,14 +1374,14 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                 .sim-custom__board {
                     display: grid;
-                    grid-template-columns: 40% 60%;
-                    gap: 12px;
+                    grid-template-columns: 38% 62%;
+                    gap: 14px;
                 }
 
                 .sim-pool, .sim-teams {
                     background: var(--white-smoke-clr, #fbf9f9);
-                    border-radius: 0.6em;
-                    padding: 10px;
+                    border-radius: 1.1em;
+                    padding: 12px;
                     max-height: 320px;
                     overflow-y: auto;
                 }
@@ -1182,10 +1406,11 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
 
                 .sim-team {
                     background: white;
-                    border-radius: 0.6em;
-                    padding: 8px;
-                    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.06);
+                    border-radius: 1em;
+                    padding: 10px;
+                    box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.06);
                     border: 2px dashed transparent;
+                    transition: border-color 0.2s ease;
                 }
 
                 .sim-team--invalid {
@@ -1197,9 +1422,9 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                     justify-content: space-between;
                     align-items: center;
                     font-size: 0.8rem;
-                    font-weight: 600;
+                    font-weight: 700;
                     color: var(--blue-royal-clr, #1935ca);
-                    margin-bottom: 6px;
+                    margin-bottom: 8px;
                 }
 
                 .sim-team__header button {
@@ -1214,19 +1439,25 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                     display: flex;
                     flex-direction: column;
                     gap: 6px;
-                    min-height: 30px;
+                    min-height: 34px;
                 }
 
                 .sim-chip {
                     display: flex;
                     align-items: center;
                     gap: 6px;
-                    background: var(--white-smoke-clr, #fbf9f9);
-                    border-radius: 6px;
-                    padding: 6px 8px;
+                    background: white;
+                    border-radius: 999px;
+                    padding: 7px 12px;
                     font-size: 0.78rem;
                     color: var(--primary-text-clr, #696F79);
                     cursor: grab;
+                    box-shadow: 0px 2px 6px 1px rgba(0, 0, 0, 0.05);
+                    transition: transform 0.15s ease;
+                }
+
+                .sim-chip:hover {
+                    transform: translateY(-1px);
                 }
 
                 .sim-chip--team {
@@ -1250,30 +1481,41 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                 .sim-add-team {
                     align-self: flex-start;
                     background: none;
-                    border: 1px dashed var(--blue-royal-clr, #1935ca);
+                    border: 2px dashed var(--blue-royal-clr, #1935ca);
                     color: var(--blue-royal-clr, #1935ca);
-                    border-radius: 6px;
-                    padding: 6px 12px;
+                    border-radius: 999px;
+                    padding: 8px 16px;
                     font-size: 0.8rem;
                     font-weight: 600;
                     cursor: pointer;
+                    transition: background 0.2s ease;
+                }
+
+                .sim-add-team:hover {
+                    background: #eef1ff;
                 }
 
                 .sim-modal__footer {
                     display: flex;
                     justify-content: flex-end;
                     gap: 10px;
-                    padding: 14px 24px;
-                    border-top: 1px solid var(--white-smoke-clr, #fbf9f9);
+                    padding: 16px 28px;
+                    background: white;
+                    flex-shrink: 0;
                 }
 
                 .sim-btn {
-                    padding: 8px 20px;
-                    border-radius: 6px;
+                    padding: 10px 24px;
+                    border-radius: 999px;
                     font-size: 0.85rem;
-                    font-weight: 600;
+                    font-weight: 700;
                     cursor: pointer;
                     border: none;
+                    transition: transform 0.15s ease, background 0.2s ease;
+                }
+
+                .sim-btn:hover {
+                    transform: translateY(-1px);
                 }
 
                 .sim-btn--ghost {
@@ -1291,7 +1533,10 @@ const startNewGame = async (personalization, grupoID, distConfig = {}) => {
                 }
 
                 @media (max-width: 720px) {
-                    .sim-modal__body {
+                    .sim-step--group {
+                        grid-template-columns: 1fr;
+                    }
+                    .sim-mode-grid {
                         grid-template-columns: 1fr;
                     }
                     .sim-custom__board {

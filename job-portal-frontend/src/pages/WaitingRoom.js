@@ -176,6 +176,13 @@ const WaitingRoom = () => {
     users.filter(user => user.role !== 'Profesor')
   );
 
+  // Cantidad de espacios a mostrar por grupo: se basa en el grupo con más jugadores,
+  // ya que los equipos ahora pueden tener tamaños distintos (2 a 10 según la personalización)
+  const maxTeamSize = Object.values(teamGroups).reduce(
+    (max, members) => Math.max(max, (members || []).length),
+    0
+  ) || 4;
+
   // Habilitar el botón "Iniciar Partida" si hay al menos 3 usuarios conectados
   const isStartButtonEnabled = filteredUsers.length >= 1;
 
@@ -346,7 +353,7 @@ const WaitingRoom = () => {
                     <h3>Grupo {teamNumber}</h3>
                   </div>
                   <div className="widget__data">
-                    {Array.from({ length: 4 }).map((_, index) => {
+                    {Array.from({ length: maxTeamSize }).map((_, index) => {
                       const user = members[index];
                       return (
                         <div className="data__player" key={index}>

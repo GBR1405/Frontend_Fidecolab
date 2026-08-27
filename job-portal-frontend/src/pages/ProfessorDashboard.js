@@ -12,11 +12,18 @@ import DrawingDemoModal from '../games/DrawingDemoModal';
 const apiUrl = process.env.REACT_APP_API_URL;
 const token = Cookies.get("authToken");
 
-const TeamProgress = ({ partidaId, currentGameType, socket }) => {
+const RANK_CLASSES = ['gold', 'silver', 'bronze'];
+const getRankClass = (rankIndex) => RANK_CLASSES[rankIndex] || 'blue';
+
+const TeamProgress = ({ partidaId, currentGameType, socket, gameIndex, ahorcadoWord }) => {
   const [teamProgress, setTeamProgress] = useState({});
   const [allTeams, setAllTeams] = useState([]);
   const [prevPositions, setPrevPositions] = useState({});
+  const [completionOrder, setCompletionOrder] = useState([]);
+  const completionOrderRef = useRef([]);
+  const lastGameKeyRef = useRef(null);
 
+  const totalLetras = ahorcadoWord ? ahorcadoWord.replace(/\s+/g, '').length : 0;
 
   const navigate = useNavigate();
 
@@ -97,12 +104,55 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
     };
   }, [socket, partidaId, currentGameType]);
 
+  // Determina si un equipo ya llegó al 100% del juego actual
+  const isTeamComplete = (team) => {
+    if (currentGameType === 'Ahorcado') {
+      const correctas = teamProgress[team]?.Ahorcado?.correctas ?? 0;
+      return totalLetras > 0 && correctas >= totalLetras;
+    }
+    return (teamProgress[team]?.[currentGameType] ?? 0) >= 100;
+  };
 
+  // Registrar el orden de llegada al 100% (se reinicia en cada juego nuevo)
+  useEffect(() => {
+    const gameKey = `${gameIndex ?? 0}-${currentGameType}`;
+    if (lastGameKeyRef.current !== gameKey) {
+      lastGameKeyRef.current = gameKey;
+      completionOrderRef.current = [];
+      setCompletionOrder([]);
+    }
 
-  // Ordenar equipos por número
+    let changed = false;
+    allTeams.forEach((team) => {
+      if (completionOrderRef.current.includes(team)) return;
+      if (isTeamComplete(team)) {
+        completionOrderRef.current = [...completionOrderRef.current, team];
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      setCompletionOrder([...completionOrderRef.current]);
+    }
+  }, [teamProgress, allTeams, currentGameType, gameIndex, totalLetras]);
+
+  // Ordenar equipos: primero los que ya terminaron (en orden de llegada), luego por progreso
   const sortedTeams = [...allTeams].sort((a, b) => {
-    const progressA = teamProgress[a]?.[currentGameType] ?? 0;
-    const progressB = teamProgress[b]?.[currentGameType] ?? 0;
+    const rankA = completionOrder.indexOf(a);
+    const rankB = completionOrder.indexOf(b);
+    const aDone = rankA !== -1;
+    const bDone = rankB !== -1;
+
+    if (aDone && bDone) return rankA - rankB;
+    if (aDone) return -1;
+    if (bDone) return 1;
+
+    const progressA = currentGameType === 'Ahorcado'
+      ? (teamProgress[a]?.Ahorcado?.correctas ?? 0)
+      : (teamProgress[a]?.[currentGameType] ?? 0);
+    const progressB = currentGameType === 'Ahorcado'
+      ? (teamProgress[b]?.Ahorcado?.correctas ?? 0)
+      : (teamProgress[b]?.[currentGameType] ?? 0);
     return progressB - progressA;
   });
 
@@ -151,6 +201,14 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
         const animationClass = direction === 'up' ? 'move-up' :
           direction === 'down' ? 'move-down' : '';
 
+        // Ranking por orden de llegada al 100% (oro, plata, bronce, azul del 4to en adelante)
+        const rankIndex = completionOrder.indexOf(team);
+        const isDone = rankIndex !== -1;
+        const rankClass = getRankClass(rankIndex);
+        const rankBadge = isDone && (
+          <span className={`rank-badge rank-badge--${rankClass}`}>{rankIndex + 1}</span>
+        );
+
         // Ahorcado: mostrar correctas vs errores
         if (currentGameType === 'Ahorcado') {
           const ahorcadoData = teamProgress[team]?.Ahorcado ?? {};
@@ -162,7 +220,7 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
           const porcentajeErrores = (letrasErradas / total) * 100;
 
           return (
-            <div key={team} className={`team-card ${animationClass}`}>
+            <div key={team} className={`team-card ${animationClass} ${isDone ? `team-card--${rankClass}` : ''}`}>
               <div className="team-header">
                 <div>
                   <span className="position-indicator">{index + 1}</span>
@@ -172,15 +230,18 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
                   Letras encontradas: {letrasEncontradas} / Errores: {letrasErradas}
                 </span>
               </div>
-              <div className="progress-bar-container">
-                <div
-                  className="progress-fill correct"
-                  style={{ width: `${porcentajeCorrectas}%` }}
-                ></div>
-                <div
-                  className="progress-fill wrong"
-                  style={{ width: `${porcentajeErrores}%` }}
-                ></div>
+              <div className="progress-row">
+                <div className={`progress-bar-container ${isDone ? 'progress-bar-container--completed' : ''}`}>
+                  <div
+                    className="progress-fill correct"
+                    style={{ width: `${porcentajeCorrectas}%` }}
+                  ></div>
+                  <div
+                    className="progress-fill wrong"
+                    style={{ width: `${porcentajeErrores}%` }}
+                  ></div>
+                </div>
+                {rankBadge}
               </div>
             </div>
           );
@@ -189,9 +250,8 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
         // Otros juegos: barra de progreso normal
         const progress = teamProgress[team]?.[currentGameType];
 
-        // Otros juegos: barra de progreso normal
         return (
-          <div key={team} className={`team-card ${animationClass}`}>
+          <div key={team} className={`team-card ${animationClass} ${isDone ? `team-card--${rankClass}` : ''}`}>
             <div className="team-header">
               <div>
                 <span className="position-indicator">{index + 1}</span>
@@ -206,11 +266,14 @@ const TeamProgress = ({ partidaId, currentGameType, socket }) => {
               )}
             </div>
             {progress !== undefined ? (
-              <div className="progress-bar-container">
-                <div
-                  className="progress-fill normal"
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div className="progress-row">
+                <div className={`progress-bar-container ${isDone ? 'progress-bar-container--completed' : ''}`}>
+                  <div
+                    className="progress-fill normal"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+                {rankBadge}
               </div>
             ) : (
               <div className="progress-bar-container inactive">
@@ -1203,6 +1266,8 @@ const SimulationProfessor = () => {
                           partidaId={partidaId}
                           currentGameType={currentGame.tipo}
                           socket={socket}
+                          gameIndex={gameConfig.currentIndex}
+                          ahorcadoWord={currentGame.tipo?.toLowerCase() === 'ahorcado' ? currentGame.tema : null}
                         />
                       </div>
                     </div>

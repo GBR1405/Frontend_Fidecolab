@@ -752,13 +752,29 @@
 }
 
 /* Barras de progreso mejoradas */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 .progress-bar-container {
   width: 100%;
   background: #ecf0f1;
   border-radius: 8px;
   height: 12px;
   overflow: hidden;
-  margin-top: 8px;
+}
+
+.progress-row .progress-bar-container {
+  flex: 1 1 100%;
+  margin-top: 0;
+  transition: flex-basis 0.4s ease;
+}
+
+.progress-row .progress-bar-container--completed {
+  flex: 0 1 88%;
 }
 
 .progress-fill {
@@ -766,6 +782,58 @@
   border-radius: 8px;
   transition: width 0.5s ease, background-color 0.3s ease;
 }
+
+/* Medalla de posición al terminar el juego (aparece a la derecha de la barra) */
+.rank-badge {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  animation: rankBadgeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes rankBadgeIn {
+  from { opacity: 0; transform: scale(0.4) rotate(-25deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.rank-badge--gold {
+  background: linear-gradient(135deg, #ffe066, #ffb300);
+  color: #5c3d00;
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.5);
+}
+
+.rank-badge--silver {
+  background: linear-gradient(135deg, #f1f3f5, #adb5bd);
+  color: #343a40;
+  box-shadow: 0 2px 8px rgba(173, 181, 189, 0.5);
+}
+
+.rank-badge--bronze {
+  background: linear-gradient(135deg, #e0a06a, #a9601c);
+  color: #3a1f00;
+  box-shadow: 0 2px 8px rgba(169, 96, 28, 0.5);
+}
+
+.rank-badge--blue {
+  background: linear-gradient(135deg, #6d8dff, #4a6bdf);
+  color: white;
+  box-shadow: 0 2px 8px rgba(74, 107, 223, 0.4);
+}
+
+/* Resalta la tarjeta del equipo según su posición final */
+.team-card--gold { border-left-color: #ffb300; }
+.team-card--silver { border-left-color: #adb5bd; }
+.team-card--bronze { border-left-color: #a9601c; }
+.team-card--blue { border-left-color: #4a6bdf; }
 
 /* Colores para diferentes estados */
 .progress-fill.normal {
